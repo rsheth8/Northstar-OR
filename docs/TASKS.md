@@ -44,6 +44,8 @@ Camera, AI, maps, and additional procedure types follow the working core journey
 
 ## Next implementation tasks (one task per branch/PR)
 
+- [~] (Amartya / Codex) **Light-workspace design foundation:** reconcile the owner-approved light workspace / midnight header direction and add opt-in semantic palette tokens. Reserves `AGENTS.md`, `CLAUDE.md`, `docs/DESIGN.md`, `docs/LIGHT_WORKSPACE_HANDOFF.md`, `NorthstarOR/DesignSystem/NorthstarWorkspacePalette.swift`, `docs/evidence/light-workspace/`, and this claim only. Existing screen migration remains F02/F09/F11/F12 after merged dependencies; no feature, model, storage, or shell edits.
+
 Claim the individual F-number row for each implementation slice. The lane checklists below are acceptance reminders, not additional parallel claims for the same work. Optional slices stay pending until their core gate passes.
 
 - [x] (Codex) **Shared design:** establish restrained clinical typography, flat controls, and quiet surfaces in `DesignSystem/`; preserve action sizes and semantic status colors (merged in [PR #8](https://github.com/rsheth8/Northstar-OR/pull/8)).
