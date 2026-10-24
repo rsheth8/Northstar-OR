@@ -28,3 +28,4 @@ GoogleService-Info.plist
 *.p12
 *.p8
 *.mobileprovision
+__pycache__/
