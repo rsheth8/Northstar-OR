@@ -42,6 +42,13 @@ jobs:
           xcodegen --version
       - name: Build and test
         run: bash scripts/check.sh
+      - name: Export native UI evidence
+        if: always()
+        run: |
+          for result in build/check.*/Tests.xcresult; do
+            [ -d "$result" ] || continue
+            xcrun xcresulttool export attachments --path "$result" --output-path build/ui-evidence
+          done
       - name: Save test results
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -50,5 +57,6 @@ jobs:
           path: |
             build/check.*/Tests.xcresult
             build/xcodebuild.log
+            build/ui-evidence/
           retention-days: 7
           if-no-files-found: ignore

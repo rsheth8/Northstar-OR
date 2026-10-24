@@ -8,8 +8,8 @@ struct NorthstarORApp: App {
         WindowGroup {
             RootView()
                 .environment(model)
-                .preferredColorScheme(.dark)
-                .tint(Northstar.Palette.aurora)
+                .preferredColorScheme(.light)
+                .tint(Northstar.Palette.ice)
         }
     }
 }
