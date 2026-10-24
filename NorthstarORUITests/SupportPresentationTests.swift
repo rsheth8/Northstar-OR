@@ -8,7 +8,9 @@ final class SupportPresentationTests: XCTestCase {
         app.launch()
         XCTAssertTrue(app.buttons["Remote Support"].firstMatch.waitForExistence(timeout: 15))
         app.buttons["Remote Support"].firstMatch.tap()
-        app.buttons["Suggested text"].firstMatch.tap()
+        // SwiftUI Menu labels reject the AX scroll-to-visible action XCUITest
+        // uses before tapping; the control is on screen, so tap its center.
+        app.buttons["Suggested text"].firstMatch.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
         let prompt = "Which technical support question would you like to discuss?"
         app.buttons[prompt].firstMatch.tap()
         let draft = app.descendants(matching: .any)["support-draft"].firstMatch
