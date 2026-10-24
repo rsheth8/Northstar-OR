@@ -1,0 +1,135 @@
+# Northstar OR: UI and UX rules
+
+The approved direction is a calm, precise workspace for institutional medical teams. Professional quality comes from readable information, consistent controls, explicit state, and dependable recovery. These are implementation and review requirements; the starter does not meet all of them yet. Product scope and clinical boundaries remain in [PRODUCT.md](PRODUCT.md).
+
+This is the canonical product design guide. [The brand kit](brand/README.md) governs artwork; [TASKS.md](TASKS.md#ux-delivery-order) governs implementation order and ownership. Changes to shared components, state, and feature screens ship in separate small PRs.
+
+## 1. The design bar
+
+Every screen must make the active fictional case, current work, unresolved items, and support arrangement easy to identify. The next action must be explicit, and the result must remain visible after it is taken.
+
+- Keep one clear visual priority per work area. Use structure and spacing to create hierarchy.
+- Preserve context when switching tabs, opening details, receiving a message, or recovering from an error.
+- Represent recorded facts, unknown information, and pending human responses distinctly.
+- Pair meaningful status with a label and icon. Color, sound, animation, and position alone are insufficient.
+- Keep the team in control. Recording an item, acknowledging a warning, requesting support, and receiving support are separate actions.
+- Keep decorative illustration in presentation material. The product uses the connected star/pulse signature and neutral wordmark.
+
+This guide sets a professional design target. It does not establish clinical readiness or replace the workflow feedback described in PRODUCT.md.
+
+## 2. Visual system
+
+Use `Northstar.Palette`, `Northstar.Fonts`, `Northstar.Space`, and `Northstar.Radius`. Add a reusable token or component in a shared-files PR when needed; avoid per-screen styling systems and raw hex values in views.
+
+| Element | Rule |
+| --- | --- |
+| Surfaces | Navy base, quiet raised work areas, restrained dividers. Use grouping and whitespace before adding another card. |
+| Type | Neutral system typography in the app. Regular body text and semibold emphasis; monospaced type for timers and compact timestamps. Inter Display remains the outlined logo wordmark. |
+| Base sizes | Body 17 pt; supporting metadata at least 13 pt; section title 24 pt; current-item title 32–40 pt. These are default-size starting points, with Dynamic Type scaling. |
+| Spacing | Use the existing 4 pt spacing scale. Start with 24 pt work-area padding and panel gaps, and 16 pt internal grouping; adapt to available space. |
+| Corners | Existing 6 / 10 / 12 pt radii for small / medium / large containers and controls. Rounded geometry supports grouping without dominating the screen. |
+| Buttons | Flat fill for the primary action, quiet outlined or text treatment for secondary actions, and a visible pressed/disabled/focused state. |
+| Icons | Consistent SF Symbols with text for consequential actions. Expand the hit area independently of icon size. |
+| Logo | Use current files from `docs/brand/`. Keep the mark modest in the app header. Preserve its proportions and connected trail. |
+| Motion | Brief state transitions, normally 100–200 ms. Respect Reduce Motion. System navigation may retain its native transitions. |
+
+Product screens must not reintroduce glowing buttons, oversized rounded display type, decorative gradients, bouncing controls, animated mascots, an “alive” voice orb, repeated pulsing, or flashing screen borders. Functional microphone feedback may show input activity alongside a readable listening state.
+
+### Color has a job
+
+| Role | Token / meaning |
+| --- | --- |
+| Main information | `ink`; use `inkMuted` for supporting information that remains readable. |
+| Selection and information | `ice`; selection also needs an indicator or label. |
+| Recorded confirmation / successful action | `aurora`, with a checkmark and explicit result. Green must not imply clinical safety or procedure readiness. |
+| Attention / deferred or unresolved item | `amber`, with a named condition and available action. |
+| Failure / blocked app action / destructive action | `alert`, with an explanation. It must not become a clinical instruction to stop or proceed. |
+| Dividers and decorative structure | `line` and `slate`; do not assume these have enough contrast for essential control boundaries or status icons. |
+
+Coverage risk describes logistics. Label it “Coverage risk” and show its reasons; it is distinct from clinical risk, checklist state, and connection status.
+
+## 3. Layout and navigation
+
+The primary demo is a landscape iPad. Layout must respond to the actual window width, safe areas, text size, and keyboard. Preserve functionality when panels stack or move into detail views. Apple's [layout guidance](https://developer.apple.com/design/human-interface-guidelines/layout) supports this adaptive approach.
+
+- Keep the three destinations recognizable: **Co-pilot**, **Planner**, and **Remote Support**. Use familiar native navigation and selection behavior.
+- Show consistent active-case context and support status across destinations. Make an intentional case change explicit; preserve selection when switching tabs.
+- Keep case identity, unresolved-item count, and support availability visible while working. Until cross-device delivery exists, label the actual mode as a local demo.
+- Give the current task the most space. Avoid a tiny task panel between rigid sidebars or a large empty presentation-style canvas.
+- In Co-pilot, use progress / current work / recent activity columns only when the current work area can remain at least 360 pt wide. Otherwise move secondary history into a labeled panel or stack the regions. Keep warnings, current actions, and support access reachable.
+- Grow rows and controls for wrapped text. Essential labels, recipients, questions, and warnings must not be clipped or reduced to unreadable text.
+- Keep message entry and its send action visible above the keyboard. Do not lose a draft on a failed send or ordinary navigation.
+- Verify the app's viewport on the intended iPad before adding visual polish. Diagnose unexpected letterboxing, overflow, and unused space rather than treating them as the intended layout.
+
+## 4. Screen contracts
+
+These describe the target experience, including behavior still pending in TASKS.md. Show only states the implementation can actually support.
+
+| Destination | Information priority | Essential interaction and result |
+| --- | --- | --- |
+| Co-pilot | Active case and facility → named support arrangement and connection → current item and unresolved items → recent activity | Record a team confirmation, defer with context, acknowledge when required, correct a record, and request support at any time. Each action leaves a visible, timestamped result. |
+| Planner | Upcoming cases and logistical risk → selected case and risk reasons → readiness items → named support options and role | Review an option, request a support arrangement, and see its actual acceptance state. A ranked or available rep is not an accepted arrangement. A map is optional supplementary information. |
+| Remote Support | Named sender/recipient and role → team's question → current context and unresolved items → conversation and recent events | Acknowledge a request, reply with technical support, and show actual message/connection state. Make incoming responses prominent in Co-pilot too. |
+| Session review, when implemented | Session identity → unresolved items → recorded confirmations/corrections → support exchanges → sources and times | Review the record. Use “Checklist complete” only for the relevant recorded checklist state, with any unresolved items still visible. Export is a separate scoped task. |
+
+Use one dominant next action in the current work area. Keep support and correction actions available without giving every control the same filled emphasis. The progress rail allows team-controlled navigation; it does not imply a universal clinical sequence.
+
+## 5. State must be truthful
+
+| Domain | Required distinction | Presentation rule |
+| --- | --- | --- |
+| Checklist item | Unrecorded / deferred / team-confirmed; current selection is separate | Acknowledging a deferred-item warning leaves the item deferred. Corrections preserve the earlier event in history. |
+| Support arrangement | Not requested / requested / accepted / connected / unavailable | Name the person and their role. Availability and remote capability do not imply acceptance. |
+| Connection | Local demo / connecting / connected / reconnecting / disconnected | Acceptance persists separately from transport state. On disconnect, remove the live-connected presentation and show the last confirmed state and time. |
+| Message | Local-only, sending, sent, delivered, acknowledged, or failed, as actually supported | “Delivered” requires delivery evidence; “acknowledged” requires an explicit recipient action. Do not invent backend acknowledgments. |
+| Voice | Off / listening / processing / unavailable | Show an explicit state, start/stop control, and touch alternative. Indicate the recognized action and prevent duplicate commands. |
+| Camera or AI | Observation / human confirmation / AI draft | Preserve source, timestamp, uncertainty, and review state. Automated output must not silently complete an item or send a handoff. |
+
+Loading, empty, unavailable, and error states are part of each screen's design. Explain what is known, what is pending, and what the user can do next. A blank log can say “No activity recorded.” A failed request retains the question and context and offers an explicit retry or edit. Show queued/offline behavior only if it has been implemented; do not imply persistence the prototype lacks.
+
+## 6. Interaction, alerts, and copy
+
+- Primary OR actions have a minimum 72 pt height and at least 72 pt width. Other interactive targets have at least a 44 × 44 pt hit area. Leave at least 8 pt between adjacent hit areas. These are project targets; verify physical-device use with gloves in the fictional walkthrough.
+- Label actions by their effect: “Record confirmation,” “Defer item,” “Request support,” “Acknowledge request,” and “Send reply.” Avoid ambiguous approval language such as “All good.”
+- Keep consequential actions explicit. A double tap, duplicate voice result, tab switch, or keyboard shortcut must not bypass a required acknowledgment or produce duplicate records.
+- Show ordinary updates inline. Show attention items in a persistent banner with the named item, consequence for the app workflow, and available action. Use an interrupting acknowledgment only where the product state requires it.
+- Use short speech or haptic feedback for important new events, paired with visible text. Do not repeat announcements on every render or make audio essential to completing a task.
+- Keep history readable and stable. Include time and source/actor when available; new events must not pull the reader away from older content they are reviewing.
+- Keep copy calm and factual. Say “Awaiting support acceptance,” “Item deferred. Acknowledgment required,” or “Connection lost. Last update 14:32.” Display relevant dates and time zones for scheduled coverage.
+- In the local starter, describe a recorded local interaction honestly. Do not say a remote person received a request merely because a tab updated.
+
+## 7. Accessibility and readability
+
+Use Dynamic Type, meaningful VoiceOver labels and reading order, keyboard access, and reduced-motion behavior. Apple documents these in its [accessibility guidance](https://developer.apple.com/design/human-interface-guidelines/accessibility). The current fixed font definitions still need an implementation pass for scaling.
+
+Use WCAG contrast ratios as internal visual targets for the native app: **4.5:1 for text** throughout our UI, and **3:1 for essential non-text control/state indicators** against adjacent colors. Our uniform text target is deliberately simpler than the standard's large-text exception. See W3C's [text contrast](https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html) and [non-text contrast](https://www.w3.org/WAI/WCAG22/Understanding/non-text-contrast.html) guidance.
+
+- Verify text at default, XXXL, and the largest accessibility text size. Grow or rearrange content while keeping the question, recipient, unresolved state, and actions available.
+- Verify VoiceOver order: case context → support/connection state → current work and unresolved items → actions → secondary history. Give controls their name, current value/state, and purpose. Do not announce timer ticks continuously.
+- Verify visible keyboard focus and a complete keyboard path through case selection, confirmation/defer, acknowledgment, and support request/reply. Essential actions must also work with touch.
+- Verify Increase Contrast, Differentiate Without Color, and Reduce Motion. Recheck text and control indicators in pressed, selected, focused, disabled, and warning states.
+- Distinguish decorative separators from essential boundaries. Token names alone are not evidence that a specific foreground/background pair is accessible.
+
+Token calculation on 2026-10-24: `ink` on `bgBase` is 16.38:1 and `inkMuted` is 8.38:1. `slate` on `bgBase` is only 1.59:1; the starter's unrecorded/upcoming icon treatment needs review. These are color-pair measurements, not a full-screen accessibility audit.
+
+## 8. Implementation plan and current gaps
+
+The logo and shared neutral typography/flat-control foundation landed in PRs #9 and #8. Full screen layouts and workflow-state behavior remain starter work. Follow [the ordered UX delivery plan](TASKS.md#ux-delivery-order).
+
+The first implementation slices must resolve adaptive layout, scalable typography and meaningful status contrast, then the explicit support/checklist state prerequisites. Polish the Co-pilot touch journey before expanding maps, camera, AI, or decorative visuals. Planner and Remote Support must support that same fictional journey.
+
+Known gaps include fixed Co-pilot sidebars, unscaled font sizes, 12 pt label text, low-contrast upcoming icons, missing support acceptance/delivery state, missing correction/deferred-item behavior, and clinical-direction sample copy. Track fixes as implementation tasks; do not describe the targets in this guide as already shipped.
+
+## 9. Review evidence for a UI PR
+
+A reviewable UI change includes the relevant screen/state, the action it supports, and what happens after that action. Use the PR template to report actual checks and outstanding gaps.
+
+| Evidence | Required review |
+| --- | --- |
+| Visual | Before/after screenshots for changed screens at a named iPad/window size; include the relevant warning, empty, failure, or disconnected state. |
+| Layout and access | Default and enlarged-text screenshots; check touch targets, contrast, VoiceOver/keyboard access, and Reduce Motion relevant to the change. |
+| Behavior | Exercise the normal path and the changed edge cases. State/model changes get meaningful automated tests; reversible styling changes get visual verification. |
+| Truthfulness | No inferred completion, acceptance, delivery, clinical readiness, or persistence. Pending and unavailable states stay visible. |
+| Integration | Existing local checks and required CI pass. No generated Xcode project, unrelated feature edits, or uncredited assets. |
+
+Before the demo, rehearse one fictional case from coverage disruption through accepted support, a recorded confirmation, a deferred item and acknowledgment, a contextual support exchange, and review. Verify that the deferred item remains unresolved until explicitly changed. Record device, text-size setting, failures, and feedback from the OR staff/device-rep walkthrough. A successful screenshot or unit test is only one part of this review.
