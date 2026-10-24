@@ -10,7 +10,7 @@ Read [PRODUCT.md](PRODUCT.md) before choosing implementation work. Northstar hel
 Priority: one coherent simulated procedure and a reliable support journey before additional procedure types, maps, or visual effects. The items below are implementation work, not claims that these capabilities already exist.
 
 ## Next implementation tasks (one task per branch/PR)
-- [~] (Codex) **Shared design:** establish restrained clinical typography, flat controls, and quiet surfaces in `DesignSystem/`; preserve action sizes and semantic status colors.
+- [x] (Codex) **Shared design:** establish restrained clinical typography, flat controls, and quiet surfaces in `DesignSystem/`; preserve action sizes and semantic status colors (merged in [PR #8](https://github.com/rsheth8/Northstar-OR/pull/8)).
 - [ ] **Shared state:** model support requests with requested / accepted / connected / unavailable states, named recipient, and support role; keep device reps distinct from clinical specialists (`Models/`, `App/AppModel.swift`, `Services/SyncService.swift`; shared-files PR).
 - [ ] **Co-pilot:** distinguish unrecorded, deferred, and team-confirmed items; support corrections and prevent actions from bypassing a pending acknowledgment (`Features/CoPilot/`; separate shared-model PR if needed).
 - [ ] **Co-pilot:** wire voice commands with visible listening state, duplicate-command handling, and touch fallback; require an explicit command rather than inferring completion from conversation (`Features/CoPilot/`, `Services/Voice*`).
@@ -47,7 +47,7 @@ Priority: one coherent simulated procedure and a reliable support journey before
 - [ ] Stream co-pilot log entries to the remote rep view
 
 ## Lane D: Pitch and demo
-- [~] (Codex) Finalize the shooting North Star / rural clinic identity, editable logo masters, and production app assets (`docs/brand/`, app asset catalog).
+- [~] (Codex) Refine the identity for institutional medical software: a restrained connected star/pulse, neutral wordmark, editable masters, and app assets (`docs/brand/`, app asset catalog). Preserve the rural scene as presentation artwork.
 - [x] (Codex) Set up GitHub build/test checks, protected main without mandatory human approvals, PR defaults, and teammate/agent collaboration guide (merged in [PR #3](https://github.com/rsheth8/Northstar-OR/pull/3)); scheduled repo stewardship in the owner’s Codex chat every 15 minutes.
 - [x] (Codex) Document agreed product direction, current implementation limits, and prioritized roadmap (`README.md`, `docs/PRODUCT.md`, `docs/TASKS.md`; merged in [PR #1](https://github.com/rsheth8/Northstar-OR/pull/1))
 - [ ] Slide deck (due Sunday 12:00 PM CT)

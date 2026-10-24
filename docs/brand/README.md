@@ -1,47 +1,45 @@
 # Northstar OR identity
 
-A shooting North Star passes over a rural clinic and one evergreen. Its continuous, tapered wake contains a single medical pulse. A cutout plus identifies the clinic; the curved ground joins the setting into one silhouette. The mark expresses support reaching a rural care team across distance.
+Northstar OR should feel precise, calm, and credible in an institutional medical setting. The primary identity is a connected shooting North Star with one pulse in its tapered trail, paired with a neutral Inter Display wordmark. One cool blue accent gives it recognition; the OR suffix uses muted ink.
 
-The gold star leads, the blue wake supplies motion, and the simple landscape supplies context. Flat shapes, open space, and the outlined Inter Display wordmark keep the identity consistent across the app and presentation.
+The symbol is the same at every size. The rural clinic and evergreen scene is preserved as presentation illustration in `archive/shooting-star-scene-v1/`; the app uses the simpler star/pulse signature.
 
-![Final Northstar OR logo](NorthstarOR-final.png)
+![Northstar OR identity](NorthstarOR-final.png)
 
-## Ready-to-use files
+## Ready-to-use artwork
 
 | File | Use |
 | --- | --- |
-| `mark-color-dark.svg` / `.png` | Transparent full-color emblem on midnight navy |
-| `lockup-horizontal-dark.svg` / `@2x.png` | Full-color logo with the name, for dark surfaces |
-| `lockup-stacked-dark.svg` | Vertical full-color logo with the name |
-| `mark-navy.svg` / `.png`, `lockup-horizontal-light.svg` / `@2x.png`, `lockup-stacked-light.svg` | Single-color artwork for white and light surfaces |
-| `mark-white.svg` / `.png`, `lockup-horizontal-white.svg` | Single-color artwork for dark surfaces |
-| `mark-compact.svg`, `mark-compact-white.svg`, `mark-compact-navy.svg` | Connected star and pulse for small placements |
+| `mark-color-dark.svg` / `.png` | Transparent ice-blue symbol on navy |
+| `lockup-horizontal-dark.svg` / `@2x.png` | Primary horizontal identity |
+| `lockup-stacked-dark.svg` | Vertical identity |
+| `mark-navy.svg` / `.png`, `lockup-horizontal-light.svg` / `@2x.png`, `lockup-stacked-light.svg` | Navy identity for white and light surfaces |
+| `mark-white.svg` / `.png`, `lockup-horizontal-white.svg` | Single-color white identity |
+| `mark-compact*.svg` | Compatibility filenames for the same symbol |
 | `NorthstarOR-AppIcon-1024.svg` / `.png` | Production app icon: square, opaque, 1024 × 1024 |
-| `NorthstarOR-final.svg` / `.png` | Finished presentation artwork with a navy background |
-| `NorthstarOR-logo-board.svg` / `.png` | Color, single-color, and actual-size proof |
+| `NorthstarOR-final.svg` / `.png` | Presentation artwork with a navy background |
+| `NorthstarOR-logo-board.svg` / `.png` | Color, single-color, and small-size proofs |
 
-The SVGs are editable vector masters. All wordmarks contain outlined lettering, so no font installation is needed. The plus is genuinely transparent in the standalone emblems.
+SVGs are editable masters. Wordmark lettering is outlined, so no font installation is needed.
 
-## Use consistently
+## Usage
 
-- Use the full emblem at 64 px high or larger, and the horizontal logo at 320 px wide or larger. For smaller placements, use the compact connected star/pulse, at least 28 px high.
-- The app icon retains the full scene. Its 58 px and 40 px representations are shown on the proof board; the small in-app header uses the compact mark.
-- Leave at least half the star's width as clear space around an emblem. Leave half the wordmark's capital height around a lockup.
-- Keep the supplied proportions, star/trail connection, and word spacing. Use the supplied single-color artwork for light backgrounds.
-- Keep the app icon square and opaque. iPadOS applies the corner mask; the rounded icon on the proof board is a preview.
-- The archived Blender emblem is the earlier exploration from PR #5. Current production artwork is the flat shooting-star identity in this directory.
+- Use the symbol at least 28 px high, and the horizontal signature at least 280 px wide.
+- Keep at least half the star's width as clear space around the symbol. Keep half the wordmark's capital height around a signature.
+- Preserve the star/trail connection, proportions, and word spacing. Use the supplied navy artwork on light backgrounds.
+- Keep the app icon square and opaque; iPadOS applies its corner mask. The proof board includes 58 px and 40 px app-icon examples.
+- Use quiet surfaces, neutral type, and flat controls in the product. Reserve green, amber, and red for actions and meaningful status, paired with labels and icons.
 
-| Role | Color |
+| Identity role | Color |
 | --- | --- |
 | Midnight navy | `#0B1220` |
-| Aurora green | `#3DDC97` |
-| Warm white | `#E8F1F8` |
-| Ice blue | `#7FC4E8` |
-| North Star gold | `#F9D98A` |
+| Main wordmark | `#E8F1F8` |
+| OR suffix | `#9BB0C4` |
+| Connected star/pulse | `#7FC4E8` |
 
-## App integration and regeneration
+## App integration and export
 
-`AppIcon.appiconset` uses the opaque 1024 px PNG. `BrandMark.imageset` uses the compact star/pulse at 3× for the existing 28 pt header. The SwiftUI layout and shared theme are unchanged.
+`AppIcon.appiconset` uses the opaque icon. `BrandMark.imageset` uses the same symbol at 3× for the existing 28 pt header. Shared typography and control styling are maintained in `DesignSystem/NorthstarTheme.swift` in a separate small PR.
 
 On macOS, with Swift command-line tools and Pillow installed:
 
@@ -49,6 +47,6 @@ On macOS, with Swift command-line tools and Pillow installed:
 python3 docs/brand/source/build_brand.py
 ```
 
-`source/build_brand.py` holds the shared geometry and layout. `source/wordmark.svg` preserves the existing Inter Display outlines. `source/render.swift` exports the SVGs through AppKit. The script regenerates the masters, presentation/proof PNGs, and app catalog assets without network access.
+`source/build_brand.py` holds the shared geometry and layout. `source/wordmark.svg` preserves the outlined Inter Display lettering. `source/render.swift` exports through AppKit. Regeneration writes the SVGs, proof/presentation PNGs, and app assets without network access.
 
-Credits: original shooting-star composition and vector production by OpenAI Codex, informed by the team's rural-clinic emblem and OpenAI image-generation concept exploration. Inter Display is used under the SIL Open Font License. AppKit/Swift and Pillow are export tools only.
+Credits: vector composition and production by OpenAI Codex, informed by the team's North Star and medical-trail direction and earlier OpenAI image-generation exploration. Inter Display uses the SIL Open Font License. AppKit/Swift and Pillow are export tools only. Earlier rural illustrations and Blender studies remain in `archive/`.

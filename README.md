@@ -84,6 +84,6 @@ Required by the hackathon rules. Keep this list up to date.
 - GitHub Actions with `actions/checkout` and `actions/upload-artifact` for CI; Dependabot for action updates
 - Inter Display (SIL Open Font License) for the logo wordmark
 - Blender (GPL) and Google Chrome (headless) produced the earlier 3D emblem, preserved in `docs/brand/archive/rural-emblem-v1/`.
-- Final shooting-star identity: OpenAI Codex created the original SVG artwork and export tooling, informed by the team's rural-clinic direction and OpenAI image-generation concept exploration. AppKit/Swift and Pillow export the production PNGs; these are build tools only, with no new app dependency.
+- Institutional shooting-star identity: OpenAI Codex created the connected star/pulse SVG artwork, neutral wordmark composition, and export tooling, informed by the team's direction and earlier OpenAI image-generation exploration. Rural scenes are preserved as presentation illustrations in `docs/brand/archive/`. AppKit/Swift and Pillow export the production PNGs; these are build tools only, with no new app dependency.
 - AI assistance: Claude (Anthropic) helped with brainstorming, the pitch proposal, the brand and logo, and the starter code scaffold. All code was written during the event.
 - AI assistance: OpenAI Codex helped review the starter implementation and document the product direction, implementation status, and task roadmap. No AI runtime or new camera library was added by this documentation update.
