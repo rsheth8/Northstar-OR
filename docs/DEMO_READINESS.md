@@ -77,15 +77,15 @@ Keep one presenter and one device driver where staffing permits. Begin with a pl
 
 | Time | On screen / operator action | Presenter point | Proof to leave visible |
 | --- | --- | --- | --- |
-| 0:00–0:25 | Problem and product loop slide | Travel disruption exposes a coordination/context gap; the app supports repeatable case work | Clear purpose, simulated scope, no invented outcome statistic |
+| 0:00–0:25 | Problem and product loop slide, including the cold-call contrast | Travel disruption exposes a coordination/context gap: a remote rep today must ask which case, where the team is, what is unresolved, what they need and why the rep is remote | Clear purpose, simulated scope, no invented outcome or time-saved statistic |
 | 0:25–1:05 | Workspace settings and contact directory; save a visible administrative edit | A facility configures its workspace and support options through normal controls | Saved configuration and a selectable named technical role |
 | 1:05–1:45 | Planner: create a distinct fictional case from the supported template | This case is created with ordinary fields, not selected from a script-only screen | New case reference, schedule/site/template, useful worklist and validation |
 | 1:45–2:20 | Explain the new case's logistical reason; request configured rep; explicitly accept in rep role | One plan is requested and accepted; backup and reschedule stay distinct | Actual selected role/plan and communication mode |
-| 2:20–3:10 | Start recording, confirm one item, defer a required item, send the question while warning remains, then acknowledge | The app records explicit actions, pins unresolved work and keeps support accessible | Question snapshot; item remains selected/deferred after acknowledgment |
-| 3:10–3:45 | Rep sees question/context, acknowledges and replies; return to Co-pilot | The recipient has the exact question and unresolved context | Explicit question acknowledgment and prominent reply |
-| 3:45–4:15 | Correct a different earlier confirmed item, then open review | Original records, corrections and unresolved work remain distinguishable | Actor/source/time and retained unresolved count |
+| 2:20–3:05 | Start recording, confirm one item, defer a required item, send the question while warning remains, then acknowledge | The app records explicit actions, pins unresolved work and keeps support accessible | Question snapshot; item remains selected/deferred after acknowledgment |
+| 3:05–3:50 | Rep opens the join brief, points to each cold-call answer before asking anything, acknowledges the question and replies; return to Co-pilot | “I haven't asked the team anything yet”: the brief already shows the question, case, unresolved work, recorded progress and why support is remote | Join brief from the request snapshot, separate acceptance and question acknowledgment, prominent reply |
+| 3:50–4:15 | Correct a different earlier confirmed item, then open review | Original records, corrections and unresolved work remain distinguishable | Actor/source/time and retained unresolved count |
 | 4:15–4:40 | Show another saved case, explicitly resume the new case and relaunch/resume if rehearsed within this window | The product retains distinct records beyond a single run | Correct case/session and persisted record/draft; no automatic sample reset |
-| 4:40–5:00 | Evidence/status and closing slide | State the implemented setup/storage/communication scope and the next fictional user evaluation | Tested capabilities and unfinished institutional deployment work described accurately |
+| 4:40–5:00 | Evidence/status and closing slide | State the implemented setup/storage/communication scope and the next evaluation: ask field reps what they need in the first 30 seconds of a remote join | Tested capabilities and unfinished institutional deployment work described accurately |
 
 These windows total 300 seconds. Rehearse the chosen values for pacing, but the app cannot require those values or this sequence. The operator triggers the deferral. Invite a judge to choose a fictional case name or support option only if the format permits and timing is rehearsed; independent variation tests are required regardless.
 
@@ -99,12 +99,12 @@ This is a proposed six-slide outline, not a claim that a deck has been built or 
 
 | Slide | Purpose | Required content / constraint |
 | --- | --- | --- |
-| 1. Problem | Establish the user's coordination difficulty | One fictional site, a travel disruption, and the consequence of missing shared context. Avoid invented market/outcome statistics |
+| 1. Problem | Establish the user's coordination difficulty | One fictional site, a travel disruption, and the five questions a remote rep must ask on a cold call. Avoid invented market/outcome statistics |
 | 2. Product loop | Orient the audience before the live product | Setup → create case → Planner → Co-pilot → support → retained review; explain Connect & Intersect through actual work |
 | 3. Product setup / standby | Transition into normal app controls; remain available as fallback | Configured fictional workspace and normal case creation; label any backup recording clearly |
 | 4. What connects it | Explain the implemented mechanism in plain language | Shared session, explicit actions, context snapshot and actual communication mode. An architecture illustration must match the build |
 | 5. Evidence and limits | Make the demonstrated scope credible | Device/build, rehearsal result, meaningful failure check, simulated-data boundary, tested vs planned features. Populate only after F19 |
-| 6. Next step and credits | Close with a specific continuation | Fictional walkthrough with OR staff/device reps, one learning goal, team names and required tool/library/asset credits |
+| 6. Next step and credits | Close with a specific continuation | Fictional walkthrough with OR staff/device reps, the learning goal “what does a rep need in the first 30 seconds of a remote join?”, team names and required tool/library/asset credits |
 
 Spend most of the presentation on the live journey. There is no requirement to read every slide or explain implementation details while an operator is taking an action. Optional camera/AI belongs on the future-work area unless its own tested slice is included in the actual build.
 
