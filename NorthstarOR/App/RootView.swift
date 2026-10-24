@@ -2,17 +2,21 @@ import SwiftUI
 
 struct RootView: View {
     var body: some View {
-        TabView {
-            CoPilotView()
-                .tabItem { Label("Co-pilot", systemImage: "waveform.path.ecg") }
-            PlannerView()
-                .tabItem { Label("Planner", systemImage: "map") }
-            RemoteSupportView()
-                .tabItem { Label("Remote Support", systemImage: "person.wave.2") }
+        VStack(spacing: 0) {
+            NorthstarWorkspaceHeader()
+            TabView {
+                CoPilotView()
+                    .tabItem { Label("Co-pilot", systemImage: "list.bullet.rectangle") }
+                PlannerView()
+                    .tabItem { Label("Planner", systemImage: "calendar") }
+                RemoteSupportView()
+                    .tabItem { Label("Remote Support", systemImage: "headphones") }
+            }
         }
+        .background(Northstar.Palette.bgBase)
     }
 }
 
 #Preview {
-    RootView().environment(AppModel()).preferredColorScheme(.dark)
+    RootView().environment(AppModel()).preferredColorScheme(.light)
 }
