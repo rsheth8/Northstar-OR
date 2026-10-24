@@ -1,0 +1,457 @@
+# Northstar OR: product implementation plan
+
+Planning baseline: `main` at `ff639ed`, inspected on **2026-10-24**. This is an implementation blueprint, not a claim that pending features are shipped. Recheck the task board and open PRs before claiming a slice; estimates and priorities must change when the baseline changes.
+
+The product scope stays in [PRODUCT.md](PRODUCT.md), visual and interaction rules in [DESIGN.md](DESIGN.md), and ownership/completion in [TASKS.md](TASKS.md). This document supplies the implementation detail behind those documents. Proposed names below describe contracts; adapt them to the existing code rather than introducing an architecture rewrite.
+
+## 1. The outcome we are building toward
+
+Northstar OR is a shared coordination workspace for a fictional rural OR team and a technical device-support representative. Its central promise is: **the team can see who is supporting the case, record what people explicitly confirmed, ask for help with useful context, and review what remains unresolved.**
+
+The primary product is the connected journey across three destinations. A polished isolated dashboard, an attractive voice visualization, or an AI chat window does not demonstrate that journey.
+
+| User | Job | Evidence that the product helped |
+| --- | --- | --- |
+| Coordinator | Understand disrupted coverage and arrange a named support resource | Can explain the logistical constraint, request an appropriate role, and distinguish an available option from an accepted arrangement |
+| OR team member | Record team-reported progress and request technical help without losing context | Can confirm, defer, correct, and ask a question; unresolved work remains visible |
+| Technical device representative | Join with the actual question and respond with context | Sees the question, snapshot time, unresolved items, and recent events; can acknowledge and reply |
+| Session reviewer | Understand what was recorded and by whom | Can distinguish original records, corrections, outstanding items, support exchanges, and information sources |
+
+There are three different delivery targets:
+
+1. **Hackathon demonstration:** one coherent simulated case, reliable touch interactions, explicit support acceptance and acknowledgment, restrained adaptive UI, honest local/transport labels, and a reviewable in-memory record.
+2. **Evaluable product prototype:** repeatable multi-device exchanges, recovery, bounded persistence, usability evidence, and well-defined ownership of the record. Still simulated data.
+3. **Candidate for institutional evaluation:** a separately scoped program with workflow partners, security and privacy owners, content governance, operational support, and formal entry criteria. Visual polish and passing CI do not establish this status.
+
+The full blueprint is larger than the remaining hackathon. Deliver target 1 first; use targets 2 and 3 as an ordered continuation, rather than promising every feature by Sunday.
+
+## 2. Verified starting point and highest-priority gaps
+
+The starter has SwiftUI tabs, shared in-memory state, a deterministic matcher interface with an injectable time argument, touch progress controls, speech output, a voice parser/service, and six existing unit tests. The approved identity and restrained shared styling are merged. No open PR was present when this plan was started.
+
+| Area and current source | What exists | Gap the implementation must resolve |
+| --- | --- | --- |
+| [Theme](../NorthstarOR/DesignSystem/NorthstarTheme.swift) | Tokens, neutral fixed-size fonts, flat primary button | Dynamic Type scaling, 13 pt supporting-label baseline, meaningful status contrast, disabled/focus/secondary controls |
+| [RootView](../NorthstarOR/App/RootView.swift) and [project.yml](../project.yml) | Three tabs and declared landscape iPad orientations | Verify actual viewport/letterboxing on the target device; define adaptive shared context and case selection |
+| [Models](../NorthstarOR/Models/Models.swift) | Procedures, reps, four step states, text log entries | Selection is mixed with completion status; no session-scoped support arrangement, question, receipt, correction, or source contract |
+| [CoPilotSession](../NorthstarOR/Features/CoPilot/CoPilotSession.swift) | Complete, skip, acknowledge, sequential advance, in-memory log | Mutating methods do not guard pending acknowledgment; repeated completion can advance multiple items; no correction or arbitrary selection |
+| [CoPilotView](../NorthstarOR/Features/CoPilot/CoPilotView.swift) | Fixed 300/320 pt sidebars, current task, recent log | Adaptive layout, persistent unresolved summary, correction and request actions; replace full-screen warning border and ambiguous completion copy |
+| [CoverageMatcher](../NorthstarOR/Features/Planner/CoverageMatcher.swift) | Skill/travel/closure rules, reasons, ranked options | Remote options ignore `isAvailable`; some reasons attribute lack of coverage to roads even when that is not the cause; automatic “Reschedule” wording needs a coordination-only replacement |
+| [Planner](../NorthstarOR/Features/Planner/PlannerView.swift) | Case list, reasons, ranked text options, reduced-support flag | No explicit choice/request/acceptance flow, preparation state, or coordinated active-session switch |
+| [ContextPackage](../NorthstarOR/Features/RemoteSupport/ContextPackage.swift) | Current step, skipped items, recent log | No actual question, recipient/role, session ID, snapshot version, or deliberately shared evidence; escalation is tied to deviations |
+| [Remote Support](../NorthstarOR/Features/RemoteSupport/RemoteSupportView.swift) | Hard-coded sender and quick prompts, local message send | Explicit request and acknowledgment, role identity, conversation, retained draft on failure; remove clinical-direction quick prompts |
+| [SyncService](../NorthstarOR/Services/SyncService.swift) and [AppModel](../NorthstarOR/App/AppModel.swift) | Void sends and same-process subscriptions; two event types applied to active session | No cross-device transport, receipt evidence, duplicate/replay protection, recovery protocol, or explicit UI-isolation contract |
+| [Voice service](../NorthstarOR/Services/VoiceCommandService.swift) | Permissions, recognition, substring parser | Not wired to UI; negated or incidental phrases can match; partial results can repeat; on-device support is conditional |
+| [SampleData](../NorthstarOR/Data/SampleData.swift) | Fictional people/sites, relative schedules, implant checklist | Clinical-direction copy and reused implant steps for ICD; make one coherent reviewed fictional scenario and resettable test clock |
+
+These are source-review findings, not a fresh device or accessibility audit. The existing tests do not establish delivery reliability, voice accuracy, interaction quality, or clinical suitability.
+
+## 3. Scope and the complete demonstration journey
+
+### Required core
+
+- One fictional pacemaker coordination scenario, with a stable scenario clock and reset action.
+- Named technical-support role, explicit arrangement request and acceptance, and separately displayed connection mode.
+- Team-reported item confirmation, deferral, acknowledgment, and correction through touch.
+- Support requested at any time with the team's question and a timestamped context snapshot.
+- Recipient acknowledgment and a technical-support reply surfaced in Co-pilot.
+- Review of unresolved items, confirmations, corrections, and support exchanges.
+- Readable, adaptive layouts using the approved brand and design guide.
+- A clearly labeled local demonstration if cross-device transport has not passed its gate.
+
+### Conditional additions after the core passes
+
+Voice, separate-device transport, durable recovery, a narrow mock-label camera observation, and session-grounded AI drafts each have their own acceptance gate. Add them individually. Maps, live weather, broad procedure coverage, video calls, EHR integration, and automated interpretation of surgical activity are outside the required demonstration.
+
+### Script and expected record
+
+| Moment | User action and visible result | Record or state that must exist |
+| --- | --- | --- |
+| 1. Coverage disruption | Coordinator opens the Grand Marais fictional case; sees 110-minute travel and road closure in 90 minutes | Simulated forecast/time label, logistical risk reasons, no assertion about whether the case can proceed |
+| 2. Arrange support | Coordinator chooses a named technical rep and requests remote support | Arrangement is requested; remote capability is not acceptance |
+| 3. Accept | Rep explicitly accepts in the support view | Accepted actor/time; connection mode shown separately; in one process, role switching remains labeled as a demo |
+| 4. Record progress | Team records a confirmation and deliberately defers a required fictional item | Explicit action source/time, deferred state, required acknowledgment |
+| 5. Acknowledge | Team acknowledges the alert | Alert gate clears; the deferred item and unresolved count remain |
+| 6. Ask a question | Team asks “Which fictional model reference should we use for this mock label?” | Exact question, recipient, session/case IDs, snapshot time/version, unresolved items, relevant recent events |
+| 7. Respond | Rep acknowledges and replies with a fictional technical reference | Recipient acknowledgment and reply are separate events; Co-pilot shows the new reply prominently |
+| 8. Correct and review | Team corrects a previously recorded item, then opens review | Original event remains; correction identifies its target; review still shows any unresolved item |
+
+A separate failure rehearsal disconnects the transport or injects a send failure. The app must preserve the question, show the actual failure or pending state, and avoid claiming delivery. This failure rehearsal is required even if the presentation uses the happy path.
+
+## 4. Shared state contracts to settle before feature UI
+
+### 4.1 Case, session, actors, and time
+
+- Keep `Procedure.id` as the fictional scheduled case identifier. Add a unique **session ID** per run; case ID alone cannot isolate a reset or a second run of the same procedure.
+- Keep `selectedCaseID` for Planner browsing separate from `activeSession`. Browsing a case must not replace an in-progress session. Starting or changing the active session is explicit and preserves or deliberately discards unsent drafts with a clear choice.
+- Use stable IDs for participants and their stated role. Device-rep technical support and clinical specialist support are different roles. Demo role selection is simulated identity, not authentication or credential verification.
+- Store absolute timestamps and format the relevant date/time zone for coverage. Inject the clock for fixtures and rules. A relative forecast needs an `asOf` time so “90 minutes” does not restart on every refresh.
+- Show a session version or last-updated time where stale context matters. Do not derive causal ordering from two devices' wall clocks.
+
+### 4.2 Checklist and acknowledgment
+
+Proposed domain shape: item status is `unrecorded`, `deferred`, or `teamConfirmed`; `selectedItemID` is independent. Keep a separate acknowledgment record linked to the deferral event/item.
+
+| Action | Preconditions | Result and invariant |
+| --- | --- | --- |
+| Select item | Item belongs to active session | Changes selection only; no completion, no implicit confirmation |
+| Record confirmation | Known target item and current session; no blocking acknowledgment; intent has not already applied | Target becomes team-confirmed and exactly one event is appended |
+| Defer item | Known target; no blocking acknowledgment; explicit user intent | Item becomes deferred; required acknowledgment is created when applicable; no automatic completion |
+| Acknowledge | References the currently pending acknowledgment ID | Records that the warning was seen; leaves the underlying item deferred |
+| Correct record | Names the original event/item and new recorded state | Appends a correction with actor/source/time and reason where supplied; original record remains visible |
+| Request support | Nonempty question and chosen recipient/role | Allowed with zero deviations and while an acknowledgment is pending |
+| Open review | Active session exists | Shows the record and unresolved work; never certifies the procedure |
+
+Choose a narrow gate: block ordinary confirmation/defer mutations while acknowledgment is pending, across touch, voice, keyboard, and remote commands. Keep support, navigation, review, and an explicit correction path available. A correction that invalidates the triggering deferral supersedes its gate through a logged transition; it must not silently acknowledge it.
+
+Every checklist mutation carries a stable intent ID, session ID, target item ID, and expected relevant state/version. Disable buttons while applying an action, but enforce the rule in the domain layer too. Duplicate callbacks are no-ops. A stale voice or touch intent must be rejected or reviewed against its original target rather than applied to the next item. Deliberately taking the same action on another item remains possible with a new intent.
+
+“Checklist complete” requires all items in the displayed checklist to be team-confirmed, with no deferred or unrecorded items. If the team has merely browsed all items, use “Review session” and display unresolved counts. Completion never describes clinical readiness or outcome.
+
+### 4.3 Coverage arrangement is different from a question
+
+Create two concepts:
+
+1. **Support arrangement:** who has been asked to cover the session, in what role and mode, and whether they accepted.
+2. **Support request:** a specific question/context exchange during that arrangement, with its own acknowledgment and messages.
+
+Do not overload one `reducedSupport: Bool` to represent all of this. It may remain temporarily as a compatibility projection during migration, but it must not create acceptance.
+
+| Domain | Minimum state / fields | Important transition |
+| --- | --- | --- |
+| Arrangement | ID, session, requested recipient/role, mode, requested/accepted/unavailable, timestamps | Only an explicit recipient action produces acceptance; declining/unavailable retains a visible outcome |
+| Question request | ID, session, author/recipient, actual question, snapshot, open/acknowledged, timestamps | Acknowledging this question does not confirm any checklist item or resolve the question automatically |
+| Connection | Local demo / connecting / connected / reconnecting / disconnected, peer and last contact | Acceptance survives a disconnect; current connectivity does not |
+| Message | ID, request/session, sender/recipient, body, local/send/receipt state | Sender submission, receiver receipt, and human acknowledgment are different facts |
+
+The UI may display “not requested” when no arrangement exists. “Connected” is derived from a live connection plus the appropriate participant, rather than replacing the arrangement's accepted state. Start with one accepted technical recipient per session; reassignment creates an explicit new arrangement and preserves prior history. Multi-party clinical coverage is later scope.
+
+### 4.4 Context, event history, and receipt evidence
+
+Extend `ContextPackage` into a **request-time snapshot** with session/case IDs, question, named recipient/role, selected item, all unresolved items, recent relevant events, capture time, and source version. Keep the original snapshot stable after sending. Later changes appear as labeled newer activity or a deliberate refreshed snapshot.
+
+Use structured events for state changes; render human-readable `LogEntry` text from them or attach structured metadata during a staged migration. Required metadata: event ID, intent ID when applicable, session/case ID, event kind, entity/target ID, actor ID/role, input source, occurrence time, and accepted session sequence/version. Correction events reference the prior event. Avoid building two independent sources of truth for the same status.
+
+The first implementation can remain in-memory. Append-only history here means the application preserves prior records in its UI/state; it does not mean immutable, durable, or tamper-evident storage.
+
+For cross-device delivery, add a versioned event envelope and per-recipient receipt tracking. A message can be labeled delivered only after the receiving application has applied it and returned its ID. Human acknowledgment is another explicit event. On reconnect, compare session/version and request a snapshot or missing events; discard duplicates and reject incompatible sessions/schema versions visibly. Reset starts a new session ID, preventing late events from reviving an old run.
+
+## 5. Architecture and migration approach
+
+Retain SwiftUI, Observation, the pure matcher, and the existing `SyncService` boundary. No new framework or runtime provider is selected by this document.
+
+```mermaid
+flowchart LR
+    UI[Co-pilot / Planner / Remote Support] --> Commands[Validated session commands]
+    Commands --> Model[AppModel and session state]
+    Model --> Events[Structured events and review projections]
+    Model --> Sync[SyncService boundary]
+    Sync <--> Transport[Local or selected device transport]
+    Voice[Explicit voice input] --> Commands
+    Optional[Future camera observations / AI drafts] --> Review[Human review]
+    Review --> Commands
+```
+
+- Keep mutable presentation/session state on the main actor. Transport callbacks arrive through one controlled hop before modifying observable state. Test this boundary when adding asynchronous delivery.
+- Views invoke domain actions, rather than writing statuses or interpreting network callbacks. Touch, voice, and keyboard share those actions and their preconditions.
+- Keep `CoverageMatcher` pure. Inject time, scenario inputs, and rule parameters; return reasons with the actual constraint, rather than a generic road-closure explanation.
+- Grow `AppModel` only with shared coordination responsibilities. Keep checklist transitions in `CoPilotSession`; extract a small support-state type when needed rather than moving all feature logic into `AppModel`.
+- Evolve `SyncService.send` to provide an asynchronous submission outcome and observable connection/receipt events. Preserve a local implementation and an injectable failure/duplicate/reorder test implementation.
+- Choose one authority for each domain in the first multi-device prototype: OR host owns checklist/session sequence; the selected recipient owns its acceptance, acknowledgment, and reply intents. The host validates and applies those intents. Do not let two devices independently overwrite checklist dictionaries.
+- A server implementation can later own sequencing. Automatic host election, multi-writer offline merge, and seamless failover are outside the initial prototype. On host loss, show disconnected and limit remote mutations until explicit reconnection/recovery.
+- Migrate in compiling slices: introduce contracts and compatibility adapters; move one domain action at a time; update tests and consumers; remove obsolete `StepStatus.current`/`skipped`, text-only routing, and boolean shortcuts once no consumer relies on them.
+
+Proposed placement: shared identities/events in `Models/`; orchestration in `App/AppModel.swift`; checklist transitions in `Features/CoPilot/`; support views/context in `Features/RemoteSupport/`; transport/voice/persistence implementations in `Services/`; fixtures in `Data/`; reusable UI in `DesignSystem/`. Shared changes get their own PR before dependent screens.
+
+## 6. Screen-level implementation specification
+
+### 6.1 Shared shell and components
+
+The shell consistently identifies the active fictional case, facility, unresolved count, support role/state, and actual communication mode. Keep the logo modest. Planner's browsed selection remains separate from this active-session context.
+
+Build only components needed by at least one immediate screen: status label, persistent attention banner, primary/secondary action, section heading, empty/error state, and readable event row. A reusable case header can follow after the shell/feature boundary is clear. Do not create a large unused component library.
+
+Use semantic/scalable fonts, 13 pt minimum default metadata, existing spacing/radii, and verified foreground/background pairs. Default primary hit areas are at least 72 pt high and wide; other targets 44 × 44 pt with 8 pt separation. Disabled and focused states must remain legible and discoverable. See DESIGN.md for exact contrast and accessibility evidence.
+
+Verify landscape presentation with the actual generated project and installed iPad runtime before changing settings. Inspect the generated Info.plist and scene/launch configuration if letterboxing persists. Change `project.yml` only for a demonstrated cause; do not commit the generated project or disable resizing to hide a layout problem.
+
+### 6.2 Co-pilot
+
+**Hierarchy:** case/support context → persistent unresolved/acknowledgment banner → current selected item → actions → secondary progress/history.
+
+- Wide layout: progress list, dominant work area, recent activity. Use three regions only while the work area can remain at least 360 pt wide.
+- Narrower windows or large text: move history to a labeled sheet/detail or stack it, preserving current actions and support access. Rows wrap and scroll; text never shrinks to conceal overflow.
+- Progress rows are selectable and show recorded status with icon/text. Selection uses the informational accent, separate from confirmation green.
+- Main actions: “Record confirmation” and “Defer item.” Provide a secondary correction action on recorded items and always-available “Request support.” Bind each action to the displayed item's ID and state version.
+- Required deferral: show a named persistent banner with “Acknowledge.” Speak once for the new event when audio is enabled; remove the decorative full-screen border. Acknowledgment changes the gate, not the deferred item.
+- New support reply: show sender/role, excerpt, and “View reply.” Do not steal text-entry focus or automatically scroll someone away from older activity. Unread state means locally unviewed, not a claim that the sender knows it was read.
+- Review entry remains available; show a factual unresolved count. Timer is secondary and does not produce repeated VoiceOver announcements.
+
+**Acceptance:** confirmation/defer/ack/correction/request are possible by touch at default and enlarged text; a pending gate blocks state mutations from every input; deferred state survives acknowledgment/tab changes; reply is visible without opening a different tab first.
+
+### 6.3 Planner
+
+**Hierarchy:** case list and labeled coverage risk → selected case → constraint reasons → named options and outstanding preparations → arrangement action/state.
+
+- Case rows show fictional facility/town, schedule/time zone, device family, and icon/text coverage risk. An empty selection explains what to choose.
+- Explain options with skill compatibility, simulated availability, travel/setup window, closure window, and remote capability. Show missing/unknown inputs explicitly. Avoid an opaque “score” unless an actual scoring function is implemented and explained.
+- Filter unavailable reps from immediately actionable options or display them in a clearly unavailable group. Never offer an unavailable remote rep as an available default.
+- Replace automatic “Reschedule” advice with a coordination state such as “No available support option — coordinator review needed.” Humans decide scheduling; preserve the matcher’s logistical explanation.
+- Selecting an option opens its details. “Request support arrangement” creates a request; the result says “Awaiting acceptance.” Only the recipient can produce acceptance in the demo role flow.
+- Readiness items are logistical preparations with explicit recorded/unrecorded state and provenance; do not summarize them as “safe to proceed.” Derive them from agreed fixture content, not AI instructions.
+- A selected non-active case cannot mutate the current session by accident. Starting it is explicit; display both contexts clearly if browsing while a session is active.
+
+**Acceptance:** high-risk scenario reasons are reproducible; availability is distinct from capability and acceptance; missing drive/forecast/qualification inputs do not create false certainty; browsing another case leaves Co-pilot untouched.
+
+### 6.4 Request composer and Remote Support
+
+**Composer:** recipient and technical role → team's question → context preview and snapshot time → explicit send.
+
+- Requesting help never requires a skipped/deferred item. Allow it while an acknowledgment banner is present.
+- Validate whitespace-only text and missing recipient locally. Show the actual question in the receiving view.
+- Preserve a draft across tab changes, sheet dismissal, keyboard changes, and a failed attempt; deliberate discard is explicit. Durable draft recovery after app termination belongs to the persistence slice.
+- Context preview includes unresolved items, selected item, and bounded recent activity. Future attachments require deliberate selection; camera access does not automatically share a stream or image.
+- The support view presents arrangement invitations separately from question requests. “Accept support arrangement” and “Acknowledge question” have different effects.
+- Conversation shows sender/role, timestamp, send/receipt state, and retry where supported. Bind retry to the same message ID to avoid a second logical request.
+- Use a text reply or coordination-only quick replies such as “Request received; reviewing the shared context.” Remove prompts that direct surgery or imply permission to continue.
+- Keyboard-safe entry and a visible send action are required. Keep connection loss and unavailable recipients visible without clearing the conversation.
+
+**Acceptance:** zero-deviation request succeeds locally; the recipient acknowledges the exact request; a reply appears prominently in Co-pilot; failures retain text/context; no “delivered” or “acknowledged” label exists without corresponding evidence.
+
+### 6.5 Session review
+
+Place review within the current session, initially as a sheet or detail view; do not add a fourth main tab. Present session identity and communication mode first, unresolved items next, then confirmations/corrections and support exchanges with actor/source/time.
+
+Offer a chronological record and a compact grouped summary from the same events. Show original and corrected records together. Distinguish a human confirmation, a received message, and any future automated observation. An in-memory review labels its retention limits honestly. Export, sign-off, EHR write-back, and legally authoritative records are separate decisions.
+
+**Acceptance:** counts match domain state; corrected records retain history; acknowledged deferrals remain unresolved; ending navigation does not imply that the clinical procedure ended.
+
+## 7. Implementation backlog: small, dependency-sized PRs
+
+The IDs below identify planned slices, not claims or GitHub issues. Claim the corresponding task in TASKS.md before work. A row that grows beyond a focused review should be split, keeping the same outcome and dependencies. Do not combine shared interfaces with every dependent screen in one PR.
+
+Priority **P0** means necessary for the coherent touch demonstration. **P1** strengthens the prototype after that path works. **P2** is an optional extension. Lane labels indicate folder ownership; they do not authorize spawning more agents.
+
+| ID | Priority / owner | Branch suggestion | Depends on | Concrete deliverable |
+| --- | --- | --- | --- | --- |
+| F01 | P0 / shared design | `pitch/accessible-components` | Current main | Scalable typography, readable status treatment, accessible action/banner primitives |
+| F02 | P0 / shared app shell | `pitch/adaptive-app-shell` | Current main; F01 for final visuals | Diagnose viewport, adaptive shell, stable navigation and active-case presentation |
+| F03 | P0 / shared data + coordinated copy | `pitch/coherent-demo-fixture` | Current main | One resettable fictional scenario, corrected non-directive copy, unsupported ICD example excluded from active demo |
+| F04 | P0 / shared contracts | `sync/session-event-contracts` | F03 agreement | Session/actor/source IDs, structured events/intents, independent item/selection and acknowledgment types |
+| F05 | P0 / Co-pilot state | `copilot/explicit-recording-state` | F04 | Guarded confirmation/defer/acknowledgment/correction with idempotence and target validation |
+| F06 | P0 / shared support contracts | `sync/support-state-contracts` | F04 | Arrangement, question, immutable context snapshot, message and receipt identities |
+| F07 | P0 / shared orchestration | `sync/local-support-journey` | F05, F06 | Local arrangement/request/ack/reply flow, main-actor routing, case/session isolation and injectable failures |
+| F08 | P0 / Planner matcher | `planner/explainable-coverage` | F03 | Availability handling, truthful constraint reasons, coordinator-review fallback and boundary tests |
+| F09 | P0 / Co-pilot layout | `copilot/adaptive-workspace` | F01, F02, F05 | Responsive progress/work/activity hierarchy, explicit actions and persistent unresolved display |
+| F10 | P0 / Co-pilot interaction | `copilot/recording-and-corrections` | F09 | Reviewable confirmation/defer/ack/correction interactions; focused behavior/visual verification |
+| F11 | P0 / Planner UI | `planner/support-arrangements` | F01, F06, F07, F08 | Reasons/options/detail, explicit arrangement request, actual acceptance and preparation state |
+| F12 | P0 / Remote Support | `planner/contextual-support-exchange` | F01, F07 | Request composer, arrangement acceptance, question acknowledgment, reply and retained failure draft |
+| F13 | P0 / Co-pilot integration | `copilot/support-reply-and-request` | F10, F12 | Always-available request entry, contextual banner, recipient/role and prominent incoming reply |
+| F14 | P0 / review | `copilot/session-review` | F05, F07, F13 | In-memory unresolved-first review with corrections, sources, and support history |
+| F15 | P1 / sync spike | `sync/transport-proof` | F06, F07; devices chosen | Time-boxed real-device proof and decision record; no production delivery claim |
+| F16 | P1 / sync implementation | `sync/device-receipts-and-recovery` | F15 passes | Selected transport, connection state, application receipts, deduplication, reconnect and stale-session rejection |
+| F17 | P1 / Co-pilot + voice | `copilot/explicit-voice-commands` | F05, F10 | Bounded parser, listening state, explicit permissions/capability, one command application, touch fallback |
+| F18 | P1 / services + shared state | `sync/session-recovery` | F04–F07, F14; retention decision | Bounded durable prototype record/drafts, schema version, corruption/reset/relaunch behavior |
+| F19 | P0 / integration and workflow feedback | `pitch/core-journey-verification` | F11–F14; include P1 only if passing | Named-device/accessibility/failure evidence, fictional walkthrough feedback, issue list with severity |
+| F20 | P0 / pitch | `pitch/demo-submission` | F19; can draft earlier | Three-minute script, accurate slides/credits, backup recording, submission-ready repo |
+| F21 | P2 / shared observation contract | `sync/observation-review-contract` | Stable core, F04 | Evidence/source/review states for optional observations, no automatic checklist mutation |
+| F22 | P2 / camera | `copilot/mock-label-observation` | F21; explicit mock dataset | Single captured label, extracted text, proposed comparison, human confirm/correct and unknown state |
+| F23 | P2 / AI | `sync/reviewable-handoff-draft` | Stable review/events; provider decision | Grounded summary/draft service through SyncService, evidence links, review-before-share and unavailable state |
+
+### Foundation PR review criteria: F01–F04
+
+- **F01:** show reusable components at default, XXXL, and largest accessibility text; measure relevant contrast pairs including essential icon/boundary states. Demonstrate touch/keyboard focus and Reduce Motion. Do not add tests that merely assert token literals.
+- **F02:** record actual device/runtime/window dimensions, investigate the letterbox cause, and verify safe areas, tab navigation, narrowed window, and keyboard. Any project setting change must name the observed cause. Coordinate case/role fields with F04/F06 instead of inventing parallel booleans.
+- **F03:** keep every fictional record under Data; use an injected scenario start and `asOf` times. Rehearsal reset recreates the same offsets and a new session ID. Review each prompt for recording/coordination language, and remove unsupported procedure claims rather than pretending implant steps cover generator replacement.
+- **F04:** encode/decode the shared event/intent envelope, verify stable identities and source labels, and keep existing consumers compiling through a small adapter. Declare supported schema version and invalid-input handling. Avoid a broad persisted-data migration before persistence exists.
+
+### State and orchestration review criteria: F05–F08
+
+- **F05:** prove that acknowledgment does not resolve a deferred item; duplicate or stale intents cannot advance another item; corrections preserve original history; selection alone changes no recorded status. Tests call domain methods directly, not only disabled UI buttons.
+- **F06:** demonstrate that arrangement acceptance, transport connection, question acknowledgment, and checklist confirmation are independently representable. Snapshot the exact question and unresolved items; serializing it must not depend on live view references.
+- **F07:** route all local support actions through validated application commands and SyncService where they cross feature/device boundaries. Reject wrong-session events, avoid subscription retain cycles, retain drafts until a successful local submission, and support deterministic failure/duplicate tests. Mark local interactions as local.
+- **F08:** cover unavailable remote reps, no qualified rep, missing drive time, absent forecast, setup/closure equality, past schedule, and tied options with stable ordering. Choose and document boundary policy. Assert reasons identify the actual failed constraint and risk remains logistical. No opaque numeric score is required.
+
+### Screen and integration review criteria: F09–F14
+
+- **F09/F10:** verify the displayed target remains the command target, primary actions survive larger text, a deferred item remains available for correction, and pending acknowledgment cannot be bypassed by alternate input. Keep evidence of warning and review states.
+- **F11:** demonstrate two different browsed/active cases without cross-contamination, no-result and unavailable options, request pending, and accepted arrangement. All logistical preparations must come from explicit fixture/recorded state.
+- **F12:** exercise a request with no deferred items, acknowledgment, one reply, failure/retry with the same message ID, keyboard occlusion, and draft preservation. Acceptance must not accidentally acknowledge the question. Remove hard-coded sender identity from the send path; use the simulated selected role.
+- **F13:** support request remains accessible during a required acknowledgment; incoming reply shows the correct sender/session and does not change checklist state. A reply arriving while the team reviews history must not destroy their position or draft.
+- **F14:** compare review totals to domain state; verify deferral plus acknowledgment, later correction, and unanswered question. Explicitly state in-memory retention until F18 lands.
+
+### Optional capability gates: F15–F18, F21–F23
+
+- **F15:** two chosen physical devices exchange one session-scoped request and explicit application receipt, then disconnect and reconnect. Record permission/network/background behavior and SDK/deployment compatibility. Stop the spike after about 60–90 minutes if there is no reliable path; retain the labeled local demo.
+- **F16:** the recipient applies an event at most once; receipt/ack labels are evidence-based; delayed events from a reset session are rejected; schema mismatch and host loss are visible; reconnect updates from a canonical snapshot or missing sequence range. Background/resume is part of the test, not an assumed guarantee.
+- **F17:** use deliberately bounded command phrases such as “Northstar, record confirmation,” “Northstar, defer item,” and “Northstar, acknowledge warning.” Process a finalized command or explicit push-to-talk result, reject negation/extra ambiguous speech, and deduplicate recognition sessions. Test “do not complete,” incidental “next,” partial repeats, stale target, denied permission, unavailable recognition, audio interruption, and spoken-alert feedback. Avoid self-triggering from text-to-speech.
+- **F18:** agree what survives termination before writing storage. A proposed prototype scope is one simulated session, pending drafts, message IDs, and receipts; version the format, write atomically, surface corrupt/unsupported records, and make reset/delete explicit. Test relaunch mid-draft and mid-send. Restore pending sends as needing reconciliation, not as delivered. This is prototype recovery, not an institutional audit record.
+- **F21:** represent a captured observation, proposed comparison, and human confirm/correct/reject action separately. Keep an unknown outcome and evidence/source/time; round-trip the contract without marking an item confirmed. Sharing an observation requires an explicit request/message action.
+- **F22:** evaluate independently labeled mock examples for readable/correct, readable/mismatch, blurred/unreadable, and absent label. Show the image, extracted text, comparison basis, and uncertainty. Record human correction separately. No clinical suitability/sterility/placement inference and no automatic completion. If extraction is not reliable, display “Unable to determine.”
+- **F23:** restrict initial questions to unresolved confirmations, changes since a given event, and a handoff draft. Provide structured session evidence, preserve unknowns, identify supporting event IDs, and review before send. Model output has no direct access to mutation commands. Evaluate omitted deferrals, invented confirmations, injected instructions in message text, timeout, and provider failure. Select/credit a provider and define data sent before implementation.
+
+## 8. Critical path, working order, and schedule
+
+The path is **contracts → guarded local state → connected touch journey → evidence → presentation**. Typography, viewport diagnosis, fixture cleanup, and matcher fixes can begin independently in separate checkouts. Feature UI must wait for the state it displays.
+
+```mermaid
+flowchart TD
+    A[F01 shared UI and F02 viewport] --> H[F09-F10 Co-pilot touch]
+    B[F03 coherent fictional fixture] --> C[F04 session and event contracts]
+    C --> D[F05 checklist transitions]
+    C --> E[F06 support contracts]
+    D --> F[F07 local orchestration]
+    E --> F
+    B --> G[F08 matcher]
+    D --> H
+    F --> I[F11 Planner and F12 support exchange]
+    G --> I
+    A --> I
+    H --> J[F13 integrated Co-pilot support]
+    I --> J
+    J --> K[F14 review]
+    K --> L[F19 verification and F20 submission]
+    F --> M[F15-F16 optional transport]
+    H --> N[F17 optional voice]
+```
+
+This is a dependency map, not an instruction to run every node concurrently. If there are two builders, assign one to Co-pilot/UI and one to shared contracts/support/Planner, with a single driver for each shared-files PR. Agree interfaces before the two feature branches diverge. With a single builder, use the topological order and cut optional work earlier.
+
+### Relative effort assumptions
+
+Treat these as planning ranges for focused work on the current starter, excluding unexpected tool/device failures. They are not delivery commitments and must be re-estimated after contracts are settled.
+
+| Workstream | Rough person-hours | How to reduce scope |
+| --- | --- | --- |
+| Shared UI, viewport, fixture | 4–7 | Implement only the components and one case needed by the core path |
+| Checklist/support contracts and guarded local orchestration | 6–10 | One session, one technical recipient, in-memory record, explicit local role switch |
+| Co-pilot, Planner, request/reply and review screens | 8–14 | One adaptive wide/stacked pattern; simple review sheet; no map or rich attachments |
+| Manual evidence, focused tests, rehearsal and presentation | 4–7 | Keep one scenario and one failure drill; simplify presentation rather than dropping correctness checks |
+| Optional cross-device transport | 3–6+ after spike | Stop after failed spike; preserve honest local demo |
+| Optional voice | 2–4+ with real-device time | Touch-only demo if command reliability or availability is unclear |
+
+The core estimate is **22–38 person-hours**, so it is tight even with two people and does not fit a single builder's remaining hackathon window. Do not count two people as a perfect 2× speedup: shared-model merges, CI, physical-device work, and rehearsal remain serial. No camera/AI/persistence estimate belongs in the deadline promise before the core is working.
+
+### Deadline-based cut lines
+
+The recorded deadline is **Sunday, October 25, 2026 at 12:00 PM CT**. This plan was prepared Saturday afternoon CT; recalculate remaining time when using it.
+
+| Gate | Decision and expected evidence |
+| --- | --- |
+| First 60–90 minutes of implementation | Confirm actual demo device(s), settle minimal contracts, fix highest-risk state/copy issues, start viewport diagnosis; do not start camera/AI |
+| At least 12 hours before deadline | Core local path should be integrated enough to rehearse. If behind, remove maps, extra cases, rich composition, transport, and voice from the demo scope |
+| At least 6 hours before deadline | Freeze feature scope. Decide transport/voice inclusion from actual evidence; keep local/touch fallbacks. No new provider integration |
+| At least 3 hours before deadline | Complete device rehearsal, unresolved-issue triage, accurate slides, credits and backup recording; fix only demo-blocking or correctness issues |
+| Final hour | Confirm submission, repository/CI status and backup access; avoid risky redesigns or dependency upgrades |
+
+If the minimum local support journey is still incomplete at the freeze, present only the working portion, label the rest as planned, and simplify the script. Never simulate acceptance/delivery labels behind the audience's back to make the journey look connected.
+
+## 9. Transport and voice decisions that must remain honest
+
+### Nearby demonstration versus geographically remote support
+
+`LocalSyncService` is same-process only. Apple describes [Multipeer Connectivity](https://developer.apple.com/documentation/multipeerconnectivity) as communication with nearby devices. It can be considered for an in-room two-device demonstration; it does not by itself connect a hospital to a distant representative. Background/resume, permissions and actual hardware compatibility need testing.
+
+For genuinely remote communication, evaluate an authenticated internet-backed transport through SyncService. Decide the network scenario first, then the provider. The spike must demonstrate connection, request, application receipt, disconnect, retry and session isolation on the intended devices. Compare setup time, available hardware, supported deployment targets, identity/access controls, and recovery needs. Do not add multiple backends during the hackathon.
+
+Default decision until that proof passes: **keep the reliable local demo and label it**. A two-device nearby demo may be included if proven. The “storm” story may mean disrupted travel; do not imply distant remote support continues without an available communications path. A durable offline outbox is separate from successful delivery and is not implemented by merely retaining an in-memory message.
+
+### Voice is an input method
+
+Voice calls the same guarded commands as touch. Recognition is not inference of what happened in the room. Apple's [on-device recognition capability](https://developer.apple.com/documentation/speech/sfspeechrecognizer/supportsondevicerecognition) is conditional; the current service only requires on-device processing when that capability is present. Its “always offline” comment and permission copy therefore need review in F17.
+
+For the prototype, prefer an explicit on-device-only mode: require supported capability and [on-device recognition](https://developer.apple.com/documentation/speech/sfspeechrecognitionrequest/requiresondevicerecognition); otherwise explain that voice is unavailable and retain touch. Do not silently switch processing modes or claim offline reliability from a parser unit test. Any network-backed mode would require its own explicit product decision and implementation.
+
+## 10. Verification plan and definition of done
+
+### Automated behavior coverage
+
+Add tests when the corresponding behavior exists; do not add placeholders or assertions that merely repeat UI implementation.
+
+| Layer | Required cases | Main failure this catches |
+| --- | --- | --- |
+| Checklist domain | Confirm/defer, acknowledgment invariants, correction, arbitrary selection, duplicate/stale target, pending gate from every action route | False completion or advancing an unrelated item |
+| Support domain | Capability vs acceptance, arrangement vs question acknowledgment, request without deviation, wrong recipient/session, immutable snapshot | False coverage or context routed to the wrong session |
+| Matcher | Availability, qualification, missing drive/forecast, setup/closure boundaries, elapsed schedules, stable ties, truthful reasons | Misleading logistical recommendation |
+| App integration | Planner browsing vs active session; request → recipient ack → reply → Co-pilot; two separate sessions; reset | Cross-tab drift and record contamination |
+| Transport, if included | Submit failure, duplicate/reordered event, receipt loss, retry, schema mismatch, host loss, reconnect snapshot and late old-session event | False delivery, duplicated mutation, silent stale state |
+| Voice, if included | Exact accepted phrases, negation/ambiguity rejection, partial/final repeats, stale targets, permission/service failure | Accidental or repeated command application |
+| Recovery, if included | Termination during draft/send, corrupt/version-mismatched file, explicit reset and deletion | Lost or falsely delivered records |
+| Camera/AI, if included | Independent mock fixtures, unknown/mismatch, false match/missed observation, invented/omitted evidence, unavailable service | Automation being presented as observed or human-confirmed fact |
+
+Keep the existing suite passing while changing its expectations where old semantics are deliberately replaced. In particular, update tests that currently expect generic “Reschedule” or `.current` as a recorded status. Run repository checks and `scripts/check.sh`; report actual test results and the simulator used. Required GitHub checks remain `Repository checks` and `iPad build and tests`.
+
+### Manual evidence matrix
+
+| Dimension | Evidence to record |
+| --- | --- |
+| Layout | Actual named iPad/runtime, landscape/window dimensions, safe areas, wide and narrower window; cause/resolution of unexpected letterboxing |
+| Text | Default, XXXL and largest accessibility size; no clipped question/recipient/warning; essential actions reachable |
+| Input | 72 pt primary / 44 pt other target checks, 8 pt gaps, touch journey, keyboard path/focus, VoiceOver reading order and control labels |
+| Perception | Contrast of text/essential indicators, color-plus-icon/text, Increase Contrast and Differentiate Without Color, Reduce Motion |
+| Error/recovery | Empty log, no option, recipient unavailable, pending acceptance, failed request, disconnected view and retry with retained draft |
+| Physical device | Microphone/permission/audio interruption if voice included; gloves/noisy-room fictional walkthrough where feasible; connection background/resume if transport included |
+| Product workflow | Fictional walkthrough with an OR staff member and device rep if available; record interruptions, confusing labels, missing context and changes needed, without real case data |
+
+Store a compact record in a future `docs/validation/` note: commit, device/OS/window, settings, scenario, actions, expected/observed result, screenshot/recording location, issue, severity and owner. Mark unperformed checks explicitly. Unit tests and simulator screenshots are not substitutes for physical-device or workflow feedback.
+
+### Core release gate
+
+The demo build is ready only when all of these hold:
+
+1. One clean run from reset reaches coverage review, explicit acceptance, touch confirmation, deferral, acknowledgment, a contextual question, explicit recipient acknowledgment, reply, correction and review.
+2. Deferred items remain unresolved after acknowledgment; no input bypasses the gate or applies an old intent to the next item.
+3. Every support/transport label reflects implemented evidence; the local demo is clearly labeled when applicable.
+4. Failed send and unavailable support are understandable; a draft survives the tested recovery path.
+5. Named-size/enlarged-text evidence is reviewed, essential controls remain usable, and no known layout issue hides required actions.
+6. Focused behavior tests, repository checks and required CI pass. Manual gaps are documented; a known failure that loses/misattributes records, creates false confirmation/delivery, or blocks the core journey prevents a readiness claim.
+7. Slides, README, script, and credits describe the build actually being shown. Backup recording uses that same working build.
+
+## 11. After the hackathon: a disciplined path toward institutional evaluation
+
+Continue simulated-data development under the current rules. Moving beyond that boundary requires a separately authorized scope, appropriate institutional owners, and a new evaluation plan. The sequence below is a planning framework, not a compliance determination or permission to deploy.
+
+| Stage | Concrete work | Exit evidence |
+| --- | --- | --- |
+| Workflow discovery | Observe/review fictional workflows with OR staff, coordinators and device reps; clarify role boundaries, interruptions and existing communication tools | Prioritized user needs, role/task map, reviewed copy/content, explicit excluded uses and measurable evaluation questions |
+| Robust simulated pilot | Authenticated participant model, session ownership, bounded storage/recovery, actual remote transport, accessibility/usability iteration | Repeatable end-to-end and failure tests, no unresolved false-state defects, task-level observations and documented changes |
+| Institutional readiness planning | Work with institution-selected security/privacy, clinical workflow, IT and procurement owners to define permitted use, data flows, access, retention, device deployment and operational responsibilities | Reviewed architecture/data-flow/threat assessment, agreed data boundaries, content governance, incident/recovery ownership, and institution-specific entry criteria |
+| Controlled evaluation | Run only the approved scenario with trained participants, agreed oversight, stop conditions and issue reporting | Recorded usability/reliability findings, resolution of blocking defects, accountable decision on any next phase |
+
+Engineering work to scope during readiness planning includes real identity and role authorization, separation between institutions/sessions, access revocation, secure transport/storage, retention/deletion, audit requirements, backups, monitoring, incident handling, supported-device policy, managed deployment and support ownership. Decide these with the institution; demo role selection, append-only UI history, and an encrypted connection alone do not answer them.
+
+Procedure content needs a named reviewer, version, references, approval/revision process, and visible applicability. A device rep's stated skills in SampleData are not verified credentials. Integrations with hospital records, external clinical systems, or real patient information must be separately scoped and evaluated; do not quietly grow them out of the simulated fixture model.
+
+Evaluate product quality with task completion, time to find the question/unresolved items, correction success, support acknowledgment delay, failure recovery, accidental-command count, and user comprehension of state. Set targets after a baseline walkthrough. Do not invent satisfaction scores, accuracy rates, time savings, or clinical outcome claims.
+
+## 12. Decisions, risks, and immediate next actions
+
+### Decision log to resolve in order
+
+| Decision | Proposed default | Evidence needed to change it |
+| --- | --- | --- |
+| First demo scope | One fictional pacemaker coordination case | Reviewed separate fixture/workflow before adding another procedure |
+| Core input | Touch; explicit voice only after F17 passes | Physical-device command/noise/permission testing |
+| Communication mode | Labeled local demo until a transport gate passes | F15/F16 end-to-end receipt/disconnect evidence |
+| First remote participant device | Second iPad if available; otherwise verify actual available Mac/iPad build before choosing | Installed runnable build, pairing/permissions and usable role view; do not assume Mac compatibility from the project name |
+| Session ownership | One active session and one OR authority | A later explicit multi-session/multi-writer requirement and tested conflict policy |
+| Record retention | In-memory for core; explicit limitation | F18 scope agreed and relaunch/corruption tests passing |
+| Optional automation | None required for the core | Working narrow camera/AI slice with reviewed fictional evaluation fixtures |
+
+### Main risks and response
+
+- **Shared-model conflicts:** land F04/F06 separately and early; one driver per shared slice; dependent feature work uses merged contracts.
+- **Attractive but misleading states:** treat false confirmation/acceptance/delivery as blocking defects, even when the UI looks complete.
+- **Voice uncertainty:** exact phrases, domain guards, deduplication, visible capability, touch fallback; cut voice if unproven.
+- **Transport consuming the schedule:** time-box the spike, choose one path, retain local mode; never present nearby exchange as evidence of distant offline support.
+- **Fixture drift:** injected clock, explicit reset/session IDs, one reviewed scenario, unsupported workflows excluded.
+- **Polish displacing reliability:** resolve viewport, text scaling, unresolved states and failed-send recovery before optional maps or automation.
+- **Hospital positioning outrunning evidence:** say professional prototype and report actual validation; institutional evaluation has its own owners and gates.
+
+### The next work to claim
+
+1. **F01 shared UI foundation:** scalable text, status contrast, primary/secondary/focus states. Pair its visual review with F02's actual-device viewport diagnosis.
+2. **F03 → F04 → F05/F06:** settle the fictional content and the minimum state contracts, then fix the domain invariants before connecting new inputs.
+3. **F07 → F09–F14:** integrate the touch support journey and review in small PRs, while F08 fixes the pure matcher and its explanations.
+
+Do not claim all of these at once. Keep the task board authoritative, preserve other writers' work, use one branch/PR per slice, credit any later provider/asset in that PR, and update shipped-status documentation only after the corresponding work is merged.

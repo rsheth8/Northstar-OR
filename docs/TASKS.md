@@ -9,6 +9,8 @@ Read [PRODUCT.md](PRODUCT.md) and [DESIGN.md](DESIGN.md) before choosing impleme
 
 Priority: one coherent simulated procedure and a reliable support journey before additional procedure types, maps, or visual effects. The items below are implementation work, not claims that these capabilities already exist.
 
+Use [the detailed implementation blueprint](IMPLEMENTATION_PLAN.md) for the inspected baseline, shared state contracts, F01–F23 PR slices, dependencies, screen specifications, acceptance tests, effort assumptions, and demo cut lines. Claim a task here; blueprint IDs are planned slices, not additional active claims or GitHub issues.
+
 ## UX delivery order
 
 The approved logo and neutral shared styling are merged. This is the next implementation sequence, not a claim that the screen redesign is complete. Claim the corresponding task below. Keep shared files in their own small PRs; a grouped stage can require several PRs.
@@ -44,8 +46,8 @@ Camera, AI, maps, and additional procedure types follow the working core journey
 - [ ] **User validation:** review the workflow with an OR nurse and device rep; document assumptions and feedback without recording real case data (`docs/`).
 
 ## Open decisions (team call)
-- [ ] **Sync backend.** Recommended: **MultipeerConnectivity**. It works with no Wi-Fi or accounts, which suits a hackathon room and the "works when the storm cuts the internet" story, and the iPad app also runs on Apple-silicon Macs for the laptop screen. Alternative: Firebase Firestore (easier across networks, but needs internet and setup).
-- [ ] **Planner device for the demo.** Same app on the Mac (Designed for iPad), or a second iPad/iPhone.
+- [ ] **Sync transport and network scenario (F15/F16).** Keep the labeled local demo until a time-boxed real-device proof passes. Multipeer Connectivity is a candidate for a nearby, in-room demonstration; distant support needs an appropriate internet-backed transport. Verify SDK/deployment compatibility, permission, receipt, disconnect/reconnect, and background behavior before choosing. Do not claim distant support survives an unavailable communications path. See [the transport decision](IMPLEMENTATION_PLAN.md#9-transport-and-voice-decisions-that-must-remain-honest).
+- [ ] **Planner/rep device for the demo.** Prefer a second iPad if available; otherwise verify the actual available Mac/iPad build, permissions and role UI before choosing. Mac compatibility is not established by the starter's iPad target.
 
 ## Lane A: Co-pilot (folders: `Features/CoPilot/`, `Services/Voice*`)
 - [ ] Build the adaptive progress / current work / activity layout from DESIGN.md; keep unresolved items, correction, and support access available
@@ -70,6 +72,7 @@ Camera, AI, maps, and additional procedure types follow the working core journey
 - [ ] Stream co-pilot log entries to the remote rep view
 
 ## Lane D: Pitch and demo
+- [~] (Codex) Write the detailed product implementation blueprint: verified starter gaps, shared state contracts, screen-level work, dependency-sized PRs, acceptance tests, demo cut lines, and the path to institutional evaluation (`docs/IMPLEMENTATION_PLAN.md`; documentation only).
 - [x] (Codex) Publish the approved UI/UX rules, screen contracts, implementation order, and review criteria; align teammate/agent instructions and remove outdated decorative-UI tasks (`docs/`, shared agent instructions, PR template; merged in [PR #11](https://github.com/rsheth8/Northstar-OR/pull/11)).
 - [x] (Codex) Refine the identity for institutional medical software: a restrained connected star/pulse, neutral wordmark, editable masters, and app assets (`docs/brand/`, app asset catalog; merged in [PR #9](https://github.com/rsheth8/Northstar-OR/pull/9)). Rural scenes are preserved as presentation artwork.
 - [x] (Codex) Set up GitHub build/test checks, protected main without mandatory human approvals, PR defaults, and teammate/agent collaboration guide (merged in [PR #3](https://github.com/rsheth8/Northstar-OR/pull/3)); scheduled repo stewardship in the owner’s Codex chat every 15 minutes.
