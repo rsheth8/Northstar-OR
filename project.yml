@@ -1,0 +1,53 @@
+# XcodeGen spec. The .xcodeproj is generated from this file and is NOT committed,
+# so parallel branches never fight over project.pbxproj.
+# Generate:  brew install xcodegen && xcodegen generate && open NorthstarOR.xcodeproj
+name: NorthstarOR
+options:
+  bundleIdPrefix: edu.umn.northstar
+  deploymentTarget:
+    iOS: "17.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    # Set your own Apple team in Xcode (Signing & Capabilities) or put it in a local
+    # xcconfig; don't commit a personal team ID.
+    DEVELOPMENT_TEAM: ""
+targets:
+  NorthstarOR:
+    type: application
+    platform: iOS
+    sources:
+      - path: NorthstarOR
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: edu.umn.northstar.or
+        TARGETED_DEVICE_FAMILY: "1,2"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: Northstar OR
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UIUserInterfaceStyle: Dark
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: "UIInterfaceOrientationPortrait"
+        INFOPLIST_KEY_NSMicrophoneUsageDescription: "Northstar OR listens for spoken step confirmations during the procedure."
+        INFOPLIST_KEY_NSSpeechRecognitionUsageDescription: "Speech recognition runs on-device to turn spoken commands into checklist actions."
+  NorthstarORTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: NorthstarORTests
+    dependencies:
+      - target: NorthstarOR
+schemes:
+  NorthstarOR:
+    build:
+      targets:
+        NorthstarOR: all
+        NorthstarORTests: [test]
+    test:
+      targets:
+        - NorthstarORTests
