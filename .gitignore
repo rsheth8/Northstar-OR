@@ -20,3 +20,11 @@ GoogleService-Info.plist
 .env
 
 .DS_Store
+
+# Local agent state and signing credentials
+.claude-flow/
+.env.*
+!.env.example
+*.p12
+*.p8
+*.mobileprovision

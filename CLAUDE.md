@@ -1,6 +1,6 @@
 # Northstar OR: instructions for agents and teammates
 
-Read this before changing anything. Then read `docs/TASKS.md` and claim a task.
+Read this before changing anything. Then read `docs/PRODUCT.md`, `docs/TEAM_WORKFLOW.md`, and `docs/TASKS.md`, and claim a task.
 
 ## What we're building
 A native SwiftUI iPad app (iPadOS 17+) for a 24-hour Medtronic hackathon. Prompt: *Connect & Intersect*.
@@ -16,6 +16,7 @@ Deadline: slide deck and repo due **Sunday 12:00 PM CT**. Polish beats breadth.
 
 ## How we work in parallel
 - **Never commit `.xcodeproj`.** It's generated from `project.yml` with `xcodegen generate`. New Swift files under `NorthstarOR/` are picked up automatically; only edit `project.yml` for build settings, Info.plist keys, or new targets.
+- **All agents:** preserve teammate edits, use separate checkouts for concurrent writers, and report only checks actually run. Review your diff and rely on required CI; human approval is optional. Never fabricate a GitHub approval.
 - **One task = one branch = one small PR.** Branch names: `copilot/...`, `planner/...`, `sync/...`, `pitch/...`. Rebase on `main` before opening the PR.
 - **Stay in your lane's folders** (see `docs/TASKS.md`). Shared files (`Models/`, `App/AppModel.swift`, `Services/SyncService.swift`, `DesignSystem/`) change in their own small PRs so conflicts stay tiny.
 - **Features talk to the backend only through `SyncService`.** Don't call a network SDK from a view.
