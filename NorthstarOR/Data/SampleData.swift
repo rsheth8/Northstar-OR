@@ -55,20 +55,20 @@ enum SampleData {
             DeviceRep(id: id(.anaContact), name: "Ana Lindqvist", homeBase: "Duluth",
                       skills: ["pacemaker", "icd"],
                       driveMinutes: [northShore: 110, lakes: 200, prairie: 390],
-                      isAvailable: true, canSupportRemotely: true),
+                      isAvailable: true, canSupportRemotely: true, statedRole: .technicalRep, travelAsOf: asOf),
             DeviceRep(id: id(.marcusContact), name: "Marcus Bell", homeBase: "Minneapolis",
                       skills: ["pacemaker", "neurostim"],
                       driveMinutes: [northShore: 270, lakes: 225, prairie: 180],
-                      isAvailable: true, canSupportRemotely: true),
+                      isAvailable: true, canSupportRemotely: true, statedRole: .technicalRep, travelAsOf: asOf),
             DeviceRep(id: id(.priyaContact), name: "Priya Raman", homeBase: "St. Cloud",
                       skills: ["icd", "insulin-pump"],
                       driveMinutes: [northShore: 300, lakes: 150, prairie: 210],
-                      isAvailable: false, canSupportRemotely: true),
+                      isAvailable: false, canSupportRemotely: true, statedRole: .technicalRep, travelAsOf: asOf),
         ]
         let forecasts = [
-            northShore: StormForecast(summary: "Simulated blizzard warning, 14 in of snow", roadClosureInHours: 1.5, snowfallInches: 14),
-            lakes: StormForecast(summary: "Simulated light snow", roadClosureInHours: nil, snowfallInches: 2),
-            prairie: StormForecast(summary: "Simulated ice storm watch", roadClosureInHours: 18, snowfallInches: 1),
+            northShore: StormForecast(summary: "Simulated blizzard warning, 14 in of snow", roadClosureInHours: 1.5, snowfallInches: 14, asOf: asOf),
+            lakes: StormForecast(summary: "Simulated light snow", roadClosureInHours: nil, snowfallInches: 2, asOf: asOf),
+            prairie: StormForecast(summary: "Simulated ice storm watch", roadClosureInHours: 18, snowfallInches: 1, asOf: asOf),
         ]
         let procedures = [
             FictionalCoordinationTemplate.makeProcedure(id: id(.northShoreCase), name: "Fictional pacemaker case A", hospitalID: northShore,
