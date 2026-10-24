@@ -44,4 +44,3 @@ struct NorthstarWorkspaceHeader: View {
         Label("On this device", systemImage: "ipad.landscape")
     }
 }
-
