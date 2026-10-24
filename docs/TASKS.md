@@ -44,7 +44,7 @@ Camera, AI, maps, and additional procedure types follow the working core journey
 
 ## Next implementation tasks (one task per branch/PR)
 
-- [~] (Amartya / Codex) **Light-workspace design foundation:** reconcile the owner-approved light workspace / midnight header direction and add opt-in semantic palette tokens. Reserves `AGENTS.md`, `CLAUDE.md`, `docs/DESIGN.md`, `docs/LIGHT_WORKSPACE_HANDOFF.md`, `NorthstarOR/DesignSystem/NorthstarWorkspacePalette.swift`, `docs/evidence/light-workspace/`, and this claim only. Existing screen migration remains F02/F09/F11/F12 after merged dependencies; no feature, model, storage, or shell edits.
+- [x] (Amartya / Codex; merged PR #33) **Light-workspace design foundation:** reconcile the owner-approved light workspace / midnight header direction and add opt-in semantic palette tokens. Reserves `AGENTS.md`, `CLAUDE.md`, `docs/DESIGN.md`, `docs/LIGHT_WORKSPACE_HANDOFF.md`, `NorthstarOR/DesignSystem/NorthstarWorkspacePalette.swift`, `docs/evidence/light-workspace/`, and this claim only. Existing screen migration remains F02/F09/F11/F12 after merged dependencies; no feature, model, storage, or shell edits.
 
 Claim the individual F-number row for each implementation slice. The lane checklists below are acceptance reminders, not additional parallel claims for the same work. Optional slices stay pending until their core gate passes.
 
@@ -57,7 +57,7 @@ Claim the individual F-number row for each implementation slice. The lane checkl
 - [ ] **F18 — P0 repository/persistence:** versioned local configuration/contacts/cases/sessions/drafts, atomic writes with visible failures, schema/corruption handling, relaunch and pending-send reconciliation (`Services/` and coordinated shared state; small PR).
 - [ ] **F07 — local support orchestration:** request/accept/ack/reply, main-actor routing, case/session isolation, safe plan replacement and late old-acceptance handling, failure injection (`App/AppModel.swift`, `Services/SyncService.swift`; shared-files PR).
 - [x] (Amartya) **F01 — shared UX foundation:** implement scalable typography, the 13 pt supporting-label baseline, high-contrast status indicators, and accessible primary/secondary/focus states (`DesignSystem/`; shared-files PR). Active on `pitch/accessible-components` (F03 claim visible); reserves `NorthstarOR/DesignSystem/` and its previews only. Merged in [PR #21](https://github.com/rsheth8/Northstar-OR/pull/21); simulator text-size/banner evidence is in `docs/evidence/f01/`, with unrun interaction checks listed.
-- [ ] **F02 — app shell and viewport:** verify the intended landscape iPad presentation; diagnose unexpected letterboxing and rigid sizing, and adapt navigation/context to window width and enlarged text (`App/RootView.swift`; shared-files PR; `project.yml` only if settings need correction).
+- [~] (Amartya / Codex) **F02 — app shell and viewport:** verify the intended landscape iPad presentation; diagnose unexpected letterboxing and rigid sizing, and adapt navigation/context to window width and enlarged text (`App/RootView.swift`; shared-files PR; `project.yml` only if settings need correction).
 - [ ] **F25 — setup/settings:** blank workspace flow, editable fictional site/time zone/local role, explicit optional sample loading and saved configuration (`Features/Workspace/`; shell entry coordinated separately).
 - [ ] **F26 — support directory:** add/edit fictional contacts, roles, device-family capabilities, availability and simulated travel estimates; these contacts drive normal support selection (`Features/Workspace/`; shared contracts/storage first).
 - [ ] **F27 — case forms:** create/edit cases through validated normal UI using a supported template; no patient fields or sample-ID dependency (`Features/Planner/`; contracts/storage first).
@@ -124,5 +124,9 @@ Claim the individual F-number row for each implementation slice. The lane checkl
 - [ ] Pass blank setup, independently created case/contact, changed logistical input and relaunch/isolation checks; complete three timed successful five-minute runs, failure/projection/audio checks and submission evidence in DEMO_READINESS.md
 - [ ] Update the demo to show coverage disruption → support acceptance → recorded progress → support request with context; add camera/AI only when implemented and tested
 - [ ] Update README credits and team names before submission
+
+## Active native iPad visual migration reservation
+
+Owner-approved implementation following the native iPad concept. F02 reserves `DesignSystem/NorthstarTheme.swift`, `DesignSystem/NorthstarComponents.swift`, `DesignSystem/NorthstarWorkspaceChrome.swift`, `App/RootView.swift`, `App/NorthstarORApp.swift`, `project.yml`, `NorthstarORUITests/`, `.github/workflows/ci.yml`, `docs/DESIGN.md`, and `docs/evidence/native-ipad/`. This is the shared shell/component PR; subsequent separate feature PRs reserve only PlannerView, CoPilotView, and RemoteSupportView respectively. Models, AppModel, session domain, matcher and SyncService are not changed. Functional setup/start/request contracts remain in their existing tasks.
 
 - [~] (Amartya / Codex) **Remote Support native visual slice:** reserves `Features/RemoteSupport/RemoteSupportView.swift`, this claim and `docs/evidence/native-support/`. Live local context, unresolved-first brief and reachable draft; no immutable request, acceptance or question acknowledgment claim until F07/F12.
