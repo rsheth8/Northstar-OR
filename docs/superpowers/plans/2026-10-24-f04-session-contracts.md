@@ -32,10 +32,10 @@
 
 **Interfaces:** Consume `LocalParticipant`, `ParticipantRole`, `CoordinationTemplateReference`. Produce `SessionIdentity`, `RecordingInputSource`, `RecordedItemStatus`, `RequiredAcknowledgment`, `SessionRecordingState`, `SessionCommandAction`, `SessionCommand`, `SessionEventPayload`, `SessionEvent`, `SessionContractError`. All values are Codable/Hashable; all identity/metadata properties are immutable. `validate()` checks structure, not domain authorization or replay acceptance.
 
-- [ ] Write focused XCTest cases for run isolation, source labels, selection/status independence, targeted command and event round trips, correction/acknowledgment links, schema rejection and malformed state.
-- [ ] Run the tests before implementation; confirm missing contract types fail compilation.
-- [ ] Implement the contracts with command kinds for select/confirm/defer/ack/correct and event payloads for selection/confirmation/deferral/ack/correction. Require version >= 0 on commands/state and positive accepted version on events. Require explicit intent IDs for user recording events. Preserve actor snapshot and absolute time. Pending gate state requires the same selected item with deferred status.
-- [ ] Run repository checks and the full iPad test suite; inspect actual output.
+- [x] Write focused XCTest cases for run isolation, source labels, selection/status independence, targeted command and event round trips, correction/acknowledgment links, schema rejection and malformed state.
+- [x] Run the tests before implementation; confirm missing contract types fail compilation.
+- [x] Implement the contracts with command kinds for select/confirm/defer/ack/correct and event payloads for selection/confirmation/deferral/ack/correction. Require version >= 0 on commands/state and positive accepted version on events. Require explicit intent IDs for user recording events. Preserve actor snapshot and absolute time. Pending gate state requires the same selected item with deferred status.
+- [x] Run repository checks and the full iPad test suite; inspect actual output.
 - [ ] Review the diff and obtain a read-only independent review if available. Address correctness findings, then satisfy required CI and merge through normal protected-branch flow.
 
 ## Execution record
@@ -43,3 +43,18 @@
 - Existing attached worktree is clean and isolated; base `14f4df6`.
 - F04 has no competing claim. Amartya's draft #21 remains confined to design-system work.
 - The previously assigned builder/reviewer both report account usage limits. The integration driver will implement here; independent review will be attempted through the available review tools. No fabricated review/approval.
+
+- Red run: `build/f04-red.log`, exit 65: expected missing `SessionIdentity` / other contract types before implementation.
+- Final local run: `SIMULATOR_ID=54F54EE7-6DCB-46CA-A459-20F06CA3E258 bash scripts/check.sh`, exit 0, 45 tests / 0 failures (16 new F04). Result `build/check.4IZuSS/Tests.xcresult`; log `build/f04-final.log`. iPad Pro 13-inch (M5), iOS 26.5 simulator.
+- Repository checks and whitespace check passed. No UI files changed, so no new device/accessibility claim.
+- Fresh read-only contract reviewer found no actionable findings; reviewed the files and whitespace, did not independently run tests. No GitHub approval was submitted.
+- Ruling: keep old feature/SyncService consumers unchanged as the compiling compatibility boundary. Mapping legacy `current` to a recorded status would lose information; F05/F07 perform the actual migration.
+- Ruling: correction events may explicitly supersede an old warning and name a distinct new warning when recording deferral. F05 must validate those references against accepted history and required-template metadata before applying them.
+
+## Consumer handoff
+
+`SessionRecordingState`, `SessionCommand`, and `SessionEvent` support schema 1 and reject missing/future schemas and structurally invalid values on decode. Direct construction requires `validate()`. `SessionIdentity` is workspace/case/run; `LocalParticipant` is a stated role/name snapshot. `RecordingInputSource` separates touch/keyboard/voice/remote without implying authentication or network receipt.
+
+`RecordedItemStatus` has unrecorded/deferred/teamConfirmed; selection remains separate. Commands carry stable intent ID, target item and expected version. Accepted events carry their own ID, intent ID, actor/source/time and positive accepted version. Warning acknowledgment names its own ID, target item and deferral event. Correction points to the original event and explicit superseded/new warning IDs; it does not erase or acknowledge history.
+
+F05 checks catalog/template membership, exact active identity/version/target, duplicates and history/gate links; the contract alone does not apply or accept commands. F18 stores the validated state and accepted history after F06 lands; F07 migrates SyncService and app routing. No persistence, delivery, clinical validation, or new guarded recording behavior is claimed by F04.
