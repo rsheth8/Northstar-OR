@@ -46,6 +46,7 @@ Priority: one coherent simulated procedure and a reliable support journey before
 - [ ] Stream co-pilot log entries to the remote rep view
 
 ## Lane D: Pitch and demo
+- [~] (Codex) Finalize the shooting North Star / rural clinic identity, editable logo masters, and production app assets (`docs/brand/`, app asset catalog).
 - [x] (Codex) Set up GitHub build/test checks, protected main without mandatory human approvals, PR defaults, and teammate/agent collaboration guide (merged in [PR #3](https://github.com/rsheth8/Northstar-OR/pull/3)); scheduled repo stewardship in the owner’s Codex chat every 15 minutes.
 - [x] (Codex) Document agreed product direction, current implementation limits, and prioritized roadmap (`README.md`, `docs/PRODUCT.md`, `docs/TASKS.md`; merged in [PR #1](https://github.com/rsheth8/Northstar-OR/pull/1))
 - [ ] Slide deck (due Sunday 12:00 PM CT)
