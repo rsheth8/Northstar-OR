@@ -1,6 +1,5 @@
 import Foundation
 
-/// Content metadata only. F24 owns the canonical persisted template reference.
 /// This fictional coordination exercise has no clinical validation or instructions.
 enum FictionalCoordinationTemplate {
     static let id = "fictional-pacemaker-coordination"
@@ -9,6 +8,11 @@ enum FictionalCoordinationTemplate {
     static let deviceFamily = "pacemaker"
     static let source = "Northstar OR fictional coordination exercise, version 1"
     static let applicability = "Recording team-reported coordination for fictional pacemaker cases only. Does not verify clinical work or outcomes."
+    static let reference = CoordinationTemplateReference(id: id, version: version)
+    static var template: CoordinationTemplate {
+        CoordinationTemplate(reference: reference, name: name, deviceFamily: deviceFamily,
+                             applicability: applicability, source: source, availability: .supportedFictional, steps: steps)
+    }
     static let technicalSupportReplies = [
         "Which technical support question would you like to discuss?",
         "Please share the fictional model reference relevant to your question.",
@@ -30,14 +34,15 @@ enum FictionalCoordinationTemplate {
 
     /// Creates an ordinary case from this content, with no sample identity dependency.
     static func makeProcedure(id: String, name: String, hospitalID: String,
-                              scheduledAt: Date, durationMinutes: Int) -> Procedure {
+                              scheduledAt: Date, durationMinutes: Int,
+                              workspaceID: String? = nil, reference: String? = nil) -> Procedure {
         Procedure(id: id, name: name, deviceFamily: deviceFamily, hospitalID: hospitalID,
-                  scheduledAt: scheduledAt, durationMinutes: durationMinutes, steps: steps)
+                  scheduledAt: scheduledAt, durationMinutes: durationMinutes, steps: steps,
+                  workspaceID: workspaceID, reference: reference ?? id, templateReference: self.reference)
     }
 
-    /// Temporary compiling adapter until F24 pins template ID/version on each case.
-    /// Matching IDs or names alone cannot authorize different or incompatible content.
+    /// Both the exact pinned reference and that version's content must match.
     static func supports(_ procedure: Procedure) -> Bool {
-        procedure.deviceFamily == deviceFamily && procedure.steps == steps && !steps.isEmpty
+        template.supports(procedure)
     }
 }
