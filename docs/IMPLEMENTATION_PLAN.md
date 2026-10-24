@@ -344,9 +344,9 @@ flowchart TD
     H --> N[F17 optional voice]
 ```
 
-This is a dependency map, not an instruction to run every node concurrently. If there are two builders, assign one to Co-pilot/UI and one to shared contracts/support/Planner, with a single driver for each shared-files PR. Agree interfaces before the two feature branches diverge. With a single builder, use the topological order and cut optional work earlier.
+This is a dependency map, not an instruction to run every node concurrently. [PARTNER_EXECUTION.md](PARTNER_EXECUTION.md) assigns Rahil shared contracts, Co-pilot, integration and review; Amartya owns shared UI, persistence, configuration/Planner and recipient support. Rahil takes F26 directory after setup to balance delivery. A single driver owns each shared-files PR; agree interfaces before feature branches diverge. With a single builder, use the topological order and cut optional work earlier.
 
-Draft the presentation script and slide skeleton once F03 settles the scenario; F20 does not wait until the final hours to begin. Populate proof screenshots, capability labels, the backup recording and final timing only from the verified integrated build. Assign the presenter, device operator and submission owner in DEMO_READINESS.md; these roles are unassigned until people actually claim them.
+Draft the presentation script and slide skeleton once F03 settles the scenario; F20 does not wait until the final hours to begin. Populate proof screenshots, capability labels, the backup recording and final timing only from the verified integrated build. DEMO_READINESS.md records the planned presentation roles; confirm them at kickoff and claim actual work in TASKS.md.
 
 ### Relative effort assumptions
 

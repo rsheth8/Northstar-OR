@@ -12,6 +12,10 @@
 
 ## Pairing and agents
 
+The working partner allocation is in [PARTNER_EXECUTION.md](PARTNER_EXECUTION.md); use [AGENT_BRIEFS.md](AGENT_BRIEFS.md) for the first bounded tasks. Rahil owns shared contracts/session/integration and release; Amartya owns shared UI, repository, configuration/Planner and recipient support. Rahil takes the directory after setup lands. Planned ownership is not an active claim. Start with F03 under Rahil, then F01 under Amartya once F03 is visibly claimed.
+
+Default to two isolated code writers and one read-only reviewer. A temporary third writer replaces the reviewer only for a disjoint reserved task, within available agent slots. Name exact files including tests; shared Models/AppModel/Sync changes are serialized and repository/shell bridges have explicit handoffs. Rahil coordinates the task board and merge order with the existing steward. Dependent implementations consume merged main; do not invent private substitute contracts while an upstream PR is unfinished.
+
 When pairing on one branch, choose one driver who edits and pushes; the navigator reviews. When working independently, use separate branches and preferably separate checkouts/worktrees. Never run two writing agents in the same checkout at once: checking out a branch changes the files for both agents.
 
 Give each agent the task, allowed folders, expected behavior, and tests. Ask it to inspect existing code before adding an abstraction. An agent must disclose what it actually tested and must not approve its own PR. Agent review and passing CI are the default; a teammate can review when useful, but a human approval is not required.
