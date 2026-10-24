@@ -34,7 +34,7 @@ Files: reserved task line; CoPilotSession.swift; minimal CoPilotView.swift adapt
 - [x] Implement command validation/atomic transition and compatibility projections; capture UI commands before callbacks. Add selectable rail for explicit post-ack navigation.
 - [x] Run scripts/check-repo.sh and scripts/check.sh; expect all tests passing and no generated tracked files.
 - [x] Review full diff independently, address actionable findings, collect named iPad warning/default/enlarged-text evidence for minimal adapter.
-- [ ] Rebase latest main, push ready PR, satisfy required CI, merge and publish exact API/verification handoff. Mark board complete only after merge.
+- [x] Rebase latest main, push ready PR, satisfy required CI, merge and publish exact API/verification handoff. Mark board complete only after merge.
 
 ## Evidence and rulings
 - Base: ad9af9a. F04 merged in PR25. Primary checkout planning edits preserved.
@@ -56,3 +56,5 @@ Files: reserved task line; CoPilotSession.swift; minimal CoPilotView.swift adapt
 - `recordingState` uses merged F04 schema1; `events` are append-only accepted structured records with actor/source/time. Text log is a compatibility projection, not the authoritative correction history. No unchecked restoration API: F18/F07 must retain state plus history/accepted intents and validate their consistency before a separate restore adapter.
 - Required deferral pins; acknowledgment clears only matching gate. Use selectItem after acknowledgment; recorded statuses change only through explicit correction referencing the latest status-changing event for that item. Correction to required deferred creates/pins a fresh warning, including when initiated from history.
 - `status(of:)`/`statuses` remain legacy view projections; use recordingState for independent selection/status. Support message/mode compatibility methods never mutate recording state/version. No support-domain contracts or persistence added.
+
+- Merged PR29 at ccb4990cc5e6a8a1c15fd4fa81a018d86fe3f0f4. Both required checks passed, CI run40138550886 (Repository checks121005391097, iPad121005391248). Final candidate also passed56tests at build/check.Dk4h5u/Tests.xcresult.
