@@ -39,7 +39,7 @@ struct PlannerView: View {
             Section("Why") {
                 ForEach(rec.reasons, id: \.self) { Text($0) }
             }
-            Section("Coverage options (best first)") {
+            Section("Coverage options (ranked for review)") {
                 ForEach(Array(rec.options.enumerated()), id: \.offset) { _, option in
                     Text(option.title)
                 }
