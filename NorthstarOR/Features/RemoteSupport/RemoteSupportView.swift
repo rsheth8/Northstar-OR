@@ -6,7 +6,7 @@ struct RemoteSupportView: View {
     @Environment(AppModel.self) private var model
     @State private var draft = ""
     private let repName = "Ana Lindqvist"
-    private let quickPrompts = ["Re-check lead connection", "Confirm thresholds before closing", "I'm watching, continue"]
+    private let quickPrompts = FictionalCoordinationTemplate.technicalSupportReplies
 
     var body: some View {
         let session = model.activeSession
