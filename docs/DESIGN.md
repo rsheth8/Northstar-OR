@@ -22,16 +22,20 @@ This guide sets a professional design target. It does not establish clinical rea
 
 ## 2. Visual system
 
+Owner-approved revision, October 24, 2026: a light hospital-worklist environment with a slim midnight-blue application header supersedes the earlier dark-first direction. Modernity comes from alignment, typography, information density, restrained branding and predictable actions. The refined Planner image is a visual concept, not evidence of implemented behavior, contrast or target sizes. Its placeholder mark and invented content must not replace approved assets or fictional templates.
+
+The migration is staged: reconcile this guide → shared light tokens/components → shell/viewport → Planner reference screen → Co-pilot and Remote Support. Domain dependencies in TASKS.md still apply. `Northstar.Palette.Workspace` supplies opt-in light tokens; existing `Palette` values and components remain dark until each coordinated consumer migration is verified. Do not mix light foregrounds/backgrounds with legacy dark components. See [the handoff](LIGHT_WORKSPACE_HANDOFF.md).
+
 Use `Northstar.Palette`, `Northstar.Fonts`, `Northstar.Space`, and `Northstar.Radius`. Add a reusable token or component in a shared-files PR when needed; avoid per-screen styling systems and raw hex values in views.
 
 | Element | Rule |
 | --- | --- |
-| Surfaces | Navy base, quiet raised work areas, restrained dividers. Use grouping and whitespace before adding another card. |
-| Type | Neutral system typography in the app. Regular body text and semibold emphasis; monospaced type for timers and compact timestamps. Inter Display remains the outlined logo wordmark. |
+| Surfaces | Soft off-white working background, white content and subtly differentiated neutral sections; slim midnight-blue header. Use aligned rows, spacing and dividers instead of floating cards. |
+| Type | Neutral system typography in the app. Regular body text and semibold emphasis; monospaced digits for case references, timers and compact timestamps where useful; proportional text for descriptions and activity. Inter Display remains the outlined logo wordmark. |
 | Base sizes | Body 17 pt; supporting metadata at least 13 pt; section title 24 pt; current-item title 32–40 pt. These are default-size starting points, with Dynamic Type scaling. |
 | Spacing | Use the existing 4 pt spacing scale. Start with 24 pt work-area padding and panel gaps, and 16 pt internal grouping; adapt to available space. |
 | Corners | Existing 6 / 10 / 12 pt radii for small / medium / large containers and controls. Rounded geometry supports grouping without dominating the screen. |
-| Buttons | Flat fill for the primary action, quiet outlined or text treatment for secondary actions, and a visible pressed/disabled/focused state. |
+| Buttons | Flat deep-blue primary fill, quiet outlined or text secondary actions, visible pressed/disabled/focused states. Green marks recorded results. Preserve 72 × 72 pt primary targets without making every action full width. |
 | Icons | Consistent SF Symbols with text for consequential actions. Expand the hit area independently of icon size. |
 | Logo | Use current files from `docs/brand/`. Keep the mark modest in the app header. Preserve its proportions and connected trail. |
 | Motion | Brief state transitions, normally 100–200 ms. Respect Reduce Motion. System navigation may retain its native transitions. |
@@ -39,6 +43,8 @@ Use `Northstar.Palette`, `Northstar.Fonts`, `Northstar.Space`, and `Northstar.Ra
 Product screens must not reintroduce glowing buttons, oversized rounded display type, decorative gradients, bouncing controls, animated mascots, an “alive” voice orb, repeated pulsing, or flashing screen borders. Functional microphone feedback may show input activity alongside a readable listening state.
 
 ### Color has a job
+
+For migrated screens, use the corresponding semantic `Palette.Workspace` tokens: `canvas`, `surface`, `surfaceSubtle`, `text`, `textSecondary`, `header`/`onHeader`, `selection`/`selectionIndicator`, `action`/`onAction`, and the named status foreground/surface pairs. Header text must use header-specific colors. Blue selection includes a narrow rail and selected accessibility state; selection is independent of recording status. Legacy names below retain their semantic meanings during migration.
 
 | Role | Token / meaning |
 | --- | --- |
@@ -55,6 +61,7 @@ Coverage risk describes logistics. Label it “Coverage risk” and show its rea
 
 The primary demo is a landscape iPad. Layout must respond to the actual window width, safe areas, text size, and keyboard. Preserve functionality when panels stack or move into detail views. Apple's [layout guidance](https://developer.apple.com/design/human-interface-guidelines/layout) supports this adaptive approach.
 
+- Use a slim identity/context header, then a clear destination-navigation row, then working content. The header shows the existing connected-star identity, configured workspace, actual communication mode and Workspace settings. Let it wrap or rearrange at enlarged text; slim is not a fixed-height clipping rule. Native iPadOS 17+ navigation behavior and accessible window adaptation take precedence over literal mockup placement.
 - Keep the three destinations recognizable: **Co-pilot**, **Planner**, and **Remote Support**. Use familiar native navigation and selection behavior.
 - On first launch offer real workspace setup or explicit sample loading. Restore the configured worklist on later launch; provide Workspace settings in the shell. Do not silently open/reset an array-zero sample session.
 - Show consistent active-case context and support status across destinations. Make an intentional case change explicit; preserve selection when switching tabs.
@@ -77,6 +84,18 @@ These describe the target experience, including behavior still pending in TASKS.
 | Setup / Workspace settings, secondary flow | Fictional site/time zone → local participant and support directory → supported template selection → communication mode | Save/edit actual configuration with field validation and retained state; optional sample loading is explicit. This is not a fourth primary tab. |
 | Remote Support (join brief) | Team's exact question with sender/role/time → case header (reference, site, device family, template version, communication mode, snapshot time) → unresolved now → recorded so far → coverage plan and recorded logistical reason → changes since request | Read the context without asking the team to explain it, acknowledge the question, reply with technical support, and show the request → acceptance → question acknowledgment → reply chain as separate states. Make incoming responses prominent in Co-pilot too. |
 | Session review, when implemented | Session identity → unresolved items → recorded confirmations/corrections → support exchanges → sources and times | Review the record. Use “Checklist complete” only for the relevant recorded checklist state, with any unresolved items still visible. Export is a separate scoped task. |
+
+### Planner reference layout
+
+Use a two-pane worklist/detail layout when the actual window permits it. The left region contains date/status filters, New case and rows prioritizing case reference, schedule, site and plan state. Recording lifecycle has its own labeled field; it must not be merged into plan state. Selected rows have a pale-blue fill and narrow blue rail; rows grow for touch and wrapping. Browsing a row never switches the active recording context.
+
+The detail order is: case reference and template/procedure label with Edit case; site, schedule/time zone, template version and recording state; coverage assessment with logistical reasons; current coordinator plan with named contact/role and actual request state; other eligible options labeled unrequested; explicit Start recording or Resume recording. Use aligned fields and flat divided sections. Keep warnings localized to coverage or the affected item. Narrow layouts navigate between list and detail without losing selection or drafts.
+
+### Co-pilot and recipient layout
+
+At wide sizes Co-pilot uses a compact workflow rail, dominant current-item area and secondary activity inspector. Move/collapse activity first as space narrows; preserve the 360 pt current-work minimum above. Show item title/context, recorded state, pending acknowledgment, permitted recording/correction actions and Request support. Replace the screen-wide amber border with a persistent warning beside the affected item. Acknowledgment leaves the pinned item deferred; support, read-only review and permitted correction remain available.
+
+Remote Support places question acknowledgment beside the exact question, sender and time. Conversation and reply entry sit alongside or below the request brief; the draft and Send remain above the keyboard. Request acceptance, question acknowledgment, delivery and connection each retain their own supported state.
 
 The Remote Support join brief answers a remote rep's first questions before they ask: what the team needs, which case, what is unresolved, what has been recorded and why support is remote. It is built from the immutable request snapshot; later events appear under a labeled “Changed since request” count rather than silently updating the brief. Missing values read “Not recorded” or “No question from the team yet”; an empty deferral list reads “No deferrals recorded.” Unrecorded items remain unresolved; a no-unresolved summary requires every applicable item to be confirmed. The brief states recorded facts only and never says ready, safe or proceed. In narrow windows stack the regions while keeping the question and Acknowledge question reachable.
 
@@ -121,7 +140,7 @@ Use WCAG contrast ratios as internal visual targets for the native app: **4.5:1 
 - Verify Increase Contrast, Differentiate Without Color, and Reduce Motion. Recheck text and control indicators in pressed, selected, focused, disabled, and warning states.
 - Distinguish decorative separators from essential boundaries. Token names alone are not evidence that a specific foreground/background pair is accessible.
 
-Token calculation on 2026-10-24: `ink` on `bgBase` is 16.38:1 and `inkMuted` is 8.38:1. `slate` on `bgBase` is only 1.59:1; the starter's unrecorded/upcoming icon treatment needs review. These are color-pair measurements, not a full-screen accessibility audit.
+Historical dark-palette calculation on 2026-10-24 (not light-theme evidence): `ink` on `bgBase` is 16.38:1 and `inkMuted` is 8.38:1. `slate` on `bgBase` is only 1.59:1; the starter's unrecorded/upcoming icon treatment needs review. These are color-pair measurements, not a full-screen accessibility audit. Light-palette measurements and remaining verification gaps are in [the foundation evidence](evidence/light-workspace/README.md).
 
 ## 8. Implementation plan and current gaps
 

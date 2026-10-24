@@ -30,8 +30,8 @@ Product bar: functional fictional workspace setup, editable contacts, normal cas
 - Follow the screen contracts, state rules, and review criteria in `docs/DESIGN.md`. The approved direction is restrained institutional software: neutral type, flat controls, quiet surfaces, and the connected star/pulse identity.
 - Use the operational patterns in `docs/DESIGN_REFERENCES.md`: case worklists, persistent workspace/case/support context, clear forms and accountable actions. Optional AI drafts are secondary; public vendor material is inspiration, not proof of Northstar validation.
 - Use `Northstar.Palette`, `Northstar.Fonts`, `Northstar.Space`, `Northstar.Radius` from `DesignSystem/NorthstarTheme.swift`. No raw hex colors in views.
-- Dark theme, landscape iPad first; adapt to available window space and Dynamic Type. Primary actions are at least 72 pt high and 72 pt wide; other hit areas are at least 44 × 44 pt.
-- Color meaning: aurora green = go/done, amber = skipped step / warning, red (`alert`) = stop. Always pair color with an icon and a label.
+- Light working surfaces with a restrained midnight-blue header, landscape iPad first (owner-approved direction; see `docs/DESIGN.md` for staged migration); adapt to available window space and Dynamic Type. Primary actions are at least 72 pt high and 72 pt wide; other hit areas are at least 44 × 44 pt.
+- Color meaning: aurora green = recorded confirmation / successful app action, amber = deferred item / warning, red (`alert`) = failed or blocked app action. Always pair color with an icon and a label.
 - Color describes the recorded workflow or app state, never clinical readiness. Availability, acceptance, connection, delivery, and acknowledgment are distinct; show only states the implementation supports.
 - Keep warnings persistent and purposeful. No decorative glow, bouncing controls, voice orb, repeated pulsing, or flashing screen borders. Respect Reduce Motion and retain touch alternatives to voice.
 - Voice: calm and short. Speak only for important moments, e.g. "Step 4 was deferred. Acknowledgment required."
