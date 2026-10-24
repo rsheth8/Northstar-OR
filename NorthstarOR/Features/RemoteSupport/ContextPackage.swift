@@ -13,11 +13,11 @@ struct ContextPackage {
     init(session: CoPilotSession, hospital: Hospital?, logLimit: Int = 8) {
         procedureName = session.procedure.name
         self.hospital = hospital.map { "\($0.name), \($0.town)" } ?? "Unknown hospital"
-        currentStep = session.currentStep?.title ?? "Procedure complete"
+        currentStep = session.currentStep?.title ?? session.recordingSummary
         reducedSupport = session.reducedSupport
         deviations = session.procedure.steps
             .filter { session.status(of: $0) == .skipped }
-            .map { "Skipped: \($0.title)" }
+            .map { "Deferred: \($0.title)" }
         recentLog = Array(session.log.suffix(logLimit))
     }
 
