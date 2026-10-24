@@ -29,7 +29,7 @@
 - Unsupported or tampered template cannot record; status adapters preserve deferred state even when selected.
 
 ### Task 1: Guard recording and integrate existing touch calls
-Files: reserved task line; CoPilotSession.swift; minimal CoPilotView.swift adapter; CoPilotSessionTests.swift; FictionalContentTests.swift.
+Files: reserved task line; CoPilotSession.swift; minimal CoPilotView.swift adapter; CoPilotSessionTests.swift; FictionalContentTests.swift; one WorkspaceContractTests.swift legacy-call adapter.
 - [ ] Write regression tests for pinned deferral, source-independent gate, explicit navigation, duplicate/stale/foreign actions, corrections and immutable history. Run scripts/check.sh; expect failures for missing authority API and old skip-advance behavior.
 - [ ] Implement command validation/atomic transition and compatibility projections; capture UI commands before callbacks. Add selectable rail for explicit post-ack navigation.
 - [ ] Run scripts/check-repo.sh and scripts/check.sh; expect all tests passing and no generated tracked files.
@@ -39,3 +39,8 @@ Files: reserved task line; CoPilotSession.swift; minimal CoPilotView.swift adapt
 ## Evidence and rulings
 - Base: ad9af9a. F04 merged in PR25. Primary checkout planning edits preserved.
 - Ruling: keep confirmation advance for starter compatibility, while adding arbitrary explicit selection; only deferral/ack prohibit advance per F05 spec. Later F09/F10 owns full interaction design.
+
+- Baseline: 45 tests passed, build/check.AQzTti/Tests.xcresult.
+- Red: build/f05-red.log, exit 65: missing command authority API (apply/makeCommand/recordingState).
+- First green: 55 tests, zero failures; build/f05-green.log. Production mutators without captured targets removed.
+- Pre-flight: shared F04 state/command/event fields match; no Models changes.

@@ -204,7 +204,7 @@ final class WorkspaceContractTests: XCTestCase {
         XCTAssertNil(legacy.templateReference)
         XCTAssertFalse(FictionalCoordinationTemplate.supports(legacy))
         let session = CoPilotSession(procedure: legacy)
-        session.completeCurrentStep()
+        apply(session, .recordConfirmation)
         XCTAssertTrue(session.log.isEmpty)
         var siteJSON = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(configuration().sites[0])) as? [String: Any])
         ["workspaceID", "timeZoneIdentifier", "roomLabels"].forEach { siteJSON.removeValue(forKey: $0) }
@@ -270,4 +270,9 @@ final class WorkspaceContractTests: XCTestCase {
             XCTAssertEqual(error as? WorkspaceContractError, expected, file: file, line: line)
         }
     }
+    private func apply(_ session: CoPilotSession, _ action: SessionCommandAction, target: String? = nil, at time: Date = .now) {
+        guard let command = session.makeCommand(action, targetItemID: target, at: time) else { return }
+        do { try session.apply(command) } catch { XCTFail("Command rejected: \(error)") }
+    }
+
 }

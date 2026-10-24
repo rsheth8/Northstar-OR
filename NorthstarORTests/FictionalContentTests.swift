@@ -66,7 +66,7 @@ final class FictionalContentTests: XCTestCase {
         let sessionB = CoPilotSession(procedure: b, now: asOf)
         XCTAssertTrue(sessionA.isRecordingSupported)
         XCTAssertTrue(sessionB.isRecordingSupported)
-        sessionA.completeCurrentStep(at: asOf)
+        apply(sessionA, .recordConfirmation, at: asOf)
         sessionA.receiveRemoteMessage("Fictional technical documentation reply", from: contact.name, at: asOf)
         XCTAssertEqual(sessionA.status(of: a.steps[0]), .completed)
         XCTAssertEqual(sessionB.status(of: b.steps[0]), .current)
@@ -101,7 +101,7 @@ final class FictionalContentTests: XCTestCase {
         let session = CoPilotSession(procedure: procedure, now: asOf)
         XCTAssertFalse(session.isFinished)
         XCTAssertFalse(session.allConfirmationsRecorded)
-        for _ in procedure.steps { session.completeCurrentStep(at: asOf) }
+        for _ in procedure.steps { apply(session, .recordConfirmation, at: asOf) }
         XCTAssertTrue(session.isFinished)
         XCTAssertTrue(session.allConfirmationsRecorded)
         XCTAssertEqual(session.log.filter { $0.kind == .stepCompleted }.count, procedure.steps.count)
@@ -111,9 +111,12 @@ final class FictionalContentTests: XCTestCase {
     func testAcknowledgingDeferredItemDoesNotMakeRecordingComplete() {
         let procedure = newProcedure()
         let session = CoPilotSession(procedure: procedure, now: asOf)
-        session.skipCurrentStep(at: asOf)
-        session.acknowledgeAlert(at: asOf)
-        for _ in procedure.steps.dropFirst() { session.completeCurrentStep(at: asOf) }
+        apply(session, .deferItem, at: asOf)
+        if let warning = session.recordingState?.pendingAcknowledgment {
+            apply(session, .acknowledgeWarning(acknowledgment: warning), at: asOf)
+        }
+        apply(session, .selectItem, target: "device-check", at: asOf)
+        for _ in procedure.steps.dropFirst() { apply(session, .recordConfirmation, at: asOf) }
         XCTAssertTrue(session.isFinished)
         XCTAssertFalse(session.allConfirmationsRecorded)
         XCTAssertEqual(session.status(of: procedure.steps[0]), .skipped)
@@ -130,9 +133,11 @@ final class FictionalContentTests: XCTestCase {
 
     private func assertCannotRecord(_ procedure: Procedure, file: StaticString = #filePath, line: UInt = #line) {
         let session = CoPilotSession(procedure: procedure, now: asOf)
-        session.completeCurrentStep(at: asOf)
-        session.skipCurrentStep(at: asOf)
-        session.acknowledgeAlert(at: asOf)
+        apply(session, .recordConfirmation, at: asOf)
+        apply(session, .deferItem, at: asOf)
+        if let warning = session.recordingState?.pendingAcknowledgment {
+            apply(session, .acknowledgeWarning(acknowledgment: warning), at: asOf)
+        }
         XCTAssertFalse(session.isRecordingSupported, file: file, line: line)
         XCTAssertNil(session.currentStep, file: file, line: line)
         XCTAssertFalse(session.isFinished, file: file, line: line)
@@ -143,4 +148,9 @@ final class FictionalContentTests: XCTestCase {
         XCTAssertTrue(session.recordingSummary.contains("unavailable"), file: file, line: line)
         XCTAssertEqual(ContextPackage(session: session, hospital: nil).currentStep, session.recordingSummary, file: file, line: line)
     }
+    private func apply(_ session: CoPilotSession, _ action: SessionCommandAction, target: String? = nil, at time: Date = .now) {
+        guard let command = session.makeCommand(action, targetItemID: target, at: time) else { return }
+        do { try session.apply(command) } catch { XCTFail("Command rejected: \(error)") }
+    }
+
 }
