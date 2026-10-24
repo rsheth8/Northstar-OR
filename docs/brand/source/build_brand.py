@@ -1,74 +1,46 @@
-"""Build the final Northstar OR identity from editable vector geometry.
+"""Export Northstar OR's institutional identity. Run from the repository root.
 
-Run from the repo root: python3 docs/brand/source/build_brand.py
-Exports use macOS AppKit/Swift and Pillow; no network access or font install.
-The source/wordmark.svg contains the existing outlined Inter Display lettering.
+Requires macOS Swift/AppKit and Pillow. Wordmark lettering is already outlined.
 """
-
 from pathlib import Path
 import re
 import subprocess
 import tempfile
 import xml.etree.ElementTree as ET
-
 from PIL import Image
 
 BRAND = Path(__file__).resolve().parent.parent
 REPO = BRAND.parent.parent
-NAVY, WHITE, GREEN, ICE, GOLD = "#0B1220", "#E8F1F8", "#3DDC97", "#7FC4E8", "#F9D98A"
+NAVY, WHITE, MUTED, ICE = "#0B1220", "#E8F1F8", "#9BB0C4", "#7FC4E8"
 
-# Full emblem: 512 × 448. Geometry has deliberate space between the five forms.
-TREE = "M130 230 L158 276 H146 L174 320 H156 L188 366 H141 V398 H119 V366 H72 L104 320 H86 L114 276 H102Z"
-LAND_CLINIC = (
-    "M40 399 C105 370 150 401 215 390 C250 384 278 374 300 370 "
-    "V309 H279 L355 251 L431 309 H410 V374 "
-    "C437 380 457 389 472 399 C404 384 364 382 314 391 "
-    "C244 407 196 418 127 409 C93 404 67 400 40 399Z"
-)
-# A true transparent cutout, not a background-colored patch.
-PLUS = "M347 320 H363 V334 H377 V350 H363 V364 H347 V350 H333 V334 H347Z"
+# The tapered trail, pulse, and North Star overlap to form one silhouette.
 TAIL = "M112 211 C143 176 180 157 214 144 L218 154 C181 165 146 184 112 211Z"
 PULSE = "M216 149 L226 158 L239 123 L252 166 L265 134"
-# The wake broadens into the star, which overlaps its end: no detached line cap.
 WAKE = "M263 129 C312 113 351 100 395 75 L407 89 C362 110 313 129 267 139Z"
-STAR = (
-    "M403 12 C410 64 416 73 457 82 C416 91 410 101 403 139 "
-    "C396 101 389 91 349 82 C389 73 396 64 403 12Z"
-)
-
-
-def symbol(mono=None, compact=False):
-    """One geometry for all colors; the compact mark keeps star and pulse only."""
-    out = []
-    if not compact:
-        out += [
-            f'<path id="evergreen" d="{TREE}" fill="{mono or GREEN}"/>',
-            f'<path id="clinic-and-land" d="{LAND_CLINIC} {PLUS}" fill="{mono or WHITE}" fill-rule="evenodd"/>',
-        ]
-    out += [
-        f'<path id="tapered-trail" d="{TAIL}" fill="{mono or ICE}"/>',
-        f'<path id="medical-pulse" d="{PULSE}" fill="none" stroke="{mono or ICE}" stroke-width="10" stroke-linejoin="round" stroke-linecap="round"/>',
-        f'<path id="connected-wake" d="{WAKE}" fill="{mono or ICE}"/>',
-        f'<path id="north-star" d="{STAR}" fill="{mono or GOLD}"/>',
-    ]
-    return "\n".join(out)
+STAR = "M403 12 C410 64 416 73 457 82 C416 91 410 101 403 139 C396 101 389 91 349 82 C389 73 396 64 403 12Z"
 
 
 def placed(body, x, y, scale):
     return f'<g transform="translate({x} {y}) scale({scale})">{body}</g>'
 
 
-def lettering(ink=WHITE, accent=GREEN):
+def symbol(color=ICE):
+    body = (
+        f'<path id="tapered-trail" d="{TAIL}" fill="{color}"/>'
+        f'<path id="medical-pulse" d="{PULSE}" fill="none" stroke="{color}" stroke-width="10" stroke-linejoin="round" stroke-linecap="round"/>'
+        f'<path id="connected-wake" d="{WAKE}" fill="{color}"/>'
+        f'<path id="north-star" d="{STAR}" fill="{color}"/>'
+    )
+    return placed(body, -88, 0, 1)
+
+
+def lettering(ink=WHITE, suffix=MUTED):
     root = ET.parse(BRAND / "source/wordmark.svg").getroot()
-    result = []
-    for item in root:
-        if not item.tag.endswith("path"):
-            continue
-        result.append(
-            f'<path d="{item.attrib["d"]}" transform="{item.attrib["transform"]}" '
-            f'fill="{ink if item.attrib["id"] == "northstar" else accent}"/>'
-        )
-    return "\n".join(result)
+    return "\n".join(
+        f'<path d="{p.attrib["d"]}" transform="{p.attrib["transform"]}" '
+        f'fill="{ink if p.attrib["id"] == "northstar" else suffix}"/>'
+        for p in root if p.tag.endswith("path")
+    )
 
 
 def svg(w, h, body, title="Northstar OR"):
@@ -79,85 +51,79 @@ def svg(w, h, body, title="Northstar OR"):
 
 
 def horizontal(mono=None):
-    return svg(900, 252,
-               placed(symbol(mono), 0, 0, 0.5) +
-               placed(lettering(mono or WHITE, mono or GREEN), 286, 90, 1.1045))
+    return svg(900, 220, placed(symbol(mono or ICE), 0, 20, .625)
+               + placed(lettering(mono or WHITE, mono or MUTED), 280, 67, 1.1045))
 
 
 def stacked(mono=None):
-    return svg(640, 600,
-               placed(symbol(mono), 64, 18, 1) +
-               placed(lettering(mono or WHITE, mono or GREEN), 30, 470, 580 / 536))
+    return svg(640, 420, placed(symbol(mono or ICE), 90, 20, 1.2)
+               + placed(lettering(mono or WHITE, mono or MUTED), 30, 320, 580 / 536))
 
 
-def usage_board(full):
-    # Distinct layer names are useful in masters; this proof repeats the shapes.
+def app_icon():
+    return f'<rect width="1024" height="1024" fill="{NAVY}"/>' + placed(symbol(), 56, 230, 2.375)
+
+
+def board():
     clean = lambda body: re.sub(r' id="[^"]+"', '', body)
-    label = lambda x, y, text, color="#9BB0C4": (
-        f'<text x="{x}" y="{y}" fill="{color}" font-family="Helvetica, sans-serif" font-size="18">{text}</text>'
+    label = lambda x, y, text, color=MUTED: (
+        f'<text x="{x}" y="{y}" fill="{color}" font-family="Helvetica, sans-serif" font-size="16">{text}</text>'
     )
-    icon = f'<rect width="1024" height="1024" fill="{NAVY}"/>' + placed(clean(full), 26, 90, 1.9)
+    icon = clean(app_icon())
     body = (
-        f'<rect width="1400" height="1080" fill="{NAVY}"/>'
-        '<rect y="744" width="1400" height="336" fill="#F4F7FB"/>'
-        + label(64, 58, "NORTHSTAR OR  /  FINAL IDENTITY")
-        + placed(clean(full), 90, 100, 1)
-        + placed(lettering(), 64, 608, 1.1)
-        + '<defs><clipPath id="app-mask"><rect x="860" y="118" width="300" height="300" rx="66"/></clipPath></defs>'
-        + '<g clip-path="url(#app-mask)">' + placed(icon, 860, 118, 300 / 1024) + '</g>'
-        + '<rect x="860" y="118" width="300" height="300" rx="66" fill="none" stroke="#24364E" stroke-width="1.5"/>'
-        + label(860, 462, "App icon")
-        + placed(icon, 860, 518, 58 / 1024)
-        + placed(icon, 972, 536, 40 / 1024)
-        + placed(clean(symbol(compact=True)), 1080 - 88 * .25, 520, .25)
-        + label(860, 614, "58 px") + label(972, 614, "40 px") + label(1080, 614, "Compact mark")
-        + label(64, 802, "SINGLE COLOR  /  LIGHT SURFACES", "#52647B")
-        + placed(clean(symbol(NAVY)), 44, 838, .36)
-        + placed(lettering(NAVY, NAVY), 258, 892, .8)
-        + placed(clean(symbol(NAVY)), 940, 830, .38)
+        f'<rect width="1400" height="960" fill="{NAVY}"/>'
+        '<rect y="624" width="1400" height="336" fill="#F4F7FB"/>'
+        + label(64, 60, "NORTHSTAR OR  /  INSTITUTIONAL IDENTITY")
+        + placed(clean(symbol()), 64, 224, .625)
+        + placed(lettering(), 344, 271, 1.1045)
+        + '<defs><clipPath id="mask"><rect x="1060" y="166" width="240" height="240" rx="54"/></clipPath></defs>'
+        + '<g clip-path="url(#mask)">' + placed(icon, 1060, 166, 240 / 1024) + '</g>'
+        + '<rect x="1060" y="166" width="240" height="240" rx="54" fill="none" stroke="#283547"/>'
+        + label(1060, 448, "App icon")
+        + placed(icon, 1060, 500, 58 / 1024)
+        + placed(icon, 1160, 518, 40 / 1024)
+        + label(1060, 590, "58 px") + label(1160, 590, "40 px")
+        + label(64, 684, "SINGLE COLOR  /  LIGHT SURFACES", "#52647B")
+        + placed(clean(symbol(NAVY)), 64, 732, .625)
+        + placed(lettering(NAVY, NAVY), 344, 779, 1.1045)
+        + placed(clean(symbol(NAVY)), 1070, 754, .5)
     )
-    return svg(1400, 1080, body, "Northstar OR — final identity and size proof")
+    return svg(1400, 960, body, "Northstar OR — institutional identity and size proofs")
 
 
 def main():
-    full = symbol()
     files = {
-        "mark-color-dark.svg": svg(512, 448, full),
-        # The light-surface signature is deliberately a single navy silhouette.
-        "mark-color-light.svg": svg(512, 448, symbol(NAVY)),
-        "mark-white.svg": svg(512, 448, symbol("#FFFFFF")),
-        "mark-navy.svg": svg(512, 448, symbol(NAVY)),
-        "mark-compact.svg": svg(384, 224, placed(symbol(compact=True), -88, 0, 1)),
-        "mark-compact-white.svg": svg(384, 224, placed(symbol("#FFFFFF", compact=True), -88, 0, 1)),
-        "mark-compact-navy.svg": svg(384, 224, placed(symbol(NAVY, compact=True), -88, 0, 1)),
+        "mark-color-dark.svg": svg(384, 224, symbol()),
+        "mark-color-light.svg": svg(384, 224, symbol(NAVY)),
+        "mark-white.svg": svg(384, 224, symbol("#FFFFFF")),
+        "mark-navy.svg": svg(384, 224, symbol(NAVY)),
+        "mark-compact.svg": svg(384, 224, symbol()),
+        "mark-compact-white.svg": svg(384, 224, symbol("#FFFFFF")),
+        "mark-compact-navy.svg": svg(384, 224, symbol(NAVY)),
         "lockup-horizontal-dark.svg": horizontal(),
         "lockup-horizontal-light.svg": horizontal(NAVY),
         "lockup-horizontal-white.svg": horizontal("#FFFFFF"),
         "lockup-stacked-dark.svg": stacked(),
         "lockup-stacked-light.svg": stacked(NAVY),
-        "NorthstarOR-AppIcon-1024.svg": svg(1024, 1024,
-            f'<rect width="1024" height="1024" fill="{NAVY}"/>' + placed(full, 26, 90, 1.9)),
-        "NorthstarOR-final.svg": svg(1280, 1000,
-            f'<rect width="1280" height="1000" fill="{NAVY}"/>' +
-            placed(full, 307.2, 98, 1.3) +
-            placed(lettering(), 238, 720, 1.5)),
-        "NorthstarOR-logo-board.svg": usage_board(full),
+        "NorthstarOR-AppIcon-1024.svg": svg(1024, 1024, app_icon()),
+        "NorthstarOR-final.svg": svg(1280, 700,
+            f'<rect width="1280" height="700" fill="{NAVY}"/>'
+            + placed(symbol(), 138, 240, .8) + placed(lettering(), 494, 281, 1.2)),
+        "NorthstarOR-logo-board.svg": board(),
     }
-    for name, contents in files.items():
-        (BRAND / name).write_text(contents)
-
+    for name, body in files.items():
+        (BRAND / name).write_text(body)
     assets = REPO / "NorthstarOR/Resources/Assets.xcassets"
     exports = [
-        ("NorthstarOR-final.svg", BRAND / "NorthstarOR-final.png", 1280, 1000, False),
-        ("NorthstarOR-logo-board.svg", BRAND / "NorthstarOR-logo-board.png", 1400, 1080, False),
+        ("NorthstarOR-final.svg", BRAND / "NorthstarOR-final.png", 1280, 700, False),
+        ("NorthstarOR-logo-board.svg", BRAND / "NorthstarOR-logo-board.png", 1400, 960, False),
         ("NorthstarOR-AppIcon-1024.svg", BRAND / "NorthstarOR-AppIcon-1024.png", 1024, 1024, True),
-        ("lockup-horizontal-dark.svg", BRAND / "lockup-horizontal-dark@2x.png", 1800, 504, False),
-        ("lockup-horizontal-light.svg", BRAND / "lockup-horizontal-light@2x.png", 1800, 504, False),
-        ("mark-color-dark.svg", BRAND / "mark-color-dark.png", 1024, 896, False),
-        ("mark-white.svg", BRAND / "mark-white.png", 1024, 896, False),
-        ("mark-navy.svg", BRAND / "mark-navy.png", 1024, 896, False),
+        ("lockup-horizontal-dark.svg", BRAND / "lockup-horizontal-dark@2x.png", 1800, 440, False),
+        ("lockup-horizontal-light.svg", BRAND / "lockup-horizontal-light@2x.png", 1800, 440, False),
+        ("mark-color-dark.svg", BRAND / "mark-color-dark.png", 1152, 672, False),
+        ("mark-white.svg", BRAND / "mark-white.png", 1152, 672, False),
+        ("mark-navy.svg", BRAND / "mark-navy.png", 1152, 672, False),
         ("NorthstarOR-AppIcon-1024.svg", assets / "AppIcon.appiconset/AppIcon-1024.png", 1024, 1024, True),
-        # A compact star/pulse has room to remain clear in the 28 pt header.
         ("mark-compact.svg", assets / "BrandMark.imageset/mark-compact@3x.png", 576, 336, False),
     ]
     with tempfile.TemporaryDirectory(prefix="northstar-brand-") as tmp:
@@ -166,8 +132,8 @@ def main():
         for source, target, w, h, opaque in exports:
             subprocess.run([str(renderer), str(BRAND / source), str(target), str(w), str(h)], check=True)
             if opaque:
-                with Image.open(target) as img:
-                    img.convert("RGB").save(target)
+                with Image.open(target) as image:
+                    image.convert("RGB").save(target)
             print(f"Exported {target.relative_to(REPO)} ({w} × {h})")
 
 
