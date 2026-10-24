@@ -19,6 +19,7 @@ Product bar: functional fictional workspace setup, editable contacts, normal cas
 ## How we work in parallel
 - **Never commit `.xcodeproj`.** It's generated from `project.yml` with `xcodegen generate`. New Swift files under `NorthstarOR/` are picked up automatically; only edit `project.yml` for build settings, Info.plist keys, or new targets.
 - **All agents:** preserve teammate edits, use separate checkouts for concurrent writers, and report only checks actually run. Review your diff and rely on required CI; human approval is optional. Never fabricate a GitHub approval.
+- Follow `docs/PARTNER_EXECUTION.md` for Rahil/Amartya ownership and shared-file reservations; `docs/AGENT_BRIEFS.md` contains bounded task prompts. Planned ownership is not an active claim. Use merged interfaces and one driver per checkout/file set.
 - **One task = one branch = one small PR.** Branch names: `copilot/...`, `planner/...`, `sync/...`, `pitch/...`. Rebase on `main` before opening the PR.
 - **Stay in your lane's folders** (see `docs/TASKS.md`). Shared files (`Models/`, `App/AppModel.swift`, `Services/SyncService.swift`, `DesignSystem/`) change in their own small PRs so conflicts stay tiny.
 - **Features talk to the backend only through `SyncService`.** Don't call a network SDK from a view.

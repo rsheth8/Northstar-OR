@@ -13,6 +13,16 @@ Use [the detailed implementation blueprint](IMPLEMENTATION_PLAN.md) for F01–F2
 
 Use [the presentation delivery plan](DEMO_READINESS.md) for the owner-confirmed **five-minute** script, product proof and fallback. First claim **F03** reusable content, then **F24/F04/F06**, guards/storage **F05/F18**, and **F07** orchestration. Shared visuals can progress separately. No implementation slice is claimed by the planning update.
 
+## Rahil and Amartya: working allocation
+
+Follow [the partner execution plan](PARTNER_EXECUTION.md) for the full F01–F28 owner map, file reservations, build waves and deadline gates. [Agent briefs](AGENT_BRIEFS.md) provide bounded kickoff/review prompts. These are planned owners, not active task claims:
+
+- **Rahil:** reusable content/shared contracts, guarded Co-pilot, AppModel/Sync integration, session review, the F26 directory after setup lands, and release/presentation/submission coordination.
+- **Amartya:** accessible shared UI/shell, F18 persistence, setup/settings, matcher/case forms/Planner, rep support exchange, worklist/start-resume, device operation and evidence/backup.
+- **Start:** Rahil claims F03; once visible, Amartya claims F01. Default two isolated writing agents plus an optional read-only reviewer. Only use a third writer for an explicitly disjoint reserved slice. Shared Models/AppModel/Sync changes remain serialized under Rahil; F18 repository files belong to Amartya.
+
+Publish actual claims here and in early draft PRs. Rahil coordinates board updates and merge order; do not mark an implementation complete because it has an owner or a plan.
+
 ## UX delivery order
 
 The approved logo and neutral shared styling are merged. This is the next implementation sequence, not a claim that the screen redesign is complete. Claim the corresponding task below. Keep shared files in their own small PRs; a grouped stage can require several PRs.
@@ -33,6 +43,9 @@ Start the fixture/contracts lane first. The visual foundation and viewport check
 Camera, AI, maps, and additional procedure types follow the working core journey. Use [the screen contracts](DESIGN.md#4-screen-contracts) and [review evidence](DESIGN.md#9-review-evidence-for-a-ui-pr) to judge each slice. Visual polish never substitutes for the state/behavior prerequisites.
 
 ## Next implementation tasks (one task per branch/PR)
+
+Claim the individual F-number row for each implementation slice. The lane checklists below are acceptance reminders, not additional parallel claims for the same work. Optional slices stay pending until their core gate passes.
+
 - [x] (Codex) **Shared design:** establish restrained clinical typography, flat controls, and quiet surfaces in `DesignSystem/`; preserve action sizes and semantic status colors (merged in [PR #8](https://github.com/rsheth8/Northstar-OR/pull/8)).
 - [ ] **F03 — first implementation claim: reusable fictional template/seed and copy.** One versioned pacemaker coordination template, optional sample factory, injected clock/IDs, non-directive recording copy and honest completion labels. Empty workspace and arbitrary compatible case IDs are valid; unsupported ICD content cannot launch (`Data/` and coordinated copy; small PR).
 - [ ] **F24 — workspace/case contracts:** stable workspace/site/contact/template/case IDs, valid case inputs and pinned supported template version (`Models/`; shared-files PR).
@@ -41,18 +54,27 @@ Camera, AI, maps, and additional procedure types follow the working core journey
 - [ ] **F06 — shared plan/support contracts:** one current coordinator plan/revision (rep request or reschedule), visible unrequested backups, superseded plans, named role/recipient, independent acceptance/connection/question/receipt state (`Models/`; shared-files PR).
 - [ ] **F18 — P0 repository/persistence:** versioned local configuration/contacts/cases/sessions/drafts, atomic writes with visible failures, schema/corruption handling, relaunch and pending-send reconciliation (`Services/` and coordinated shared state; small PR).
 - [ ] **F07 — local support orchestration:** request/accept/ack/reply, main-actor routing, case/session isolation, safe plan replacement and late old-acceptance handling, failure injection (`App/AppModel.swift`, `Services/SyncService.swift`; shared-files PR).
-- [ ] **Shared UX foundation:** implement scalable typography, the 13 pt supporting-label baseline, high-contrast status indicators, and accessible primary/secondary/focus states (`DesignSystem/`; shared-files PR).
-- [ ] **App shell and viewport:** verify the intended landscape iPad presentation; diagnose unexpected letterboxing and rigid sizing, and adapt navigation/context to window width and enlarged text (`App/RootView.swift`; shared-files PR; `project.yml` only if settings need correction).
+- [ ] **F01 — shared UX foundation:** implement scalable typography, the 13 pt supporting-label baseline, high-contrast status indicators, and accessible primary/secondary/focus states (`DesignSystem/`; shared-files PR).
+- [ ] **F02 — app shell and viewport:** verify the intended landscape iPad presentation; diagnose unexpected letterboxing and rigid sizing, and adapt navigation/context to window width and enlarged text (`App/RootView.swift`; shared-files PR; `project.yml` only if settings need correction).
 - [ ] **F25 — setup/settings:** blank workspace flow, editable fictional site/time zone/local role, explicit optional sample loading and saved configuration (`Features/Workspace/`; shell entry coordinated separately).
 - [ ] **F26 — support directory:** add/edit fictional contacts, roles, device-family capabilities, availability and simulated travel estimates; these contacts drive normal support selection (`Features/Workspace/`; shared contracts/storage first).
 - [ ] **F27 — case forms:** create/edit cases through validated normal UI using a supported template; no patient fields or sample-ID dependency (`Features/Planner/`; contracts/storage first).
 - [ ] **F28 — worklist/start/resume:** useful case filters, explicit active-context switch and retained independent records/drafts; pending acknowledgment cannot be bypassed (`Features/Planner/`; shared session orchestration in its own PR).
-- [ ] **Co-pilot:** wire voice commands with visible listening state, duplicate-command handling, and touch fallback; require an explicit command rather than inferring completion from conversation (`Features/CoPilot/`, `Services/Voice*`).
-- [ ] **Planner + Remote Support:** allow a team member to request help at any time; include their question, current context, unresolved items, recipient acknowledgment, and prominent incoming messages (`Features/Planner/`, `Features/RemoteSupport/`; coordinate shared state first).
-- [ ] **Sync:** connect separate devices through `SyncService`, show connection state, and test disconnected behavior without implying a message was delivered (`Services/`; coordinate shared state first).
-- [ ] **Camera observation:** on mock labels only, show a captured frame, extracted text, proposed match, and explicit confirmation; unreadable or unseen means unknown, never skipped (feature implementation after a small shared-state PR).
-- [ ] **AI assistant:** answer session questions and draft handoffs from recorded events; label drafts, preserve event sources, and review before sharing; choose an integration through `SyncService` and credit it before implementation.
-- [ ] **Session review:** summarize retained confirmations, deferred items, corrections and support exchanges; verify correct case after resume/relaunch; label automated sources separately. Export remains separate scope.
+- [ ] **F08 — explainable matcher:** availability, qualification, missing travel/forecast, schedule/closure boundaries, stable ranking and explicit Reschedule candidate; reasons describe actual logistical constraints (`Features/Planner/CoverageMatcher.swift`; pure behavior tests).
+- [ ] **F09 — adaptive Co-pilot workspace:** progress/current work/activity hierarchy, persistent unresolved context and reachable actions at wide/narrow windows and enlarged text (`Features/CoPilot/`; merged state/UI interfaces first).
+- [ ] **F10 — recording and corrections UI:** explicit confirmation/defer/acknowledgment/correction interactions; pinned-item warning cannot be bypassed and history remains reviewable (`Features/CoPilot/`; after F09).
+- [ ] **F11 — Planner support plans:** configured case/contact detail, one named-rep or reschedule plan, visible unrequested backups, actual acceptance and safe plan replacement; no preparation checklist (`Features/Planner/`; after shared orchestration, matcher, contacts and case forms).
+- [ ] **F12 — contextual support exchange:** actual question/snapshot, chosen sender/recipient, explicit acceptance/question acknowledgment/reply, retained failed-send draft and retry (`Features/RemoteSupport/`; configured contacts/cases and shared orchestration first).
+- [ ] **F13 — Co-pilot support integration:** request help with zero deviations or while warning is pending; correct sender/session and prominent incoming reply without changing selection or losing drafts (`Features/CoPilot/`; after F10/F12).
+- [ ] **F14 — retained session review:** unresolved-first confirmations, corrections and support exchanges; verify correct case after resume/relaunch and preserve actor/source/time. Export remains separate (`Features/CoPilot/`; after F05/F07/F13/F18).
+- [ ] **F19 — core journey verification:** blank setup, independent contact/two cases, input change, relaunch/isolation, meaningful failure and relevant accessibility/device evidence (`docs/` and focused tests; after core integration).
+- [ ] **F20 — five-minute delivery:** draft deck/script early, then verified-build screenshots/claims, three timed runs, playable backup, credits and authorized submission checks (`docs/`/presentation artifacts; final assets after F19).
+- [ ] **F15 — conditional transport proof:** time-box chosen real-device request/receipt/disconnect/reconnect proof and document the actual network scenario before implementing a backend (`Services/` and decision/evidence note; core first).
+- [ ] **F16 — conditional device delivery:** implement only the proven transport through `SyncService`, honest connection/receipt states, deduplication and stale-session/reconnect handling (`Services/`; after F15 passes).
+- [ ] **F17 — conditional voice:** bounded explicit commands, visible listening state, duplicate/stale-command handling, permissions/capability/noise checks and touch fallback (`Features/CoPilot/`, `Services/Voice*`; reliable touch first).
+- [ ] **F21 — later observation contract:** evidence/source/time/proposed result and separate human confirm/correct/reject states; unknown never completes an item (`Models/`; after stable core).
+- [ ] **F22 — later camera observation:** mock labels only, captured frame/extracted text/proposed match and explicit review; unreadable or unseen means unknown (after F21 and labeled mock examples).
+- [ ] **F23 — later AI assistant:** recorded-session questions and reviewable handoff drafts with sources, unresolved items and unavailable state; provider through `SyncService`, credited before implementation (stable core first).
 - [ ] **User validation:** review the workflow with an OR nurse and device rep; document assumptions and feedback without recording real case data (`docs/`).
 
 ## Open decisions (team call)
@@ -91,7 +113,7 @@ Camera, AI, maps, and additional procedure types follow the working core journey
 - [x] (Codex) Refine the identity for institutional medical software: a restrained connected star/pulse, neutral wordmark, editable masters, and app assets (`docs/brand/`, app asset catalog; merged in [PR #9](https://github.com/rsheth8/Northstar-OR/pull/9)). Rural scenes are preserved as presentation artwork.
 - [x] (Codex) Set up GitHub build/test checks, protected main without mandatory human approvals, PR defaults, and teammate/agent collaboration guide (merged in [PR #3](https://github.com/rsheth8/Northstar-OR/pull/3)); scheduled repo stewardship in the owner’s Codex chat every 15 minutes.
 - [x] (Codex) Document agreed product direction, current implementation limits, and prioritized roadmap (`README.md`, `docs/PRODUCT.md`, `docs/TASKS.md`; merged in [PR #1](https://github.com/rsheth8/Northstar-OR/pull/1))
-- [ ] Assign presenter, device operator, integration owner and submission owner; duration is owner-confirmed at five minutes; confirm deck format, submission location and access in DEMO_READINESS.md
+- [ ] Confirm the planned presentation roles at kickoff: Rahil integration/presenter/submission, Amartya device/evidence/backup; duration is owner-confirmed at five minutes; confirm deck format, submission location and access in DEMO_READINESS.md
 - [ ] Build the concise slide deck from the proof/story map in DEMO_READINESS.md (due Sunday 12:00 PM CT); draft from F03, finalize only with verified build evidence
 - [ ] Rehearse the 5-minute product presentation: workspace settings, normal new case, support loop, correction/review, second case and relaunch/resume. Operator triggers deferral; judge interaction only if allowed and rehearsed
 - [ ] Record and test a backup screen capture of the final verified build, labeled with the actual communication mode

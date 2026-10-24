@@ -156,21 +156,21 @@ If the core path is still incomplete at feature freeze, simplify the claimed dem
 
 ## 9. Owners, time gates and submission
 
-No person is assigned by this document. Fill these roles when a person actually takes the work; the same person may hold multiple roles.
+The owner-requested [partner execution plan](PARTNER_EXECUTION.md) sets the following working defaults. Confirm them at kickoff; they do not mean the work or evidence has been completed. Actual implementation claims remain in TASKS.md.
 
-| Role | Current owner | Responsibility |
+| Role | Planned owner | Responsibility |
 | --- | --- | --- |
-| Integration owner | Unassigned | Track P0 slices, merge dependencies and identify the candidate commit/build |
-| Presenter | Unassigned | Maintain factual narration, timing and fallback handoff |
-| Device operator | Unassigned | Reset/setup, perform the exact primary path and run alternate checks |
-| Evidence/deck owner | Unassigned | Keep screenshots, capability claims, credits and backup aligned to the candidate build |
-| Submission owner | Unassigned | Verify organizer requirements, access, upload/submit, reopen final artifacts and record completion |
+| Integration owner | Rahil | Track P0 slices, merge dependencies and identify the candidate commit/build |
+| Presenter/deck narrative | Rahil | Maintain factual narration, timing, credits, capability claims and fallback handoff |
+| Device operator | Amartya | Reset/setup, perform the exact primary path and run alternate checks |
+| Evidence/backup | Amartya; Rahil reviews | Keep screenshots, actual checks and playable backup aligned to the candidate build/deck |
+| Submission owner | Rahil; Amartya verifies | Verify organizer requirements, access, upload/submit, reopen final artifacts and record completion |
 
 Recorded deadline: **Sunday, October 25, 2026, 12:00 PM CT**. Presentation duration is owner-confirmed at five minutes. Deck format, portal/repository visibility and required fields remain to be confirmed.
 
 | Time gate | Required decision |
 | --- | --- |
-| Start of implementation | Claim F03 reusable content, then F24/F04/F06 and P0 storage; agree minimal setup/case fields, choose devices and assign responsibilities |
+| Start of implementation | Rahil claims F03; Amartya claims F01 once visible. Follow the partner plan for F24/F04/F06 and P0 storage; agree minimal fields, choose devices and confirm the working responsibilities |
 | At least 12 hours before deadline | Exercise ordinary setup/new-case/local support early; cut maps/camera/AI/extra template types/advanced administration and unproven voice/transport if behind |
 | At least 6 hours before deadline | Freeze feature scope; choose the demonstrated communication/input mode from evidence; finish slide content and start final-build runs |
 | At least 3 hours before deadline | Complete primary/alternate verification, record and test backup, finalize credits and fix only blocking defects |

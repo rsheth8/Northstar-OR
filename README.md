@@ -16,6 +16,8 @@ When a blizzard prevents an expert from reaching a small-town hospital, Northsta
 
 Read [the product brief](docs/PRODUCT.md) for the agreed experience, boundaries, camera/AI scope, and demo. Follow [the UI/UX rules](docs/DESIGN.md) for screen layouts, truthful states, accessibility, and review criteria. Read [the team workflow](docs/TEAM_WORKFLOW.md), then claim one task in [the task board](docs/TASKS.md). Build one coherent simulated procedure before broadening to other procedure types.
 
+[The Rahil + Amartya execution plan](docs/PARTNER_EXECUTION.md) assigns all implementation slices, file ownership, two focused build lanes and release responsibilities. [Copyable agent briefs](docs/AGENT_BRIEFS.md) start Rahil on F03 and Amartya on F01 after that claim is visible. Those implementation tasks are not started by publishing the plan.
+
 [The detailed implementation plan](docs/IMPLEMENTATION_PLAN.md) maps the inspected starter to shared state contracts, 28 dependency-sized implementation slices, screen specifications, acceptance tests, deadline cut lines, and later institutional evaluation gates. Its backlog is proposed work; TASKS.md remains the ownership and completion record.
 
 [The presentation delivery plan](docs/DEMO_READINESS.md) narrows that backlog to the must-work demonstration, a timed script, alternate-path tests, rehearsal evidence, fallback and submission checks. Implementation starts with the fictional fixture and shared state contracts; presentation drafting starts before final integration.
@@ -82,7 +84,7 @@ docs/               PRODUCT.md (scope), DESIGN.md (UI/UX rules), IMPLEMENTATION_
 ## Team
 
 - Rahil Sheth ([@rsheth8](https://github.com/rsheth8))
-- *Partner: add your name here*
+- Amartya
 
 ## Tools, libraries, and AI credits
 
@@ -95,4 +97,4 @@ Required by the hackathon rules. Keep this list up to date.
 - Blender (GPL) and Google Chrome (headless) produced the earlier 3D emblem, preserved in `docs/brand/archive/rural-emblem-v1/`.
 - Institutional shooting-star identity: OpenAI Codex created the connected star/pulse SVG artwork, neutral wordmark composition, and export tooling, informed by the team's direction and earlier OpenAI image-generation exploration. Rural scenes are preserved as presentation illustrations in `docs/brand/archive/`. AppKit/Swift and Pillow export the production PNGs; these are build tools only, with no new app dependency.
 - AI assistance: Claude (Anthropic) helped with brainstorming, the pitch proposal, the brand and logo, and the starter code scaffold. All code was written during the event.
-- AI assistance: OpenAI Codex helped review the starter and document the product direction/status, UI/UX rules, configurable product foundation, institutional interface reference study, implementation blueprint, five-minute presentation plan, and task roadmap. No vendor screenshots/assets, AI runtime or camera library were added by this documentation update.
+- AI assistance: OpenAI Codex helped review the starter and document the product direction/status, UI/UX rules, configurable product foundation, institutional interface reference study, implementation blueprint, partner/subagent execution plan, five-minute presentation plan, and task roadmap. No vendor screenshots/assets, AI runtime or camera library were added by this documentation update.
