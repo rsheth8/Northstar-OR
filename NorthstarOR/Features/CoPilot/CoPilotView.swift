@@ -55,9 +55,9 @@ struct CoPilotView: View {
             VStack(alignment: .leading, spacing: Northstar.Space.s3) {
                 ForEach(Array(session.procedure.steps.enumerated()), id: \.element.id) { index, step in
                     let status = session.status(of: step)
-                    let selection = session.makeCommand(.selectItem, targetItemID: step.id)
+                    let selection = session.makeCommand(.selectItem, targetItemID: step.id).map(RecordingCommandActivation.init)
                     Button {
-                        if let selection { _ = try? session.apply(selection) }
+                        if let selection { _ = try? session.apply(selection.command(at: .now)) }
                     } label: {
                     HStack(spacing: Northstar.Space.s3) {
                         Image(systemName: icon(for: status))
@@ -93,8 +93,8 @@ struct CoPilotView: View {
                     Label("\(alert.title) was deferred", systemImage: "exclamationmark.triangle.fill")
                         .font(Northstar.Fonts.title).foregroundStyle(Northstar.Palette.amber)
                     let acknowledgment = session.recordingState?.pendingAcknowledgment
-                    let command = acknowledgment.flatMap { session.makeCommand(.acknowledgeWarning(acknowledgment: $0)) }
-                    Button("Acknowledge warning") { if let command { _ = try? session.apply(command) } }
+                    let command = acknowledgment.flatMap { session.makeCommand(.acknowledgeWarning(acknowledgment: $0)).map(RecordingCommandActivation.init) }
+                    Button("Acknowledge warning") { if let command { _ = try? session.apply(command.command(at: .now)) } }
                         .buttonStyle(NorthstarPrimaryButtonStyle())
                 }
             } else if let step = session.currentStep {
@@ -105,8 +105,8 @@ struct CoPilotView: View {
                     Label("Technical support may help with this report", systemImage: "person.badge.clock")
                         .font(Northstar.Fonts.caption).foregroundStyle(Northstar.Palette.ice)
                 }
-                let deferCommand = session.makeCommand(.deferItem)
-                let confirmationCommand = session.makeCommand(.recordConfirmation)
+                let deferCommand = session.makeCommand(.deferItem).map(RecordingCommandActivation.init)
+                let confirmationCommand = session.makeCommand(.recordConfirmation).map(RecordingCommandActivation.init)
                 let isUnrecorded = session.recordingState?.itemStatuses[step.id] == .unrecorded
                 if !isUnrecorded {
                     Label(session.status(of: step) == .skipped ? "Item remains deferred" : "Team confirmation recorded",
@@ -118,14 +118,14 @@ struct CoPilotView: View {
                 HStack(spacing: Northstar.Space.s4) {
                     Button("Defer item") {
                         let skipped = step
-                        if let deferCommand, (try? session.apply(deferCommand)) != nil, skipped.isRequired {
+                        if let deferCommand, (try? session.apply(deferCommand.command(at: .now))) != nil, skipped.isRequired {
                             announcer.say("\(skipped.title) was deferred. Acknowledgment required.")
                         }
                     }
                     .font(Northstar.Fonts.step)
                     .frame(minHeight: 72).padding(.horizontal, Northstar.Space.s6)
                     .disabled(!isUnrecorded)
-                    Button("Record confirmation") { if let confirmationCommand { _ = try? session.apply(confirmationCommand) } }
+                    Button("Record confirmation") { if let confirmationCommand { _ = try? session.apply(confirmationCommand.command(at: .now)) } }
                         .buttonStyle(NorthstarPrimaryButtonStyle())
                         .disabled(!isUnrecorded)
                 }

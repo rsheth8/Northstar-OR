@@ -190,3 +190,21 @@ private extension SessionEvent {
         }
     }
 }
+
+/// A rendered control keeps its target/version/intent. First activation supplies the
+/// human action time; retries keep the entire resulting command, including that time.
+final class RecordingCommandActivation {
+    private let captured: SessionCommand
+    private var activated: SessionCommand?
+
+    init(_ captured: SessionCommand) { self.captured = captured }
+
+    func command(at time: Date) -> SessionCommand {
+        if let activated { return activated }
+        let command = SessionCommand(id: captured.id, identity: captured.identity, actor: captured.actor,
+            source: captured.source, issuedAt: time, expectedVersion: captured.expectedVersion,
+            targetItemID: captured.targetItemID, action: captured.action)
+        activated = command
+        return command
+    }
+}

@@ -185,6 +185,26 @@ final class CoPilotSessionTests: XCTestCase {
         XCTAssertFalse(invalid.isRecordingSupported)
     }
 
+    func testDelayedActivationStampsFirstTapOnceWithoutRetargetingCapturedVersion() throws {
+        let s = session()
+        let displayed = try command(s, .recordConfirmation, id: "delayed")
+        let activation = RecordingCommandActivation(displayed)
+        let tappedAt = time.addingTimeInterval(120)
+        let activated = activation.command(at: tappedAt)
+        let event = try s.apply(activated)
+        XCTAssertEqual(event.occurredAt, tappedAt)
+        XCTAssertEqual(s.log.first?.timestamp, tappedAt)
+        XCTAssertEqual(activation.command(at: tappedAt.addingTimeInterval(10)), activated)
+        XCTAssertEqual(try s.apply(activation.command(at: tappedAt.addingTimeInterval(10))), event)
+        XCTAssertEqual(s.events.count, 1)
+        let delayedStale = RecordingCommandActivation(displayed)
+        let anotherIntent = SessionCommand(id: "another", identity: displayed.identity, actor: displayed.actor,
+            source: displayed.source, issuedAt: time, expectedVersion: displayed.expectedVersion,
+            targetItemID: displayed.targetItemID, action: displayed.action)
+        reject(s, RecordingCommandActivation(anotherIntent).command(at: tappedAt), .staleVersion)
+        XCTAssertEqual(delayedStale.command(at: tappedAt).targetItemID, "timeout")
+    }
+
     func testPlannerFlagReachesCoPilotThroughSync() {
         let model = AppModel(sync: LocalSyncService())
         model.sync.send(.reducedSupportChanged(procedureID: model.activeSession.procedure.id, on: true))
