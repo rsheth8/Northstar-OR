@@ -14,7 +14,7 @@
 
 When pairing on one branch, choose one driver who edits and pushes; the navigator reviews. When working independently, use separate branches and preferably separate checkouts/worktrees. Never run two writing agents in the same checkout at once: checking out a branch changes the files for both agents.
 
-Give each agent the task, allowed folders, expected behavior, and tests. Ask it to inspect existing code before adding an abstraction. An agent must disclose what it actually tested and must not approve its own PR. The other teammate provides the GitHub approval.
+Give each agent the task, allowed folders, expected behavior, and tests. Ask it to inspect existing code before adding an abstraction. An agent must disclose what it actually tested and must not approve its own PR. Agent review and passing CI are the default; a teammate can review when useful, but a human approval is not required.
 
 ## Check, review, merge
 
@@ -30,15 +30,15 @@ Open the draft for review once ready. Explain the behavior and verification in t
 GitHub protection was enabled on 2026-10-24 with these settings:
 
 - PR required for `main`, including administrators; direct pushes are blocked.
-- One teammate approval, dismissed if new commits arrive; all review conversations resolved.
+- No mandatory human approval; all review conversations resolved.
 - Required checks: `Repository checks` and `iPad build and tests`, against current `main`.
 - Squash merges only, automatic deletion of merged branches, and an Update branch button.
-- Auto-merge available: enable it only when ready; GitHub waits for approval and checks.
+- Auto-merge available: enable it only when ready; GitHub waits for required checks and branch rules.
 - Force pushes and branch deletion blocked on `main`.
 
-Both teammates are listed in `.github/CODEOWNERS` so GitHub requests review automatically. Check Settings → Branches for the live policy. The initial setup PR also needs a teammate approval before its workflow files reach `main`.
+Check Settings → Branches for the live policy. Human review is optional; repository stewardship is delegated to an agent as described below.
 
-Before opening a PR, rebase on current `origin/main`. If another PR lands during review, use GitHub's Update branch button (safe on a shared branch), or rebase only your own task branch with `git push --force-with-lease`. A rebase rewrites commits and dismisses stale approvals. Never force-push a branch another teammate is actively using without coordinating.
+Before opening a PR, rebase on current `origin/main`. If another PR lands during review, use GitHub's Update branch button (safe on a shared branch), or rebase only your own task branch with `git push --force-with-lease`. A rebase rewrites commits and triggers fresh checks. Never force-push a branch another teammate is actively using without coordinating.
 
 CI runs on every PR to `main` and after merges. It checks generated/local files and conflict markers, then builds/tests on macOS 15 with Xcode 16.4. Actions are pinned to commit IDs; Dependabot proposes updates weekly. Older runs on the same PR are cancelled, failures retain logs/results for seven days, and no signing credentials are needed. macOS runs consume the private repository's Actions allowance; no spending limit is changed by this setup.
 
@@ -46,4 +46,10 @@ After merging, pull current `main`, regenerate the project, and mark the task `[
 
 ## If something breaks
 
-Stop dependent merges. Open a small fix PR or revert the offending PR through GitHub, run CI, and get teammate review. Keep unrelated unfinished work on its existing branch. For demo readiness, manually rehearse the full simulated journey on the actual devices; a passing unit suite cannot verify microphone behavior, UI usability, or cross-device delivery.
+Stop dependent merges. Open a small fix PR or revert the offending PR through GitHub, run CI, and have the agent review the diff before merging. Keep unrelated unfinished work on its existing branch. For demo readiness, manually rehearse the full simulated journey on the actual devices; a passing unit suite cannot verify microphone behavior, UI usability, or cross-device delivery.
+
+## Repository steward
+
+The owner has authorized an agent to monitor this repository and manage routine PR integration without mandatory teammate approvals. GitHub enforces required checks continuously; the recurring agent run handles follow-up on a schedule. This is not continuous live supervision.
+
+For ready PRs, the steward reviews the diff and CI, updates the branch from `main` when needed, and enables squash auto-merge. Drafts, explicit holds, failed checks, unresolved conversations, unclear intent, and unsafe conflicts block integration. The steward can propose small targeted fixes, but must not bypass protections, rewrite active teammate branches, discard work, invent completed validation, or broaden product scope. It stays quiet when there is nothing actionable and reports meaningful merges, failures, or decisions requiring the team.
