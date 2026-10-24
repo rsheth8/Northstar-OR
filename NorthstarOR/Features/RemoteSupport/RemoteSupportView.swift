@@ -1,48 +1,201 @@
 import SwiftUI
 
-/// What the remote device rep sees: the context package plus quick prompts to send to the OR.
-/// Starter layout only. The planner lane owns this screen.
+/// Live local context until the immutable request/receipt contracts land.
 struct RemoteSupportView: View {
     @Environment(AppModel.self) private var model
-    @State private var draft = ""
-    private let repName = "Ana Lindqvist"
-    private let quickPrompts = FictionalCoordinationTemplate.technicalSupportReplies
+    @Environment(\.dynamicTypeSize) private var typeSize
+    @State private var drafts: [String: String] = [:]
+    @State private var senderID: String?
+    @State private var sendError: String?
+
+    private var senders: [DeviceRep] { model.reps.filter { $0.statedRole == .technicalRep } }
+    private var sender: DeviceRep? {
+        if let senderID { return senders.first { $0.id == senderID } }
+        return senders.first
+    }
+    private var draft: Binding<String> {
+        let id = model.activeSession.identity.sessionID
+        return Binding(get: { drafts[id, default: ""] }, set: { drafts[id] = $0 })
+    }
 
     var body: some View {
-        let session = model.activeSession
-        let package = ContextPackage(session: session, hospital: model.hospital(session.procedure.hospitalID))
-
         NavigationStack {
-            List {
-                Section("Context package") {
-                    LabeledContent("Procedure", value: package.procedureName)
-                    LabeledContent("Hospital", value: package.hospital)
-                    LabeledContent("Current step", value: package.currentStep)
-                    if package.needsEscalation {
-                        ForEach(package.deviations, id: \.self) {
-                            Label($0, systemImage: "exclamationmark.triangle.fill").foregroundStyle(Northstar.Palette.amber)
+            GeometryReader { proxy in
+                if proxy.size.width >= 1000 && !typeSize.isAccessibilitySize {
+                    HStack(spacing: 0) {
+                        ScrollView { brief.padding(Northstar.Space.s6) }
+                            .frame(maxWidth: .infinity)
+                            .background(Northstar.Palette.bgRaised)
+                        Divider()
+                        VStack(spacing: 0) {
+                            ScrollView { conversation.padding(Northstar.Space.s4) }
+                            composer
                         }
+                        .frame(width: 360)
+                        .background(Northstar.Palette.bgBase)
                     }
-                }
-                Section("Recent log") {
-                    ForEach(package.recentLog.reversed()) { Text($0.message).font(Northstar.Fonts.log) }
-                }
-                Section("Send a prompt to the OR") {
-                    ForEach(quickPrompts, id: \.self) { prompt in
-                        Button(prompt) { send(prompt, procedureID: session.procedure.id) }
+                } else {
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: Northstar.Space.s6) {
+                            brief
+                            Divider()
+                            conversation
+                        }
+                        .padding(Northstar.Space.s6)
                     }
-                    HStack {
-                        TextField("Custom prompt", text: $draft)
-                        Button("Send") { send(draft, procedureID: session.procedure.id); draft = "" }
-                            .disabled(draft.isEmpty)
-                    }
+                    .safeAreaInset(edge: .bottom, spacing: 0) { composer }
                 }
             }
-            .navigationTitle("Remote Support Link")
+            .background(Northstar.Palette.bgRaised)
+            .foregroundStyle(Northstar.Palette.ink)
+            .navigationTitle("Remote Support")
+            .navigationBarTitleDisplayMode(.inline)
         }
     }
 
-    private func send(_ text: String, procedureID: String) {
-        model.sync.send(.remoteMessage(procedureID: procedureID, from: repName, text: text))
+    private var brief: some View {
+        let session = model.activeSession
+        return VStack(alignment: .leading, spacing: Northstar.Space.s6) {
+            VStack(alignment: .leading, spacing: Northstar.Space.s2) {
+                Text("Team question").font(Northstar.Fonts.label).foregroundStyle(Northstar.Palette.inkMuted)
+                Text("No team question recorded").font(Northstar.Fonts.title)
+                    .accessibilityAddTraits(.isHeader)
+                Text("This build shares the current recording on this device. Contextual requests and question acknowledgment are not available yet.")
+                    .font(Northstar.Fonts.body).foregroundStyle(Northstar.Palette.inkMuted)
+            }
+            Divider()
+            section("Current case context") {
+                Text(session.procedure.reference ?? session.procedure.id).font(Northstar.Fonts.display)
+                Text(session.procedure.name).font(Northstar.Fonts.body)
+                Text(model.hospital(session.procedure.hospitalID)?.name ?? "Site not recorded")
+                    .font(Northstar.Fonts.body).foregroundStyle(Northstar.Palette.inkMuted)
+                NorthstarStatusLabel("Live local context · Not a request snapshot", tone: .info, systemImage: "ipad.landscape")
+            }
+            Divider()
+            section("Unresolved items") {
+                let items = session.procedure.steps.filter { session.recordingState?.itemStatuses[$0.id] != .teamConfirmed }
+                if items.isEmpty { Text("No unresolved items recorded.").font(Northstar.Fonts.body) }
+                ForEach(items) { step in
+                    itemRow(step, status: session.recordingState?.itemStatuses[step.id] ?? .unrecorded)
+                }
+            }
+            Divider()
+            section("Recorded confirmations") {
+                let items = session.procedure.steps.filter { session.recordingState?.itemStatuses[$0.id] == .teamConfirmed }
+                if items.isEmpty { Text("No team confirmations recorded.").font(Northstar.Fonts.body).foregroundStyle(Northstar.Palette.inkMuted) }
+                ForEach(items) { step in itemRow(step, status: .teamConfirmed) }
+            }
+            Divider()
+            section("Support context") {
+                NorthstarStatusLabel(session.reducedSupport ? "Reduced-support context recorded" : "Standard support context recorded", tone: .neutral)
+                Text("A support context label is not a request, acceptance or connection.")
+                    .font(Northstar.Fonts.supporting).foregroundStyle(Northstar.Palette.inkMuted)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var conversation: some View {
+        let messages = model.activeSession.log.filter { $0.kind == .remoteMessage }
+        return section("Conversation") {
+            Text("Messages on this device").font(Northstar.Fonts.supporting).foregroundStyle(Northstar.Palette.inkMuted)
+            if messages.isEmpty {
+                Text("No local messages yet").font(Northstar.Fonts.body).foregroundStyle(Northstar.Palette.inkMuted)
+                    .padding(.vertical, Northstar.Space.s6)
+            }
+            ForEach(messages) { entry in
+                VStack(alignment: .leading, spacing: Northstar.Space.s2) {
+                    Text(entry.message).font(Northstar.Fonts.body).textSelection(.enabled)
+                    Text(entry.timestamp.formatted(date: .omitted, time: .shortened))
+                        .font(Northstar.Fonts.supporting).monospacedDigit().foregroundStyle(Northstar.Palette.inkMuted)
+                }
+                .padding(.vertical, Northstar.Space.s2)
+                Divider()
+            }
+        }
+    }
+
+    private var composer: some View {
+        VStack(alignment: .leading, spacing: Northstar.Space.s3) {
+            if let sendError {
+                Text(sendError).font(Northstar.Fonts.body).foregroundStyle(Northstar.Palette.alert)
+                    .accessibilityIdentifier("support-send-error")
+            }
+            Menu {
+                ForEach(senders) { rep in
+                    Button(rep.name) { senderID = rep.id }
+                }
+            } label: {
+                Label(sender.map { "Local sender: \($0.name)" } ?? "No technical rep configured", systemImage: "person.crop.circle")
+                    .font(Northstar.Fonts.supporting)
+                    .frame(minHeight: Northstar.Target.minimum)
+            }
+            .disabled(senders.isEmpty)
+            TextField("Write a local technical-support message", text: draft, axis: .vertical)
+                .font(Northstar.Fonts.body)
+                .lineLimit(1...4)
+                .padding(Northstar.Space.s3)
+                .frame(minHeight: Northstar.Target.minimum)
+                .background(Northstar.Palette.bgRaised, in: RoundedRectangle(cornerRadius: Northstar.Radius.sm))
+                .overlay { RoundedRectangle(cornerRadius: Northstar.Radius.sm).strokeBorder(Northstar.Palette.indicator) }
+                .accessibilityIdentifier("support-draft")
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: Northstar.Space.s3) { composerActions }
+                VStack(alignment: .leading, spacing: Northstar.Space.s3) { composerActions }
+            }
+        }
+        .padding(Northstar.Space.s4)
+        .background(Northstar.Palette.bgBase)
+    }
+
+    @ViewBuilder private var composerActions: some View {
+        Menu("Suggested text") {
+            ForEach(FictionalCoordinationTemplate.technicalSupportReplies, id: \.self) { prompt in
+                Button(prompt) { draft.wrappedValue = prompt }
+            }
+        }
+        .buttonStyle(NorthstarSecondaryButtonStyle())
+        Button("Send locally", action: send)
+            .buttonStyle(NorthstarPrimaryButtonStyle(tone: .standard))
+            .disabled(sender == nil || draft.wrappedValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            .accessibilityIdentifier("support-send")
+    }
+
+    private func send() {
+        let session = model.activeSession
+        let text = draft.wrappedValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let sender, !text.isEmpty else { return }
+        let previousIDs = Set(session.log.map(\.id))
+        model.sync.send(.remoteMessage(procedureID: session.procedure.id, from: sender.name, text: text))
+        // SyncService currently returns no receipt. Confirm only the observable
+        // synchronous local effect; retain the draft if routing did not occur.
+        if session.log.contains(where: { !previousIDs.contains($0.id) && $0.kind == .remoteMessage }) {
+            drafts[session.identity.sessionID] = ""
+            sendError = nil
+        } else {
+            sendError = "Message not added on this device. Your draft is kept; try again."
+        }
+    }
+
+    private func itemRow(_ step: ProcedureStep, status: RecordedItemStatus) -> some View {
+        HStack(alignment: .top, spacing: Northstar.Space.s3) {
+            Image(systemName: status == .teamConfirmed ? "checkmark.circle.fill" : status == .deferred ? "exclamationmark.triangle.fill" : "circle")
+                .foregroundStyle(status == .teamConfirmed ? Northstar.Palette.aurora : status == .deferred ? Northstar.Palette.amber : Northstar.Palette.indicator)
+                .accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: Northstar.Space.s1) {
+                Text(step.title).font(Northstar.Fonts.body)
+                Text(status == .teamConfirmed ? "Team-confirmed" : status == .deferred ? "Deferred" : "Unrecorded")
+                    .font(Northstar.Fonts.supporting).foregroundStyle(Northstar.Palette.inkMuted)
+            }
+        }
+        .accessibilityElement(children: .combine)
+    }
+
+    private func section<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: Northstar.Space.s3) {
+            Text(title).font(Northstar.Fonts.bodyStrong).accessibilityAddTraits(.isHeader)
+            content()
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
