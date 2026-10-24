@@ -4,7 +4,7 @@
 
 ## Start one task
 
-1. Read `AGENTS.md`, `CLAUDE.md`, `PRODUCT.md`, and `TASKS.md`. Check open PRs for work already in progress.
+1. Read `AGENTS.md`, `CLAUDE.md`, `PRODUCT.md`, `DESIGN.md`, and `TASKS.md`. Check open PRs for work already in progress.
 2. Update local `main` with `git pull --ff-only` while your workspace is clean. Never discard local edits to make it clean.
 3. Create a task branch: `copilot/<task>`, `planner/<task>`, `sync/<task>`, or `pitch/<task>`.
 4. Mark the task `[~] (your name)` in `TASKS.md` and push an early draft PR so the other teammate can see the claim. A claim sitting only on your laptop is invisible to them.
@@ -26,6 +26,8 @@ bash scripts/check.sh
 The second command generates the Xcode project, finds an installed iPad simulator, builds, and runs the unit tests without signing. Install XcodeGen with `brew install xcodegen`. To pick a specific simulator, use `SIMULATOR_ID=<udid> bash scripts/check.sh`. Results and logs are in ignored `build/`.
 
 Open the draft for review once ready. Explain the behavior and verification in the PR template; include a screenshot for visible changes. Review shared state, failure/disconnect paths, and product boundaries. Avoid cosmetic churn in unrelated files.
+
+For UI changes, use [the design guide](DESIGN.md#9-review-evidence-for-a-ui-pr): include before/after screenshots at a named iPad/window size, enlarged-text evidence, and the relevant empty, warning, disconnected, or failure state. Record the touch-target, contrast, VoiceOver, keyboard, and Reduce Motion checks actually performed, plus unresolved gaps. State/model changes need meaningful behavior tests; reversible styling changes need visual verification. Documentation-only PRs can mark the UI section not applicable. These are review requirements, not an additional human-approval requirement.
 
 GitHub protection was enabled on 2026-10-24 with these settings:
 

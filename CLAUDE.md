@@ -1,6 +1,6 @@
 # Northstar OR: instructions for agents and teammates
 
-Read this before changing anything. Then read `docs/PRODUCT.md`, `docs/TEAM_WORKFLOW.md`, and `docs/TASKS.md`, and claim a task.
+Read this before changing anything. Then read `docs/PRODUCT.md`, `docs/DESIGN.md`, `docs/TEAM_WORKFLOW.md`, and `docs/TASKS.md`, and claim a task.
 
 ## What we're building
 A native SwiftUI iPad app (iPadOS 17+) for a 24-hour Medtronic hackathon. Prompt: *Connect & Intersect*.
@@ -24,11 +24,15 @@ Deadline: slide deck and repo due **Sunday 12:00 PM CT**. Polish beats breadth.
 - Keep `NorthstarORTests` passing: `xcodebuild test -scheme NorthstarOR -destination 'platform=iOS Simulator,name=iPad Pro 13-inch (M4)'` (pick any installed iPad simulator).
 
 ## Design system
+- Follow the screen contracts, state rules, and review criteria in `docs/DESIGN.md`. The approved direction is restrained institutional software: neutral type, flat controls, quiet surfaces, and the connected star/pulse identity.
 - Use `Northstar.Palette`, `Northstar.Fonts`, `Northstar.Space`, `Northstar.Radius` from `DesignSystem/NorthstarTheme.swift`. No raw hex colors in views.
-- Dark theme, landscape iPad, glove-friendly targets (min 72 pt for primary actions).
+- Dark theme, landscape iPad first; adapt to available window space and Dynamic Type. Primary actions are at least 72 pt high and 72 pt wide; other hit areas are at least 44 × 44 pt.
 - Color meaning: aurora green = go/done, amber = skipped step / warning, red (`alert`) = stop. Always pair color with an icon and a label.
-- Voice: calm and short. Speak only for important moments, e.g. "Step 4 was skipped. Confirm to continue."
+- Color describes the recorded workflow or app state, never clinical readiness. Availability, acceptance, connection, delivery, and acknowledgment are distinct; show only states the implementation supports.
+- Keep warnings persistent and purposeful. No decorative glow, bouncing controls, voice orb, repeated pulsing, or flashing screen borders. Respect Reduce Motion and retain touch alternatives to voice.
+- Voice: calm and short. Speak only for important moments, e.g. "Step 4 was deferred. Acknowledgment required."
 - Logo files: `docs/brand/` (SVG). App icon lives in the asset catalog.
+- UI PRs include named-size screenshots, relevant empty/failure/warning states, and enlarged-text evidence. Report the contrast, touch, VoiceOver, keyboard, and Reduce Motion checks actually run, with remaining gaps.
 
 ## Architecture in one breath
 `AppModel` (Observable) holds sample data, the active `CoPilotSession`, and a `SyncService`.

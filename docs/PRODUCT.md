@@ -2,6 +2,8 @@
 
 This brief records the agreed direction. It is a design plan, not a claim that every feature is implemented. See the README for current status and TASKS.md for ownership.
 
+The approved visual and interaction rules are in [DESIGN.md](DESIGN.md). Use its screen contracts, accessibility targets, and review evidence alongside this brief. [The UX delivery order](TASKS.md#ux-delivery-order) turns that direction into small implementation tasks.
+
 ## Purpose and users
 
 Help a rural OR team coordinate technical support, maintain shared workflow context, and hand off information when weather disrupts the usual support arrangement.

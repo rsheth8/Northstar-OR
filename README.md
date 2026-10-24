@@ -14,11 +14,13 @@ When a blizzard prevents an expert from reaching a small-town hospital, Northsta
 
 ## Start here with your partner
 
-Read [the product brief](docs/PRODUCT.md) for the agreed experience, boundaries, camera/AI scope, and demo. Read [the team workflow](docs/TEAM_WORKFLOW.md), then claim one task in [the task board](docs/TASKS.md). Build one coherent simulated procedure before broadening to other procedure types.
+Read [the product brief](docs/PRODUCT.md) for the agreed experience, boundaries, camera/AI scope, and demo. Follow [the UI/UX rules](docs/DESIGN.md) for screen layouts, truthful states, accessibility, and review criteria. Read [the team workflow](docs/TEAM_WORKFLOW.md), then claim one task in [the task board](docs/TASKS.md). Build one coherent simulated procedure before broadening to other procedure types.
 
 **Core journey:** coverage disruption → a human accepts support → the team records progress → a team member requests help → the expert receives context → the team reviews the session record.
 
 The final logo, app icon, editable artwork, and usage guidance are in [the brand kit](docs/brand/README.md).
+
+The approved design uses neutral typography, flat controls, quiet navy surfaces, and meaningful status colors. The logo and shared styling are implemented; adaptive screen layouts, scalable text, and explicit support/checklist states remain in [the ordered UX plan](docs/TASKS.md#ux-delivery-order).
 
 ## What works today
 
@@ -67,7 +69,7 @@ NorthstarOR/
     Planner/        CoverageMatcher engine + planner view
     RemoteSupport/  ContextPackage + remote rep view
 NorthstarORTests/   unit tests for the matcher, session, and voice parsing
-docs/               PRODUCT.md (agreed direction), TASKS.md (work), brand/ (logos)
+docs/               PRODUCT.md (scope), DESIGN.md (UI/UX rules), TASKS.md (plan), brand/ (logos)
 ```
 
 ## Team
@@ -86,4 +88,4 @@ Required by the hackathon rules. Keep this list up to date.
 - Blender (GPL) and Google Chrome (headless) produced the earlier 3D emblem, preserved in `docs/brand/archive/rural-emblem-v1/`.
 - Institutional shooting-star identity: OpenAI Codex created the connected star/pulse SVG artwork, neutral wordmark composition, and export tooling, informed by the team's direction and earlier OpenAI image-generation exploration. Rural scenes are preserved as presentation illustrations in `docs/brand/archive/`. AppKit/Swift and Pillow export the production PNGs; these are build tools only, with no new app dependency.
 - AI assistance: Claude (Anthropic) helped with brainstorming, the pitch proposal, the brand and logo, and the starter code scaffold. All code was written during the event.
-- AI assistance: OpenAI Codex helped review the starter implementation and document the product direction, implementation status, and task roadmap. No AI runtime or new camera library was added by this documentation update.
+- AI assistance: OpenAI Codex helped review the starter implementation and document the product direction, implementation status, UI/UX rules, and task roadmap. No AI runtime or new camera library was added by this documentation update.

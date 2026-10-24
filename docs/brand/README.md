@@ -2,6 +2,8 @@
 
 Northstar OR should feel precise, calm, and credible in an institutional medical setting. The primary identity is a connected shooting North Star with one pulse in its tapered trail, paired with a neutral Inter Display wordmark. One cool blue accent gives it recognition; the OR suffix uses muted ink.
 
+Product screen layouts, interaction rules, accessibility targets, and review criteria are defined in [the UI/UX guide](../DESIGN.md). This file governs artwork and its usage.
+
 The symbol is the same at every size. The rural clinic and evergreen scene is preserved as presentation illustration in `archive/shooting-star-scene-v1/`; the app uses the simpler star/pulse signature.
 
 ![Northstar OR identity](NorthstarOR-final.png)
