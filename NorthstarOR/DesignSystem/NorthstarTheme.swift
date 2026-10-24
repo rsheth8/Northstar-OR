@@ -1,6 +1,6 @@
 import SwiftUI
 
-// Northstar OR design tokens for SwiftUI. Mirrors tokens.json (dark theme is primary).
+// Shared Northstar OR design tokens. Dark theme is primary.
 
 extension Color {
     init(hex: UInt32, alpha: Double = 1) {
@@ -19,10 +19,10 @@ enum Northstar {
     // MARK: Colors (dark theme)
     enum Palette {
         static let bgBase     = Color(hex: 0x0B1220)
-        static let bgRaised   = Color(hex: 0x121C33)
+        static let bgRaised   = Color(hex: 0x141E2C)
         static let bgSunken   = Color(hex: 0x070C17)
-        static let slate      = Color(hex: 0x2A3B5C)
-        static let line       = Color(hex: 0x26344F)
+        static let slate      = Color(hex: 0x2A394B)
+        static let line       = Color(hex: 0x283547)
         static let ink        = Color(hex: 0xE8F1F8)
         static let inkMuted   = Color(hex: 0x9BB0C4)
         static let starlight  = Color(hex: 0xF9D98A)  // logo star (updated)
@@ -49,17 +49,17 @@ enum Northstar {
 
     // MARK: Radius
     enum Radius {
-        static let sm: CGFloat = 10
-        static let md: CGFloat = 16
-        static let lg: CGFloat = 22
+        static let sm: CGFloat = 6
+        static let md: CGFloat = 10
+        static let lg: CGFloat = 12
     }
 
     // MARK: Type
     enum Fonts {
-        static let display     = Font.system(size: 56, weight: .heavy, design: .rounded)
-        static let stepCurrent = Font.system(size: 44, weight: .bold, design: .rounded)
-        static let title       = Font.system(size: 34, weight: .bold, design: .rounded)
-        static let step        = Font.system(size: 28, weight: .semibold, design: .rounded)
+        static let display     = Font.system(size: 40, weight: .semibold)
+        static let stepCurrent = Font.system(size: 32, weight: .semibold)
+        static let title       = Font.system(size: 24, weight: .semibold)
+        static let step        = Font.system(size: 22, weight: .semibold)
         static let body        = Font.system(size: 17, weight: .regular)
         static let bodyStrong  = Font.system(size: 17, weight: .semibold)
         static let caption     = Font.system(size: 13, weight: .medium)
@@ -81,8 +81,6 @@ struct NorthstarPrimaryButtonStyle: ButtonStyle {
                 Northstar.Palette.aurora,
                 in: RoundedRectangle(cornerRadius: Northstar.Radius.lg, style: .continuous)
             )
-            .shadow(color: Northstar.Palette.aurora.opacity(0.35), radius: 16)
-            .scaleEffect(configuration.isPressed ? 0.97 : 1)
-            .animation(.spring(response: 0.25, dampingFraction: 0.7), value: configuration.isPressed)
+            .opacity(configuration.isPressed ? 0.82 : 1)
     }
 }
