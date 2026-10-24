@@ -28,7 +28,9 @@ struct RemoteSupportView: View {
                             .background(Northstar.Palette.bgRaised)
                         Divider()
                         VStack(spacing: 0) {
+                            // Keep the newest message in view when the keyboard shortens this pane.
                             ScrollView { conversation.padding(Northstar.Space.s4) }
+                                .defaultScrollAnchor(.bottom)
                             composer
                         }
                         .frame(width: 360)
