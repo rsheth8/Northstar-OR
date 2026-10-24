@@ -46,7 +46,7 @@ Priority: one coherent simulated procedure and a reliable support journey before
 - [ ] Stream co-pilot log entries to the remote rep view
 
 ## Lane D: Pitch and demo
-- [~] (Codex) Document agreed product direction, current implementation limits, and prioritized roadmap (`README.md`, `docs/PRODUCT.md`, `docs/TASKS.md`; branch `pitch/product-direction`; mark complete after merge)
+- [x] (Codex) Document agreed product direction, current implementation limits, and prioritized roadmap (`README.md`, `docs/PRODUCT.md`, `docs/TASKS.md`; merged in [PR #1](https://github.com/rsheth8/Northstar-OR/pull/1))
 - [ ] Slide deck (due Sunday 12:00 PM CT)
 - [ ] 3-minute demo script, judge triggers the skipped-step alert
 - [ ] Record a backup screen capture of a perfect run
