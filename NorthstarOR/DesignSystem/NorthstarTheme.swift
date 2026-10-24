@@ -38,7 +38,7 @@ enum Northstar {
         static let alert = Workspace.failure
         static let indicator = Workspace.boundary
         static let focusRing = Workspace.focus
-        static let auroraPressed = Workspace.success
+        static let auroraPressed = Color(hex: 0x105033) // Distinct pressed confirmation fill.
         static let icePressed = Workspace.actionPressed
         static let iceSoft = Workspace.selection
         static let alertSoft = Workspace.failureSurface
