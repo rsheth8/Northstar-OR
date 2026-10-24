@@ -1,54 +1,92 @@
 import Foundation
 
-/// Hardcoded, fictional demo data. Every name and number here is made up.
+/// Optional, fictional seed content. Every person, facility and input is made up.
+/// Creating a seed creates ordinary model records, never progress or support acceptance.
+/// F07/F25 will replace the starter's automatic startup use with explicit sample loading.
 enum SampleData {
-    static let hospitals: [Hospital] = [
-        Hospital(id: "grand-marais", name: "North Shore Community Hospital", town: "Grand Marais", latitude: 47.75, longitude: -90.33),
-        Hospital(id: "bemidji", name: "Lakes Regional Medical Center", town: "Bemidji", latitude: 47.47, longitude: -94.88),
-        Hospital(id: "worthington", name: "Prairie Valley Hospital", town: "Worthington", latitude: 43.62, longitude: -95.60),
-    ]
+    enum Record: String, CaseIterable {
+        case northShoreSite = "grand-marais"
+        case lakesSite = "bemidji"
+        case prairieSite = "worthington"
+        case anaContact = "rep-ana"
+        case marcusContact = "rep-marcus"
+        case priyaContact = "rep-priya"
+        case northShoreCase = "proc-1"
+        case unsupportedCase = "proc-2"
+        case lakesCase = "proc-3"
+    }
 
-    static let reps: [DeviceRep] = [
-        DeviceRep(id: "rep-ana", name: "Ana Lindqvist", homeBase: "Duluth",
-                  skills: ["pacemaker", "icd"],
-                  driveMinutes: ["grand-marais": 110, "bemidji": 200, "worthington": 390],
-                  isAvailable: true, canSupportRemotely: true),
-        DeviceRep(id: "rep-marcus", name: "Marcus Bell", homeBase: "Minneapolis",
-                  skills: ["pacemaker", "neurostim"],
-                  driveMinutes: ["grand-marais": 270, "bemidji": 225, "worthington": 180],
-                  isAvailable: true, canSupportRemotely: true),
-        DeviceRep(id: "rep-priya", name: "Priya Raman", homeBase: "St. Cloud",
-                  skills: ["icd", "insulin-pump"],
-                  driveMinutes: ["grand-marais": 300, "bemidji": 150, "worthington": 210],
-                  isAvailable: false, canSupportRemotely: true),
-    ]
+    /// A content bundle using existing public model types, not a persistence schema.
+    struct Seed {
+        /// Baseline for all simulated forecast and travel inputs in this bundle.
+        let asOf: Date
+        let hospitals: [Hospital]
+        let reps: [DeviceRep]
+        let forecasts: [String: StormForecast]
+        let procedures: [Procedure]
 
-    static let forecasts: [String: StormForecast] = [
-        "grand-marais": StormForecast(summary: "Blizzard warning, 14 in of snow", roadClosureInHours: 1.5, snowfallInches: 14),
-        "bemidji": StormForecast(summary: "Light snow", roadClosureInHours: nil, snowfallInches: 2),
-        "worthington": StormForecast(summary: "Ice storm watch", roadClosureInHours: 18, snowfallInches: 1),
-    ]
+        static func empty(asOf: Date) -> Seed {
+            Seed(asOf: asOf, hospitals: [], reps: [], forecasts: [:], procedures: [])
+        }
 
-    static let pacemakerSteps: [ProcedureStep] = [
-        ProcedureStep(id: "timeout", title: "Surgical time-out", detail: "Confirm patient, procedure, and site with the whole team.", isRequired: true, normallyCoveredByRep: false),
-        ProcedureStep(id: "device-check", title: "Verify device and leads", detail: "Match model and serial numbers to the implant record.", isRequired: true, normallyCoveredByRep: true),
-        ProcedureStep(id: "programmer", title: "Connect programmer", detail: "Pair the programmer and confirm telemetry.", isRequired: true, normallyCoveredByRep: true),
-        ProcedureStep(id: "lead-placement", title: "Lead placement", detail: "Team places leads per standard technique.", isRequired: true, normallyCoveredByRep: false),
-        ProcedureStep(id: "thresholds", title: "Measure thresholds", detail: "Record sensing and pacing thresholds.", isRequired: true, normallyCoveredByRep: true),
-        ProcedureStep(id: "connect-device", title: "Connect leads to device", detail: "Confirm secure connection and tighten set screws.", isRequired: true, normallyCoveredByRep: true),
-        ProcedureStep(id: "final-interrogation", title: "Final interrogation", detail: "Interrogate the device and save the report.", isRequired: true, normallyCoveredByRep: true),
-        ProcedureStep(id: "closure", title: "Closure and count", detail: "Close the pocket and complete the instrument count.", isRequired: true, normallyCoveredByRep: false),
-    ]
+        /// Absolute closure time preserves the meaning of the relative fixture input.
+        func roadClosureAt(hospitalID: String) -> Date? {
+            forecasts[hospitalID]?.roadClosureInHours.map { asOf.addingTimeInterval($0 * 3600) }
+        }
+    }
 
-    static let procedures: [Procedure] = {
-        let now = Date()
-        return [
-            Procedure(id: "proc-1", name: "Dual-chamber pacemaker implant", deviceFamily: "pacemaker",
-                      hospitalID: "grand-marais", scheduledAt: now.addingTimeInterval(8 * 3600), durationMinutes: 90, steps: pacemakerSteps),
-            Procedure(id: "proc-2", name: "ICD generator change", deviceFamily: "icd",
-                      hospitalID: "worthington", scheduledAt: now.addingTimeInterval(26 * 3600), durationMinutes: 60, steps: pacemakerSteps),
-            Procedure(id: "proc-3", name: "Pacemaker implant", deviceFamily: "pacemaker",
-                      hospitalID: "bemidji", scheduledAt: now.addingTimeInterval(30 * 3600), durationMinutes: 90, steps: pacemakerSteps),
+    /// Invoke explicitly for a fresh sample. The clock is read once and every record ID
+    /// is generated once so references remain coherent even with UUID-based generators.
+    static func make(clock: () -> Date = Date.init,
+                     makeID: (Record) -> String = { $0.rawValue }) -> Seed {
+        let asOf = clock()
+        let ids = Dictionary(uniqueKeysWithValues: Record.allCases.map { ($0, makeID($0)) })
+        // Every enum case was populated above; avoid consulting the generator twice.
+        func id(_ record: Record) -> String { ids[record]! }
+        let northShore = id(.northShoreSite)
+        let lakes = id(.lakesSite)
+        let prairie = id(.prairieSite)
+        let hospitals = [
+            Hospital(id: northShore, name: "North Shore Community Hospital", town: "Grand Marais", latitude: 47.75, longitude: -90.33),
+            Hospital(id: lakes, name: "Lakes Regional Medical Center", town: "Bemidji", latitude: 47.47, longitude: -94.88),
+            Hospital(id: prairie, name: "Prairie Valley Hospital", town: "Worthington", latitude: 43.62, longitude: -95.60),
         ]
-    }()
+        let reps = [
+            DeviceRep(id: id(.anaContact), name: "Ana Lindqvist", homeBase: "Duluth",
+                      skills: ["pacemaker", "icd"],
+                      driveMinutes: [northShore: 110, lakes: 200, prairie: 390],
+                      isAvailable: true, canSupportRemotely: true),
+            DeviceRep(id: id(.marcusContact), name: "Marcus Bell", homeBase: "Minneapolis",
+                      skills: ["pacemaker", "neurostim"],
+                      driveMinutes: [northShore: 270, lakes: 225, prairie: 180],
+                      isAvailable: true, canSupportRemotely: true),
+            DeviceRep(id: id(.priyaContact), name: "Priya Raman", homeBase: "St. Cloud",
+                      skills: ["icd", "insulin-pump"],
+                      driveMinutes: [northShore: 300, lakes: 150, prairie: 210],
+                      isAvailable: false, canSupportRemotely: true),
+        ]
+        let forecasts = [
+            northShore: StormForecast(summary: "Simulated blizzard warning, 14 in of snow", roadClosureInHours: 1.5, snowfallInches: 14),
+            lakes: StormForecast(summary: "Simulated light snow", roadClosureInHours: nil, snowfallInches: 2),
+            prairie: StormForecast(summary: "Simulated ice storm watch", roadClosureInHours: 18, snowfallInches: 1),
+        ]
+        let procedures = [
+            FictionalCoordinationTemplate.makeProcedure(id: id(.northShoreCase), name: "Fictional pacemaker case A", hospitalID: northShore,
+                scheduledAt: asOf.addingTimeInterval(8 * 3600), durationMinutes: 90),
+            // No reviewed ICD coordination content exists. Never reuse pacemaker items.
+            Procedure(id: id(.unsupportedCase), name: "Fictional ICD case — recording unavailable", deviceFamily: "icd", hospitalID: prairie,
+                scheduledAt: asOf.addingTimeInterval(26 * 3600), durationMinutes: 60, steps: []),
+            FictionalCoordinationTemplate.makeProcedure(id: id(.lakesCase), name: "Fictional pacemaker case B", hospitalID: lakes,
+                scheduledAt: asOf.addingTimeInterval(30 * 3600), durationMinutes: 90),
+        ]
+        return Seed(asOf: asOf, hospitals: hospitals, reps: reps, forecasts: forecasts, procedures: procedures)
+    }
+
+    // Compatibility for starter consumers. Full blank setup/bootstrap is F07/F25.
+    private static let starterSeed = make()
+    static var hospitals: [Hospital] { starterSeed.hospitals }
+    static var reps: [DeviceRep] { starterSeed.reps }
+    static var forecasts: [String: StormForecast] { starterSeed.forecasts }
+    static var procedures: [Procedure] { starterSeed.procedures }
+    static var pacemakerSteps: [ProcedureStep] { FictionalCoordinationTemplate.steps }
 }

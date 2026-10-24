@@ -73,11 +73,16 @@ struct CoPilotView: View {
 
     private func currentStep(_ session: CoPilotSession) -> some View {
         VStack(spacing: Northstar.Space.s6) {
-            if let alert = session.pendingAlert {
+            if !session.isRecordingSupported {
+                Label(session.recordingSummary, systemImage: "exclamationmark.triangle.fill")
+                    .font(Northstar.Fonts.title).foregroundStyle(Northstar.Palette.amber)
+                Text("Choose a case using the supported fictional pacemaker coordination template.")
+                    .font(Northstar.Fonts.body).foregroundStyle(Northstar.Palette.inkMuted)
+            } else if let alert = session.pendingAlert {
                 VStack(spacing: Northstar.Space.s3) {
-                    Label("\(alert.title) was skipped", systemImage: "exclamationmark.triangle.fill")
+                    Label("\(alert.title) was deferred", systemImage: "exclamationmark.triangle.fill")
                         .font(Northstar.Fonts.title).foregroundStyle(Northstar.Palette.amber)
-                    Button("Confirm and continue") { session.acknowledgeAlert() }
+                    Button("Acknowledge warning") { session.acknowledgeAlert() }
                         .buttonStyle(NorthstarPrimaryButtonStyle())
                 }
             } else if let step = session.currentStep {
@@ -85,23 +90,26 @@ struct CoPilotView: View {
                     .multilineTextAlignment(.center)
                 Text(step.detail).font(Northstar.Fonts.body).foregroundStyle(Northstar.Palette.inkMuted)
                 if step.normallyCoveredByRep && session.reducedSupport {
-                    Label("Normally covered by the device rep", systemImage: "person.badge.clock")
+                    Label("Technical support may help with this report", systemImage: "person.badge.clock")
                         .font(Northstar.Fonts.caption).foregroundStyle(Northstar.Palette.ice)
                 }
                 HStack(spacing: Northstar.Space.s4) {
-                    Button("Skip") {
+                    Button("Defer item") {
                         let skipped = step
                         session.skipCurrentStep()
-                        if skipped.isRequired { announcer.say("\(skipped.title) was skipped. Confirm to continue.") }
+                        if skipped.isRequired { announcer.say("\(skipped.title) was deferred. Acknowledgment required.") }
                     }
                     .font(Northstar.Fonts.step)
                     .frame(minHeight: 72).padding(.horizontal, Northstar.Space.s6)
-                    Button("Complete") { session.completeCurrentStep() }
+                    Button("Record confirmation") { session.completeCurrentStep() }
                         .buttonStyle(NorthstarPrimaryButtonStyle())
                 }
             } else {
-                Label("Procedure complete", systemImage: "checkmark.seal.fill")
-                    .font(Northstar.Fonts.display).foregroundStyle(Northstar.Palette.aurora)
+                Label(session.recordingSummary, systemImage: session.allConfirmationsRecorded ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
+                    .font(Northstar.Fonts.display)
+                    .foregroundStyle(session.allConfirmationsRecorded ? Northstar.Palette.aurora : Northstar.Palette.amber)
+                Text("This is a coordination record, not verification of clinical work or outcome.")
+                    .font(Northstar.Fonts.body).foregroundStyle(Northstar.Palette.inkMuted)
             }
         }
         .frame(maxHeight: .infinity)

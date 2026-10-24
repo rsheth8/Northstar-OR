@@ -19,31 +19,45 @@ final class CoPilotSession {
         self.reducedSupport = reducedSupport
         self.startedAt = now
         var s: [String: StepStatus] = [:]
-        for (i, step) in procedure.steps.enumerated() { s[step.id] = i == 0 ? .current : .upcoming }
+        if FictionalCoordinationTemplate.supports(procedure) {
+            for (i, step) in procedure.steps.enumerated() { s[step.id] = i == 0 ? .current : .upcoming }
+        }
         self.statuses = s
     }
 
     var currentStep: ProcedureStep? {
-        procedure.steps.indices.contains(currentIndex) ? procedure.steps[currentIndex] : nil
+        isRecordingSupported && procedure.steps.indices.contains(currentIndex) ? procedure.steps[currentIndex] : nil
     }
-    var isFinished: Bool { currentStep == nil }
+    var isRecordingSupported: Bool { FictionalCoordinationTemplate.supports(procedure) }
+    /// Describes reaching the end of the app record, never the clinical procedure.
+    var isFinished: Bool { isRecordingSupported && currentStep == nil }
+    var allConfirmationsRecorded: Bool {
+        isRecordingSupported && !procedure.steps.isEmpty && procedure.steps.allSatisfy { status(of: $0) == .completed }
+    }
+    var recordingSummary: String {
+        guard isRecordingSupported else { return "Recording unavailable — no supported coordination template" }
+        if allConfirmationsRecorded { return "All team confirmations recorded" }
+        let unresolved = procedure.steps.filter { status(of: $0) != .completed }.count
+        if isFinished { return "Recording ended — \(unresolved) unresolved item\(unresolved == 1 ? "" : "s")" }
+        return "\(unresolved) confirmation\(unresolved == 1 ? "" : "s") unresolved"
+    }
 
     func status(of step: ProcedureStep) -> StepStatus { statuses[step.id] ?? .upcoming }
 
     func completeCurrentStep(at time: Date = .now) {
         guard let step = currentStep else { return }
         statuses[step.id] = .completed
-        log.append(LogEntry(.stepCompleted, "\(step.title) complete", at: time))
+        log.append(LogEntry(.stepCompleted, "Team confirmation recorded: \(step.title)", at: time))
         advance()
     }
 
     func skipCurrentStep(at time: Date = .now) {
         guard let step = currentStep else { return }
         statuses[step.id] = .skipped
-        log.append(LogEntry(.stepSkipped, "\(step.title) skipped", at: time))
+        log.append(LogEntry(.stepSkipped, "Item deferred: \(step.title)", at: time))
         if step.isRequired {
             pendingAlert = step
-            log.append(LogEntry(.alert, "Required step skipped: \(step.title). Confirm to continue.", at: time))
+            log.append(LogEntry(.alert, "Required item deferred: \(step.title). Acknowledgment required.", at: time))
         }
         advance()
     }
@@ -51,7 +65,7 @@ final class CoPilotSession {
     /// Team confirms they saw the skipped-step alert.
     func acknowledgeAlert(at time: Date = .now) {
         guard let step = pendingAlert else { return }
-        log.append(LogEntry(.note, "Team acknowledged skipped step: \(step.title)", at: time))
+        log.append(LogEntry(.note, "Team acknowledged warning; item remains deferred: \(step.title)", at: time))
         pendingAlert = nil
     }
 
