@@ -124,3 +124,5 @@ Claim the individual F-number row for each implementation slice. The lane checkl
 - [ ] Pass blank setup, independently created case/contact, changed logistical input and relaunch/isolation checks; complete three timed successful five-minute runs, failure/projection/audio checks and submission evidence in DEMO_READINESS.md
 - [ ] Update the demo to show coverage disruption → support acceptance → recorded progress → support request with context; add camera/AI only when implemented and tested
 - [ ] Update README credits and team names before submission
+
+- [~] (Amartya / Codex) **Remote Support native visual slice:** reserves `Features/RemoteSupport/RemoteSupportView.swift`, this claim and `docs/evidence/native-support/`. Live local context, unresolved-first brief and reachable draft; no immutable request, acceptance or question acknowledgment claim until F07/F12.
