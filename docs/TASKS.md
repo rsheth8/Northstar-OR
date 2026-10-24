@@ -10,7 +10,7 @@ Read [PRODUCT.md](PRODUCT.md) before choosing implementation work. Northstar hel
 Priority: one coherent simulated procedure and a reliable support journey before additional procedure types, maps, or visual effects. The items below are implementation work, not claims that these capabilities already exist.
 
 ## Next implementation tasks (one task per branch/PR)
-- [~] (Codex) **Shared design:** establish restrained clinical typography, flat controls, and quiet surfaces in `DesignSystem/`; preserve action sizes and semantic status colors.
+- [x] (Codex) **Shared design:** establish restrained clinical typography, flat controls, and quiet surfaces in `DesignSystem/`; preserve action sizes and semantic status colors (merged in [PR #8](https://github.com/rsheth8/Northstar-OR/pull/8)).
 - [ ] **Shared state:** model support requests with requested / accepted / connected / unavailable states, named recipient, and support role; keep device reps distinct from clinical specialists (`Models/`, `App/AppModel.swift`, `Services/SyncService.swift`; shared-files PR).
 - [ ] **Co-pilot:** distinguish unrecorded, deferred, and team-confirmed items; support corrections and prevent actions from bypassing a pending acknowledgment (`Features/CoPilot/`; separate shared-model PR if needed).
 - [ ] **Co-pilot:** wire voice commands with visible listening state, duplicate-command handling, and touch fallback; require an explicit command rather than inferring completion from conversation (`Features/CoPilot/`, `Services/Voice*`).
