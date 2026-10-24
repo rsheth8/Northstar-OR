@@ -124,3 +124,5 @@ Claim the individual F-number row for each implementation slice. The lane checkl
 - [ ] Pass blank setup, independently created case/contact, changed logistical input and relaunch/isolation checks; complete three timed successful five-minute runs, failure/projection/audio checks and submission evidence in DEMO_READINESS.md
 - [ ] Update the demo to show coverage disruption → support acceptance → recorded progress → support request with context; add camera/AI only when implemented and tested
 - [ ] Update README credits and team names before submission
+
+- [~] (Amartya / Codex) **Planner native visual slice:** reserves only `Features/Planner/PlannerView.swift`, this claim and `docs/evidence/native-planner/`. Implements the approved list/detail styling against merged matcher/session APIs. No plan/request/create/start contracts are invented; F11/F27/F28 remain pending.
