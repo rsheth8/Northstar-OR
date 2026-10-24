@@ -6,7 +6,7 @@
 
 When a blizzard prevents an expert from reaching a small-town hospital, Northstar OR helps the team arrange support, track reported workflow progress, and share context. Device representatives provide technical device support; clinical specialists have distinct roles and responsibilities.
 
-- **Planner + Coverage Matcher.** Surfaces coverage risk and ranks logistical options for human review. Planned readiness tracking distinguishes an available rep from someone who has accepted a support request.
+- **Planner + Coverage Matcher.** Surfaces coverage risk and ranks logistical options for human review. The planned coordinator flow commits to one named-rep request or marks the case to reschedule, keeps backups visible, and distinguishes availability from acceptance.
 - **iPad Co-pilot.** Tracks team-reported checklist progress, surfaces unresolved confirmations, and records timestamped events. Voice controls and focused camera observations are planned extensions. It prompts and documents; it never makes clinical decisions.
 - **Remote Support Link.** Prepares context so a human expert can join with the team's question, current workflow, and unresolved items. Teams should be able to request help at any time; a deviation is not a prerequisite.
 
@@ -17,6 +17,8 @@ When a blizzard prevents an expert from reaching a small-town hospital, Northsta
 Read [the product brief](docs/PRODUCT.md) for the agreed experience, boundaries, camera/AI scope, and demo. Follow [the UI/UX rules](docs/DESIGN.md) for screen layouts, truthful states, accessibility, and review criteria. Read [the team workflow](docs/TEAM_WORKFLOW.md), then claim one task in [the task board](docs/TASKS.md). Build one coherent simulated procedure before broadening to other procedure types.
 
 [The detailed implementation plan](docs/IMPLEMENTATION_PLAN.md) maps the inspected starter to shared state contracts, 23 dependency-sized implementation slices, screen specifications, acceptance tests, deadline cut lines, and later institutional evaluation gates. Its backlog is proposed work; TASKS.md remains the ownership and completion record.
+
+[The presentation delivery plan](docs/DEMO_READINESS.md) narrows that backlog to the must-work demonstration, a timed script, alternate-path tests, rehearsal evidence, fallback and submission checks. Implementation starts with the fictional fixture and shared state contracts; presentation drafting starts before final integration.
 
 **Core journey:** coverage disruption → a human accepts support → the team records progress → a team member requests help → the expert receives context → the team reviews the session record.
 
@@ -30,7 +32,7 @@ This repository contains a starter app, not the full experience described above.
 
 | Capability | Current implementation | Next intended behavior |
 | --- | --- | --- |
-| Planner | Fictional forecasts, rule-based coverage options, reasons, and a reduced-support flag | Support readiness, named owner, and accepted coverage |
+| Planner | Fictional forecasts, rule-based coverage options, reasons, and a reduced-support flag | One explicit named-rep or reschedule plan, visible backups, and actual recipient acceptance |
 | Co-pilot | Touch checklist, skip acknowledgment, spoken skip alert, timestamped in-memory log | Connected voice controls, deferred/unrecorded states, corrections, and prominent support messages |
 | Voice input | Command parser and recognition service exist; the view does not use them | Explicit complete / skip / confirm commands with listening status and touch fallback |
 | Remote support | Context package and text prompts between tabs in one app instance | Requests at any time, recipient acknowledgment, and communication across devices |
@@ -90,4 +92,4 @@ Required by the hackathon rules. Keep this list up to date.
 - Blender (GPL) and Google Chrome (headless) produced the earlier 3D emblem, preserved in `docs/brand/archive/rural-emblem-v1/`.
 - Institutional shooting-star identity: OpenAI Codex created the connected star/pulse SVG artwork, neutral wordmark composition, and export tooling, informed by the team's direction and earlier OpenAI image-generation exploration. Rural scenes are preserved as presentation illustrations in `docs/brand/archive/`. AppKit/Swift and Pillow export the production PNGs; these are build tools only, with no new app dependency.
 - AI assistance: Claude (Anthropic) helped with brainstorming, the pitch proposal, the brand and logo, and the starter code scaffold. All code was written during the event.
-- AI assistance: OpenAI Codex helped review the starter implementation and document the product direction, implementation status, UI/UX rules, detailed implementation blueprint, and task roadmap. No AI runtime or new camera library was added by this documentation update.
+- AI assistance: OpenAI Codex helped review the starter implementation and document the product direction, implementation status, UI/UX rules, detailed implementation blueprint, presentation delivery plan, and task roadmap. No AI runtime or new camera library was added by this documentation update.
