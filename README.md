@@ -18,6 +18,8 @@ Read [the product brief](docs/PRODUCT.md) for the agreed experience, boundaries,
 
 **Core journey:** coverage disruption → a human accepts support → the team records progress → a team member requests help → the expert receives context → the team reviews the session record.
 
+The final logo, app icon, editable artwork, and usage guidance are in [the brand kit](docs/brand/README.md).
+
 ## What works today
 
 This repository contains a starter app, not the full experience described above.
@@ -81,6 +83,7 @@ Required by the hackathon rules. Keep this list up to date.
 - XcodeGen for project generation
 - GitHub Actions with `actions/checkout` and `actions/upload-artifact` for CI; Dependabot for action updates
 - Inter Display (SIL Open Font License) for the logo wordmark
-- Blender (GPL) to model and render the 3D emblem; Google Chrome (headless) to export the logo PNGs. Both are build tools only, run from `docs/brand/source/`.
+- Blender (GPL) and Google Chrome (headless) produced the earlier 3D emblem, preserved in `docs/brand/archive/rural-emblem-v1/`.
+- Final shooting-star identity: OpenAI Codex created the original SVG artwork and export tooling, informed by the team's rural-clinic direction and OpenAI image-generation concept exploration. AppKit/Swift and Pillow export the production PNGs; these are build tools only, with no new app dependency.
 - AI assistance: Claude (Anthropic) helped with brainstorming, the pitch proposal, the brand and logo, and the starter code scaffold. All code was written during the event.
 - AI assistance: OpenAI Codex helped review the starter implementation and document the product direction, implementation status, and task roadmap. No AI runtime or new camera library was added by this documentation update.

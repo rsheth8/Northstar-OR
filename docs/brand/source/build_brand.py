@@ -1,236 +1,174 @@
-"""Generate the Northstar OR brand set (SVG + PNG) from one emblem definition.
+"""Build the final Northstar OR identity from editable vector geometry.
 
-Run from the repo root:  python3 docs/brand/source/build_brand.py
-Needs Google Chrome (headless) for the PNG exports.
+Run from the repo root: python3 docs/brand/source/build_brand.py
+Exports use macOS AppKit/Swift and Pillow; no network access or font install.
+The source/wordmark.svg contains the existing outlined Inter Display lettering.
 """
-import math, re, subprocess
+
 from pathlib import Path
+import re
+import subprocess
+import tempfile
+import xml.etree.ElementTree as ET
+
+from PIL import Image
 
 BRAND = Path(__file__).resolve().parent.parent
 REPO = BRAND.parent.parent
-CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+NAVY, WHITE, GREEN, ICE, GOLD = "#0B1220", "#E8F1F8", "#3DDC97", "#7FC4E8", "#F9D98A"
 
-# Palette (matches NorthstarTheme.swift)
-NAVY, NAVY_TOP, INK = "#0B1220", "#1B2C55", "#0E1A33"
-GOLD, GOLD_DEEP, CORE = "#F9D98A", "#E0A526", "#FFF6DC"
-AURORA, AURORA_SHADE = "#3DDC97", "#22B57A"
-ICE, AMBER, CLINIC = "#7FC4E8", "#FFB020", "#E8F1F8"
-SNOW_TOP, SNOW_BOTTOM, HILL = "#D6E3EF", "#9FB6CC", "#1A2A4A"
-
-# ---------- geometry (512 x 512 scene) ----------
-A, B = (150, 226), (372, 226)  # rainbow ends: pine tip -> clinic roof peak
-APEX = 166                      # top of the rainbow
-STAR_Y, STAR_TOP, STAR_SIDE, STAR_BOTTOM = 76, 54, 34, 34
-GAP = 10                        # space between the R spike and the star
-STAR_X = (A[0] + B[0]) / 2      # beat and star sit dead centre
-HALF = 56                       # half-width of the beat
-AMP = APEX - (STAR_Y + STAR_BOTTOM + GAP)
-_dx, _dy = B[0] - STAR_X, A[1] - APEX
-RADIUS = (_dx ** 2 + _dy ** 2) / (2 * _dy)  # circle through both ends and the apex
-
-# Mirror-symmetric beat in units of HALF: a sharp straight-sided R spike
-# with a smooth dip on each side.
-R_WIDTH = 0.12
-WAVES = [(0.15, -0.26, 0.045)]  # (centre, height, width) of the two dips
+# Full emblem: 512 × 448. Geometry has deliberate space between the five forms.
+TREE = "M130 230 L158 276 H146 L174 320 H156 L188 366 H141 V398 H119 V366 H72 L104 320 H86 L114 276 H102Z"
+LAND_CLINIC = (
+    "M40 399 C105 370 150 401 215 390 C250 384 278 374 300 370 "
+    "V309 H279 L355 251 L431 309 H410 V374 "
+    "C437 380 457 389 472 399 C404 384 364 382 314 391 "
+    "C244 407 196 418 127 409 C93 404 67 400 40 399Z"
+)
+# A true transparent cutout, not a background-colored patch.
+PLUS = "M347 320 H363 V334 H377 V350 H363 V364 H347 V350 H333 V334 H347Z"
+TAIL = "M112 211 C143 176 180 157 214 144 L218 154 C181 165 146 184 112 211Z"
+PULSE = "M216 149 L226 158 L239 123 L252 166 L265 134"
+# The wake broadens into the star, which overlaps its end: no detached line cap.
+WAKE = "M263 129 C312 113 351 100 395 75 L407 89 C362 110 313 129 267 139Z"
+STAR = (
+    "M403 12 C410 64 416 73 457 82 C416 91 410 101 403 139 "
+    "C396 101 389 91 349 82 C389 73 396 64 403 12Z"
+)
 
 
-def _beat_raw(d):
-    y = max(0.0, 1 - abs(d) / R_WIDTH)
-    for c, h, w in WAVES:
-        for cc in (c, -c):
-            y += h * math.exp(-((d - cc) / w) ** 2 / 2)
-    return y
-
-
-def beat(d):
-    return _beat_raw(d) / _beat_raw(0)  # normalise so the spike tip is exactly AMP
-
-
-def baseline(x):
-    """Circular rainbow arc through A, the apex and B."""
-    return APEX + RADIUS - math.sqrt(RADIUS ** 2 - (x - STAR_X) ** 2)
-
-
-def heartbeat_d():
-    n = 1600
-    xs = [A[0] + i * (B[0] - A[0]) / n for i in range(n + 1)]
-    pts = [f"{x:.2f} {baseline(x) - AMP * beat((x - STAR_X) / HALF):.2f}" for x in xs]
-    return "M" + " L".join(pts)
-
-
-def star_d(cx, cy):
-    """Four-point star with concave sides and a long north point."""
-    t, sd, b = STAR_TOP, STAR_SIDE, STAR_BOTTOM
-    p = lambda dx, dy: f"{cx + dx:.1f} {cy + dy:.1f}"
-    return (f"M{p(0, -t)} C{p(3, -14)} {p(8, -5)} {p(sd, 0)} "
-            f"C{p(8, 5)} {p(3, 10)} {p(0, b)} "
-            f"C{p(-3, 10)} {p(-8, 5)} {p(-sd, 0)} "
-            f"C{p(-8, -5)} {p(-3, -14)} {p(0, -t)}Z")
-
-
-BACK_HILL = "M0 330 C120 290 200 308 280 320 C360 332 430 292 512 302 V512 H0Z"
-SNOW = "M0 360 C110 338 190 350 262 354 C306 357 326 326 376 324 C430 322 470 338 512 346 V512 H0Z"
-TRAIL = "M363 330 H381 C384 370 330 392 300 420 C270 448 290 486 330 520 H240 C210 486 214 444 256 412 C296 384 352 370 363 330Z"
-SNOW_LINE = "M0 360 C110 338 190 350 262 354 C306 357 326 326 376 324 C430 322 470 338 512 346"
-PINES = [(150, 358, 132), (102, 362, 108), (200, 364, 96)]  # x, base y, height
-
-
-def pine_tiers(x, base, h):
-    """Three stacked tiers; returns list of (apex_y, base_y, half_width)."""
+def symbol(mono=None, compact=False):
+    """One geometry for all colors; the compact mark keeps star and pulse only."""
     out = []
-    for i, (top, bot, w) in enumerate(((0.0, 0.42, 0.20), (0.22, 0.70, 0.28), (0.46, 1.0, 0.36))):
-        out.append((base - h * (1 - top), base - h * (1 - bot), h * w))
-    return out
+    if not compact:
+        out += [
+            f'<path id="evergreen" d="{TREE}" fill="{mono or GREEN}"/>',
+            f'<path id="clinic-and-land" d="{LAND_CLINIC} {PLUS}" fill="{mono or WHITE}" fill-rule="evenodd"/>',
+        ]
+    out += [
+        f'<path id="tapered-trail" d="{TAIL}" fill="{mono or ICE}"/>',
+        f'<path id="medical-pulse" d="{PULSE}" fill="none" stroke="{mono or ICE}" stroke-width="10" stroke-linejoin="round" stroke-linecap="round"/>',
+        f'<path id="connected-wake" d="{WAKE}" fill="{mono or ICE}"/>',
+        f'<path id="north-star" d="{STAR}" fill="{mono or GOLD}"/>',
+    ]
+    return "\n".join(out)
 
 
-def pines_color(snow=True):
-    s = []
-    for x, base, h in PINES:  # listed back to front
-        s.append(f'<rect x="{x-4}" y="{base-10}" width="8" height="12" rx="2" fill="{INK}"/>')
-        for ay, by, w in pine_tiers(x, base, h):
-            s.append(f'<path d="M{x} {ay} L{x-w:.1f} {by:.1f} L{x} {by:.1f}Z" fill="{AURORA}"/>')
-            s.append(f'<path d="M{x} {ay} L{x+w:.1f} {by:.1f} L{x} {by:.1f}Z" fill="{AURORA_SHADE}"/>')
-        if snow:
-            ay, by, w = pine_tiers(x, base, h)[0]
-            f = 0.38
-            s.append(f'<path d="M{x} {ay} L{x - w*f:.1f} {ay + (by-ay)*f:.1f} L{x - w*f*0.35:.1f} {ay + (by-ay)*f*0.82:.1f} '
-                     f'L{x} {ay + (by-ay)*f:.1f} L{x + w*f*0.4:.1f} {ay + (by-ay)*f*0.8:.1f} L{x + w*f:.1f} {ay + (by-ay)*f:.1f}Z" fill="{CLINIC}"/>')
-    return "".join(s)
+def placed(body, x, y, scale):
+    return f'<g transform="translate({x} {y}) scale({scale})">{body}</g>'
 
 
-def pines_mono(c):
-    s = []
-    for x, base, h in PINES:
-        for ay, by, w in pine_tiers(x, base, h):
-            s.append(f'<path d="M{x} {ay} L{x-w:.1f} {by:.1f} L{x+w:.1f} {by:.1f}Z" fill="{c}"/>')
-    return "".join(s)
+def lettering(ink=WHITE, accent=GREEN):
+    root = ET.parse(BRAND / "source/wordmark.svg").getroot()
+    result = []
+    for item in root:
+        if not item.tag.endswith("path"):
+            continue
+        result.append(
+            f'<path d="{item.attrib["d"]}" transform="{item.attrib["transform"]}" '
+            f'fill="{ink if item.attrib["id"] == "northstar" else accent}"/>'
+        )
+    return "\n".join(result)
 
 
-CX, CB = 372, 330  # clinic centre x, ground y
+def svg(w, h, body, title="Northstar OR"):
+    return (
+        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {w} {h}" width="{w}" height="{h}" role="img">\n'
+        f'<title>{title}</title>\n{body}\n</svg>\n'
+    )
 
 
-def clinic_color():
-    return (f'<rect x="{CX-50}" y="{CB-62}" width="100" height="64" fill="{CLINIC}"/>'
-            f'<rect x="{CX+30}" y="{CB-62}" width="20" height="64" fill="#C9D7E6"/>'
-            f'<path d="M{CX-62} {CB-58} L{CX} {CB-104} L{CX} {CB-58}Z" fill="{AURORA}"/>'
-            f'<path d="M{CX+62} {CB-58} L{CX} {CB-104} L{CX} {CB-58}Z" fill="{AURORA_SHADE}"/>'
-            f'<path d="M{CX-10} {CB+2} V{CB-24} a10 10 0 0 1 20 0 V{CB+2}Z" fill="{AMBER}"/>'
-            f'<rect x="{CX-38}" y="{CB-46}" width="18" height="16" rx="2" fill="{AMBER}"/>'
-            f'<rect x="{CX+20}" y="{CB-46}" width="18" height="16" rx="2" fill="{AMBER}"/>')
+def horizontal(mono=None):
+    return svg(900, 252,
+               placed(symbol(mono), 0, 0, 0.5) +
+               placed(lettering(mono or WHITE, mono or GREEN), 286, 90, 1.1045))
 
 
-def clinic_mono(c):
-    body = (f"M{CX-50} {CB-58} H{CX+50} V{CB} H{CX-50}Z "
-            f"M{CX-10} {CB} V{CB-24} a10 10 0 0 1 20 0 V{CB}Z "
-            f"M{CX-38} {CB-46} h18 v16 h-18Z M{CX+20} {CB-46} h18 v16 h-18Z")
-    return (f'<path d="{body}" fill="{c}" fill-rule="evenodd"/>'
-            f'<path d="M{CX-62} {CB-62} L{CX} {CB-106} L{CX+62} {CB-62}Z" fill="{c}"/>')
+def stacked(mono=None):
+    return svg(640, 600,
+               placed(symbol(mono), 64, 18, 1) +
+               placed(lettering(mono or WHITE, mono or GREEN), 30, 470, 580 / 536))
 
 
-def heartbeat(color, glow=True, w=6):
-    d = heartbeat_d()
-    g = (f'<path d="{d}" fill="none" stroke="{color}" stroke-width="{w*3}" stroke-linecap="round" '
-         f'stroke-linejoin="round" opacity="0.2" filter="url(#soft)"/>') if glow else ""
-    return (g + f'<path d="{d}" fill="none" stroke="{color}" stroke-width="{w}" stroke-linecap="round" stroke-linejoin="round"/>'
-            f'<circle cx="{A[0]}" cy="{A[1]}" r="{w+1}" fill="{color}"/><circle cx="{B[0]}" cy="{B[1]}" r="{w+1}" fill="{color}"/>')
-
-
-DEFS = (f'<filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="7"/></filter>'
-        f'<filter id="haze" x="-30%" y="-80%" width="160%" height="260%"><feGaussianBlur stdDeviation="16"/></filter>'
-        f'<linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="{NAVY_TOP}"/><stop offset="1" stop-color="{NAVY}"/></linearGradient>'
-        f'<linearGradient id="snow" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="{SNOW_TOP}"/><stop offset="1" stop-color="{SNOW_BOTTOM}"/></linearGradient>'
-        f'<radialGradient id="starfill" cx="0.5" cy="0.62" r="0.6"><stop offset="0" stop-color="{CORE}"/><stop offset="1" stop-color="{GOLD}"/></radialGradient>'
-        f'<radialGradient id="starglow"><stop offset="0" stop-color="{GOLD}" stop-opacity="0.45"/><stop offset="1" stop-color="{GOLD}" stop-opacity="0"/></radialGradient>')
-
-
-def scene_color(clip_id):
-    return (f'<g clip-path="url(#{clip_id})">'
-            f'<rect width="512" height="512" fill="url(#sky)"/>'
-            f'<path d="M-40 150 C80 110 160 150 260 120 S440 70 560 96 L560 130 C440 118 360 160 260 160 S80 160 -40 196Z" '
-            f'fill="{AURORA}" opacity="0.16" filter="url(#haze)"/>'
-            f'<path d="{BACK_HILL}" fill="{HILL}"/><path d="{SNOW}" fill="url(#snow)"/>'
-            f'<path d="{TRAIL}" fill="#B3C5D7"/>'
-            f'{pines_color()}{clinic_color()}'
-            f'<circle cx="{STAR_X:.1f}" cy="{STAR_Y}" r="92" fill="url(#starglow)"/>'
-            f'{heartbeat(ICE)}'
-            f'<path d="{star_d(round(STAR_X, 1), STAR_Y)}" fill="url(#starfill)"/>'
-            f'</g>')
-
-
-def badge_color(ring=GOLD):
-    return (f'<defs>{DEFS}<clipPath id="disc"><circle cx="256" cy="256" r="240"/></clipPath></defs>'
-            f'{scene_color("disc")}'
-            f'<circle cx="256" cy="256" r="236" fill="none" stroke="{ring}" stroke-width="9"/>'
-            f'<circle cx="256" cy="256" r="222" fill="none" stroke="{ring}" stroke-width="2" opacity="0.35"/>')
-
-
-def badge_mono(c):
-    return (f'<defs><clipPath id="inner"><circle cx="256" cy="256" r="222"/></clipPath></defs>'
-            f'<circle cx="256" cy="256" r="236" fill="none" stroke="{c}" stroke-width="12"/>'
-            f'<g clip-path="url(#inner)"><path d="{SNOW_LINE}" fill="none" stroke="{c}" stroke-width="8"/></g>'
-            f'{pines_mono(c)}{clinic_mono(c)}{heartbeat(c, glow=False, w=9)}'
-            f'<path d="{star_d(round(STAR_X, 1), STAR_Y)}" fill="{c}"/>')
-
-
-def app_icon():
-    return (f'<defs>{DEFS}<clipPath id="sq"><rect width="512" height="512"/></clipPath></defs>'
-            f'<g transform="translate(256 300) scale(1.2) translate(-256 -256)">{scene_color("sq")}</g>')
-
-
-def svg(w, h, body):
-    return f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {w} {h}" width="{w}" height="{h}">{body}</svg>\n'
-
-
-def placed(body, x, y, size):
-    return f'<g transform="translate({x} {y}) scale({size/512:.5f})">{body}</g>'
-
-
-def wordmark(old_file):
-    """Reuse the outlined Inter Display wordmark from the previous lockups."""
-    txt = (BRAND / old_file).read_text()
-    paths = re.findall(r'<path transform="translate[^>]*/>', txt)
-    return "".join(paths[-2:])
-
-
-def write(name, content):
-    (BRAND / name).write_text(content)
-    print("wrote", name)
-
-
-def png(svg_name, out, w, h, scale=1, opaque=False):
-    subprocess.run([CHROME, "--headless=new", "--disable-gpu", "--hide-scrollbars",
-                    f"--force-device-scale-factor={scale}", f"--window-size={w},{h}",
-                    "--default-background-color=00000000", f"--screenshot={out}",
-                    (BRAND / svg_name).as_uri()], check=True, capture_output=True)
-    if opaque:  # App Store icons must not have an alpha channel
-        tmp = str(out) + ".jpg"
-        subprocess.run(["sips", "-s", "format", "jpeg", "-s", "formatOptions", "100", str(out), "--out", tmp], check=True, capture_output=True)
-        subprocess.run(["sips", "-s", "format", "png", tmp, "--out", str(out)], check=True, capture_output=True)
-        Path(tmp).unlink()
-    print("png", out)
+def usage_board(full):
+    # Distinct layer names are useful in masters; this proof repeats the shapes.
+    clean = lambda body: re.sub(r' id="[^"]+"', '', body)
+    label = lambda x, y, text, color="#9BB0C4": (
+        f'<text x="{x}" y="{y}" fill="{color}" font-family="Helvetica, sans-serif" font-size="18">{text}</text>'
+    )
+    icon = f'<rect width="1024" height="1024" fill="{NAVY}"/>' + placed(clean(full), 26, 90, 1.9)
+    body = (
+        f'<rect width="1400" height="1080" fill="{NAVY}"/>'
+        '<rect y="744" width="1400" height="336" fill="#F4F7FB"/>'
+        + label(64, 58, "NORTHSTAR OR  /  FINAL IDENTITY")
+        + placed(clean(full), 90, 100, 1)
+        + placed(lettering(), 64, 608, 1.1)
+        + '<defs><clipPath id="app-mask"><rect x="860" y="118" width="300" height="300" rx="66"/></clipPath></defs>'
+        + '<g clip-path="url(#app-mask)">' + placed(icon, 860, 118, 300 / 1024) + '</g>'
+        + '<rect x="860" y="118" width="300" height="300" rx="66" fill="none" stroke="#24364E" stroke-width="1.5"/>'
+        + label(860, 462, "App icon")
+        + placed(icon, 860, 518, 58 / 1024)
+        + placed(icon, 972, 536, 40 / 1024)
+        + placed(clean(symbol(compact=True)), 1080 - 88 * .25, 520, .25)
+        + label(860, 614, "58 px") + label(972, 614, "40 px") + label(1080, 614, "Compact mark")
+        + label(64, 802, "SINGLE COLOR  /  LIGHT SURFACES", "#52647B")
+        + placed(clean(symbol(NAVY)), 44, 838, .36)
+        + placed(lettering(NAVY, NAVY), 258, 892, .8)
+        + placed(clean(symbol(NAVY)), 940, 830, .38)
+    )
+    return svg(1400, 1080, body, "Northstar OR — final identity and size proof")
 
 
 def main():
-    words = {k: wordmark(f"lockup-{k}.svg") for k in
-             ("horizontal-dark", "horizontal-light", "horizontal-white", "stacked-dark", "stacked-light")}
+    full = symbol()
+    files = {
+        "mark-color-dark.svg": svg(512, 448, full),
+        # The light-surface signature is deliberately a single navy silhouette.
+        "mark-color-light.svg": svg(512, 448, symbol(NAVY)),
+        "mark-white.svg": svg(512, 448, symbol("#FFFFFF")),
+        "mark-navy.svg": svg(512, 448, symbol(NAVY)),
+        "mark-compact.svg": svg(384, 224, placed(symbol(compact=True), -88, 0, 1)),
+        "mark-compact-white.svg": svg(384, 224, placed(symbol("#FFFFFF", compact=True), -88, 0, 1)),
+        "mark-compact-navy.svg": svg(384, 224, placed(symbol(NAVY, compact=True), -88, 0, 1)),
+        "lockup-horizontal-dark.svg": horizontal(),
+        "lockup-horizontal-light.svg": horizontal(NAVY),
+        "lockup-horizontal-white.svg": horizontal("#FFFFFF"),
+        "lockup-stacked-dark.svg": stacked(),
+        "lockup-stacked-light.svg": stacked(NAVY),
+        "NorthstarOR-AppIcon-1024.svg": svg(1024, 1024,
+            f'<rect width="1024" height="1024" fill="{NAVY}"/>' + placed(full, 26, 90, 1.9)),
+        "NorthstarOR-final.svg": svg(1280, 1000,
+            f'<rect width="1280" height="1000" fill="{NAVY}"/>' +
+            placed(full, 307.2, 98, 1.3) +
+            placed(lettering(), 238, 720, 1.5)),
+        "NorthstarOR-logo-board.svg": usage_board(full),
+    }
+    for name, contents in files.items():
+        (BRAND / name).write_text(contents)
 
-    write("mark-color-dark.svg", svg(512, 512, badge_color(GOLD)))
-    write("mark-color-light.svg", svg(512, 512, badge_color(GOLD_DEEP)))
-    write("mark-white.svg", svg(512, 512, badge_mono("#FFFFFF")))
-    write("mark-navy.svg", svg(512, 512, badge_mono(INK)))
-    write("NorthstarOR-AppIcon-1024.svg", svg(1024, 1024, placed(app_icon(), 0, 0, 1024)))
-
-    write("lockup-horizontal-dark.svg", svg(834, 205, placed(badge_color(GOLD), 14, 12, 181) + words["horizontal-dark"]))
-    write("lockup-horizontal-light.svg", svg(834, 205, placed(badge_color(GOLD_DEEP), 14, 12, 181) + words["horizontal-light"]))
-    write("lockup-horizontal-white.svg", svg(834, 205, placed(badge_mono("#FFFFFF"), 14, 12, 181) + words["horizontal-white"]))
-    write("lockup-stacked-dark.svg", svg(458, 350, placed(badge_color(GOLD), 115, 14, 228) + words["stacked-dark"]))
-    write("lockup-stacked-light.svg", svg(458, 350, placed(badge_color(GOLD_DEEP), 115, 14, 228) + words["stacked-light"]))
-
-    png("lockup-horizontal-dark.svg", BRAND / "lockup-horizontal-dark@2x.png", 834, 205, 2)
     assets = REPO / "NorthstarOR/Resources/Assets.xcassets"
-    png("mark-color-dark.svg", assets / "BrandMark.imageset/mark-color-dark@2x.png", 512, 512, 1)
-    png("NorthstarOR-AppIcon-1024.svg", assets / "AppIcon.appiconset/AppIcon-1024.png", 1024, 1024, 1, opaque=True)
-    png("source/board.html", BRAND / "NorthstarOR-logo-board.png", 1400, 1020, 1)
+    exports = [
+        ("NorthstarOR-final.svg", BRAND / "NorthstarOR-final.png", 1280, 1000, False),
+        ("NorthstarOR-logo-board.svg", BRAND / "NorthstarOR-logo-board.png", 1400, 1080, False),
+        ("NorthstarOR-AppIcon-1024.svg", BRAND / "NorthstarOR-AppIcon-1024.png", 1024, 1024, True),
+        ("lockup-horizontal-dark.svg", BRAND / "lockup-horizontal-dark@2x.png", 1800, 504, False),
+        ("lockup-horizontal-light.svg", BRAND / "lockup-horizontal-light@2x.png", 1800, 504, False),
+        ("mark-color-dark.svg", BRAND / "mark-color-dark.png", 1024, 896, False),
+        ("mark-white.svg", BRAND / "mark-white.png", 1024, 896, False),
+        ("mark-navy.svg", BRAND / "mark-navy.png", 1024, 896, False),
+        ("NorthstarOR-AppIcon-1024.svg", assets / "AppIcon.appiconset/AppIcon-1024.png", 1024, 1024, True),
+        # A compact star/pulse has room to remain clear in the 28 pt header.
+        ("mark-compact.svg", assets / "BrandMark.imageset/mark-compact@3x.png", 576, 336, False),
+    ]
+    with tempfile.TemporaryDirectory(prefix="northstar-brand-") as tmp:
+        renderer = Path(tmp) / "render"
+        subprocess.run(["swiftc", str(BRAND / "source/render.swift"), "-o", str(renderer)], check=True)
+        for source, target, w, h, opaque in exports:
+            subprocess.run([str(renderer), str(BRAND / source), str(target), str(w), str(h)], check=True)
+            if opaque:
+                with Image.open(target) as img:
+                    img.convert("RGB").save(target)
+            print(f"Exported {target.relative_to(REPO)} ({w} × {h})")
 
 
 if __name__ == "__main__":
