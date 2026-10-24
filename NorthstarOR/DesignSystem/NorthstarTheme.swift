@@ -34,6 +34,20 @@ enum Northstar {
         static let amber      = Color(hex: 0xFFB020)
         static let amberSoft  = Color(hex: 0x3A2A0A)
         static let alert      = Color(hex: 0xFF6B6B)
+
+        // Readable state colors. Measured with the WCAG formula against
+        // bgBase / bgRaised; see docs/DESIGN.md section 7 for the targets.
+        /// Neutral icons, outlines and boundaries that carry meaning
+        /// (4.66:1 / 4.18:1). Non-text only; use `inkMuted` for text.
+        /// `slate` and `line` stay decorative (about 1.5:1).
+        static let indicator     = Color(hex: 0x6B819A)
+        /// Keyboard focus ring. Drawn outside the control with a gap so it
+        /// contrasts with the surface (9.77:1 / 8.76:1), not the fill.
+        static let focusRing     = ice
+        static let auroraPressed = Color(hex: 0x2FB97C)  // onAurora text 7.45:1
+        static let icePressed    = Color(hex: 0x5FA8CF)  // onAurora text 7.12:1
+        static let iceSoft       = Color(hex: 0x12283A)  // ice text 7.89:1
+        static let alertSoft     = Color(hex: 0x3A1518)  // alert text 5.82:1
     }
 
     // MARK: Spacing
@@ -47,6 +61,27 @@ enum Northstar {
         static let s12: CGFloat = 48
     }
 
+    // MARK: Touch targets
+    enum Target {
+        /// Primary OR actions: at least 72 x 72 pt.
+        static let primary: CGFloat = 72
+        /// Every other interactive element: at least 44 x 44 pt.
+        static let minimum: CGFloat = 44
+        /// Space between adjacent hit areas.
+        static let spacing: CGFloat = Space.s2
+    }
+
+    // MARK: Motion
+    enum Motion {
+        /// Brief state transitions only; no looping or decorative motion.
+        static let duration: Double = 0.15
+
+        /// `nil` when Reduce Motion is on, so the change applies instantly.
+        static func stateChange(reduceMotion: Bool) -> Animation? {
+            reduceMotion ? nil : .easeOut(duration: duration)
+        }
+    }
+
     // MARK: Radius
     enum Radius {
         static let sm: CGFloat = 6
@@ -55,32 +90,20 @@ enum Northstar {
     }
 
     // MARK: Type
+    // Built on text styles so every token scales with Dynamic Type.
+    // Sizes in comments are the defaults at the Large content size.
     enum Fonts {
-        static let display     = Font.system(size: 40, weight: .semibold)
-        static let stepCurrent = Font.system(size: 32, weight: .semibold)
-        static let title       = Font.system(size: 24, weight: .semibold)
-        static let step        = Font.system(size: 22, weight: .semibold)
-        static let body        = Font.system(size: 17, weight: .regular)
-        static let bodyStrong  = Font.system(size: 17, weight: .semibold)
-        static let caption     = Font.system(size: 13, weight: .medium)
-        static let label       = Font.system(size: 12, weight: .bold)
-        static let log         = Font.system(size: 15, weight: .medium, design: .monospaced)
-        static let timer       = Font.system(size: 28, weight: .semibold, design: .monospaced)
-    }
-}
-
-// MARK: Primary action button (aurora, glove-friendly, 72pt tall)
-struct NorthstarPrimaryButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(Northstar.Fonts.step)
-            .foregroundStyle(Northstar.Palette.onAurora)
-            .padding(.horizontal, Northstar.Space.s8)
-            .frame(minHeight: 72)
-            .background(
-                Northstar.Palette.aurora,
-                in: RoundedRectangle(cornerRadius: Northstar.Radius.lg, style: .continuous)
-            )
-            .opacity(configuration.isPressed ? 0.82 : 1)
+        static let display     = Font.system(.largeTitle, weight: .semibold)              // 34
+        static let stepCurrent = Font.system(.largeTitle, weight: .semibold)              // 34
+        static let title       = Font.system(.title2, weight: .semibold)                  // 22
+        static let step        = Font.system(.title2, weight: .semibold)                  // 22
+        static let body        = Font.system(.body)                                       // 17
+        static let bodyStrong  = Font.system(.body, weight: .semibold)                    // 17
+        static let caption     = Font.system(.footnote, weight: .medium)                  // 13
+        static let label       = Font.system(.footnote, weight: .semibold)                // 13
+        /// Supporting metadata: the 13 pt baseline in regular weight.
+        static let supporting  = Font.system(.footnote)                                   // 13
+        static let log         = Font.system(.subheadline, design: .monospaced, weight: .medium)  // 15
+        static let timer       = Font.system(.title, design: .monospaced, weight: .semibold)      // 28
     }
 }
