@@ -22,9 +22,9 @@ struct NorthstarPrimaryButtonStyle: ButtonStyle {
         case standard
     }
 
-    var tone: Tone = .confirm
+    var tone: Tone = .standard
 
-    init(tone: Tone = .confirm) {
+    init(tone: Tone = .standard) {
         self.tone = tone
     }
 
@@ -43,7 +43,7 @@ struct NorthstarPrimaryButtonAppearance<Label: View>: View {
     @ViewBuilder let label: Label
 
     private var shape: RoundedRectangle {
-        RoundedRectangle(cornerRadius: Northstar.Radius.lg, style: .continuous)
+        RoundedRectangle(cornerRadius: Northstar.Radius.sm, style: .continuous)
     }
 
     private var fill: Color {
@@ -69,7 +69,7 @@ struct NorthstarPrimaryButtonAppearance<Label: View>: View {
                 }
             }
             .contentShape(shape)
-            .northstarFocusRing(state.isFocused, cornerRadius: Northstar.Radius.lg)
+            .northstarFocusRing(state.isFocused, cornerRadius: Northstar.Radius.sm)
     }
 }
 
@@ -111,8 +111,7 @@ struct NorthstarSecondaryButtonAppearance<Label: View>: View {
         size == .large ? Northstar.Target.primary : Northstar.Target.minimum
     }
 
-    // `indicator` drops below 3:1 on the pressed `slate` fill, so the
-    // pressed outline switches to `ink`.
+    // The pressed outline remains distinct from the neutral pressed surface.
     private var outline: StrokeStyle {
         StrokeStyle(lineWidth: 2, dash: state.isEnabled ? [] : [6, 4])
     }
@@ -248,7 +247,7 @@ struct NorthstarBanner: View {
     }
 
     private var shape: RoundedRectangle {
-        RoundedRectangle(cornerRadius: Northstar.Radius.lg, style: .continuous)
+        RoundedRectangle(cornerRadius: Northstar.Radius.sm, style: .continuous)
     }
 
     var body: some View {
