@@ -16,6 +16,8 @@ When a blizzard prevents an expert from reaching a small-town hospital, Northsta
 
 Read [the product brief](docs/PRODUCT.md) for the agreed experience, boundaries, camera/AI scope, and demo. Follow [the UI/UX rules](docs/DESIGN.md) for screen layouts, truthful states, accessibility, and review criteria. Read [the team workflow](docs/TEAM_WORKFLOW.md), then claim one task in [the task board](docs/TASKS.md). Build one coherent simulated procedure before broadening to other procedure types.
 
+[The detailed implementation plan](docs/IMPLEMENTATION_PLAN.md) maps the inspected starter to shared state contracts, 23 dependency-sized implementation slices, screen specifications, acceptance tests, deadline cut lines, and later institutional evaluation gates. Its backlog is proposed work; TASKS.md remains the ownership and completion record.
+
 **Core journey:** coverage disruption → a human accepts support → the team records progress → a team member requests help → the expert receives context → the team reviews the session record.
 
 The final logo, app icon, editable artwork, and usage guidance are in [the brand kit](docs/brand/README.md).
@@ -69,7 +71,7 @@ NorthstarOR/
     Planner/        CoverageMatcher engine + planner view
     RemoteSupport/  ContextPackage + remote rep view
 NorthstarORTests/   unit tests for the matcher, session, and voice parsing
-docs/               PRODUCT.md (scope), DESIGN.md (UI/UX rules), TASKS.md (plan), brand/ (logos)
+docs/               PRODUCT.md (scope), DESIGN.md (UI/UX rules), IMPLEMENTATION_PLAN.md (blueprint), TASKS.md (ownership), brand/ (logos)
 ```
 
 ## Team
@@ -88,4 +90,4 @@ Required by the hackathon rules. Keep this list up to date.
 - Blender (GPL) and Google Chrome (headless) produced the earlier 3D emblem, preserved in `docs/brand/archive/rural-emblem-v1/`.
 - Institutional shooting-star identity: OpenAI Codex created the connected star/pulse SVG artwork, neutral wordmark composition, and export tooling, informed by the team's direction and earlier OpenAI image-generation exploration. Rural scenes are preserved as presentation illustrations in `docs/brand/archive/`. AppKit/Swift and Pillow export the production PNGs; these are build tools only, with no new app dependency.
 - AI assistance: Claude (Anthropic) helped with brainstorming, the pitch proposal, the brand and logo, and the starter code scaffold. All code was written during the event.
-- AI assistance: OpenAI Codex helped review the starter implementation and document the product direction, implementation status, UI/UX rules, and task roadmap. No AI runtime or new camera library was added by this documentation update.
+- AI assistance: OpenAI Codex helped review the starter implementation and document the product direction, implementation status, UI/UX rules, detailed implementation blueprint, and task roadmap. No AI runtime or new camera library was added by this documentation update.
