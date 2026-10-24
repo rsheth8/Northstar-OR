@@ -1,0 +1,93 @@
+# Northstar OR: product direction
+
+This brief records the agreed direction. It is a design plan, not a claim that every feature is implemented. See the README for current status and TASKS.md for ownership.
+
+## Purpose and users
+
+Help a rural OR team coordinate technical support, maintain shared workflow context, and hand off information when weather disrupts the usual support arrangement.
+
+The initial users are a coordinator arranging coverage, an OR team member recording confirmations and requesting help, and a remote device representative providing technical support. Clinical specialists are a distinct role; availability of a device rep must not imply clinical coverage.
+
+Every feature must answer: whose work does this make easier, at what moment, and how will we demonstrate that it worked?
+
+## Product boundaries
+
+- Fictional people, facilities, records, forecasts, and training materials only. Keep simulated records in `NorthstarOR/Data/`.
+- The app prompts and documents. It does not diagnose, recommend treatment, verify surgical technique, or decide whether a procedure can proceed.
+- Checklist content must be reviewed for the specific workflow. AI must not invent procedure instructions.
+- A team statement, camera observation, and AI draft are different sources of information. Preserve that distinction in the interface and log.
+- Acknowledging a warning does not complete the underlying item. An unseen event is unknown, not proof that a step was skipped.
+- Remote support supplements coordination; a disconnected service or unanswered request must remain visibly disconnected or unanswered.
+
+## The experience we intend to build
+
+### Before the procedure: establish readiness
+
+Planner shows the selected fictional procedure, device family, coverage risk and reasons, support contact and role, outstanding preparation confirmations, and backup arrangement.
+
+Coverage Matcher ranks logistical options for human review. "Can support remotely" is a capability, not acceptance of a particular case. Track requested, accepted, connected, and unavailable support explicitly. A human decides the plan.
+
+### During the workflow: capture explicit confirmations
+
+Co-pilot shows current context and unresolved items with large touch controls and optional explicit voice commands. Support unrecorded, deferred, and team-confirmed items, with corrections and a visible history. Do not infer task completion from ambient conversation.
+
+Use short, purposeful alerts. A pending required acknowledgment must not be bypassed through another input path. A deferred item remains visible after acknowledgment; the workflow must not silently mark it complete. Keep the team in control of navigation rather than treating surgery as a universally fixed sequence.
+
+### When help is needed: request it with context
+
+Allow a team member to request support at any time, even if nothing is marked skipped. Include the team's actual question, current workflow context, unresolved items, relevant recent events, and deliberately shared evidence.
+
+Show the recipient, role, request state, and acknowledgment. Do not equate sending a request with receiving a response. Surface incoming messages prominently. Use `SyncService` for cross-device/backend communication.
+
+### After the session: review the record
+
+Prepare a reviewable summary of confirmations, deferred items, corrections, support exchanges, and automated observations. Keep sources and timestamps visible. "Checklist complete" describes checklist state; it does not certify the procedure or clinical outcome. Decide durable storage and export scope in a separate implementation task.
+
+## Camera and AI: narrow jobs with visible evidence
+
+Neither camera analysis nor conversational AI is currently implemented. Do not pitch them as working until the end-to-end behavior is demonstrated.
+
+### First camera use case
+
+On a mock device label, capture a frame, extract a fictional model number, compare it with the simulated case record, and display the image, extracted text, and proposed match. Ask a person to confirm or correct it. Record the observation separately from the human confirmation.
+
+If the frame is unreadable or the object is not visible, report "Unable to determine." Do not automatically complete a checklist item. A label match does not establish sterility, correct placement, or clinical suitability. A camera preview, sharing video with a person, and interpreting images are separate implementation capabilities.
+
+### First conversational AI use cases
+
+- "What confirmations are still unresolved?"
+- "What changed since the rep joined?"
+- "Draft a handoff for the rep."
+
+Ground answers in recorded session events and identify missing information. Label generated handoffs as drafts and review them before sharing. Explicit workflow commands should use controlled actions; free-form model output must not silently mutate checklist state. Keep voice commands usable without the conversational service and show when AI is unavailable. Any remote service integration goes through `SyncService`; choose and credit the provider in its implementation PR.
+
+### How to evaluate the prototype
+
+Use independently labeled fictional examples for readable, unreadable, mismatched, and absent labels. Record false matches, missed observations, and response delay rather than claiming general accuracy. Test voice in noise, duplicate recognition results, unavailable permissions, corrections, and interrupted connectivity. Verify AI summaries preserve unresolved items and never invent completion or receipt of a message.
+
+## Supporting multiple procedures
+
+Reuse the coordination framework: support requests, explicit confirmations, observations, messages, and review. Give each supported procedure its own reviewed fictional workflow, device requirements, support roles, and references.
+
+Start with one coherent pacemaker demonstration. The current ICD generator-change example reuses implant steps and must be corrected or excluded from the demo before claiming meaningful multi-procedure support. Broad autonomous recognition across procedures is outside the hackathon scope.
+
+## Intended demonstration
+
+1. A fictional Grand Marais hospital has a case in eight hours. Roads are expected to close in 90 minutes; the qualified rep is 110 minutes away.
+2. Planner explains the coverage risk. A coordinator requests remote technical support; the rep explicitly accepts.
+3. The OR view reflects the support arrangement. A team member records progress with voice or touch.
+4. A fictional required confirmation is deferred. Co-pilot displays and speaks a short alert; acknowledgment leaves the item unresolved.
+5. The team requests help with a question. The rep receives current context and acknowledges the request; a reply appears prominently in Co-pilot.
+6. If implemented and tested, capture a mock label and confirm its proposed match. If AI is implemented, request a session-grounded handoff draft and review it.
+7. Review the session record, including unresolved items and information sources.
+
+For the current starter, support interactions only work between tabs on the same app instance. Use that honestly until cross-device sync is implemented. Keep a reliable touch-based demo; camera and AI are additions after the core support journey works.
+
+## Design grounding and remaining validation
+
+These are product hypotheses requiring feedback from OR staff and device reps, not a validated clinical workflow. WHO emphasizes local adaptation and multidisciplinary involvement in checklist implementation. AHRQ emphasizes receiver acknowledgment and opportunities for questions in handoffs.
+
+- [WHO checklist implementation guidance](https://www.who.int/publications/i/item/9789241598590)
+- [AHRQ TeamSTEPPS handoff guidance](https://www.ahrq.gov/teamstepps-program/curriculum/communication/tools/handoff.html)
+
+Before broadening scope, review a fictional walkthrough with an OR nurse and a device rep. Ask what interrupts them, what information they need when joining, and which confirmations this app should capture. Do not collect real case data for this prototype.
