@@ -81,5 +81,6 @@ Required by the hackathon rules. Keep this list up to date.
 - XcodeGen for project generation
 - GitHub Actions with `actions/checkout` and `actions/upload-artifact` for CI; Dependabot for action updates
 - Inter Display (SIL Open Font License) for the logo wordmark
+- Blender (GPL) to model and render the 3D emblem; Google Chrome (headless) to export the logo PNGs. Both are build tools only, run from `docs/brand/source/`.
 - AI assistance: Claude (Anthropic) helped with brainstorming, the pitch proposal, the brand and logo, and the starter code scaffold. All code was written during the event.
 - AI assistance: OpenAI Codex helped review the starter implementation and document the product direction, implementation status, and task roadmap. No AI runtime or new camera library was added by this documentation update.
