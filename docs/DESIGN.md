@@ -68,18 +68,19 @@ These describe the target experience, including behavior still pending in TASKS.
 | Destination | Information priority | Essential interaction and result |
 | --- | --- | --- |
 | Co-pilot | Active case and facility → named support arrangement and connection → current item and unresolved items → recent activity | Record a team confirmation, defer with context, acknowledge when required, correct a record, and request support at any time. Each action leaves a visible, timestamped result. |
-| Planner | Upcoming cases and logistical risk → selected case and risk reasons → readiness items → named support options and role | Review an option, request a support arrangement, and see its actual acceptance state. A ranked or available rep is not an accepted arrangement. A map is optional supplementary information. |
+| Planner | Upcoming cases and logistical risk → selected case and risk reasons → named options/roles → one current plan and visible backups | Commit to one named-rep request or mark to reschedule; only a named-rep request has recipient acceptance. Backups stay unrequested. No preparation checklist. A map is optional supplementary information. |
 | Remote Support | Named sender/recipient and role → team's question → current context and unresolved items → conversation and recent events | Acknowledge a request, reply with technical support, and show actual message/connection state. Make incoming responses prominent in Co-pilot too. |
 | Session review, when implemented | Session identity → unresolved items → recorded confirmations/corrections → support exchanges → sources and times | Review the record. Use “Checklist complete” only for the relevant recorded checklist state, with any unresolved items still visible. Export is a separate scoped task. |
 
-Use one dominant next action in the current work area. Keep support and correction actions available without giving every control the same filled emphasis. The progress rail allows team-controlled navigation; it does not imply a universal clinical sequence.
+Use one dominant next action in the current work area. Keep support and correction actions available without giving every control the same filled emphasis. The progress rail allows team-controlled navigation outside a pending required acknowledgment. That gate pins the deferred item; support, read-only review and its explicit correction remain available. It does not imply a universal clinical sequence.
 
 ## 5. State must be truthful
 
 | Domain | Required distinction | Presentation rule |
 | --- | --- | --- |
-| Checklist item | Unrecorded / deferred / team-confirmed; current selection is separate | Acknowledging a deferred-item warning leaves the item deferred. Corrections preserve the earlier event in history. |
-| Support arrangement | Not requested / requested / accepted / connected / unavailable | Name the person and their role. Availability and remote capability do not imply acceptance. |
+| Checklist item | Unrecorded / deferred / team-confirmed; current selection is separate | Required deferral pins that item while acknowledgment is pending. Acknowledgment leaves it selected/deferred. Corrections preserve history. |
+| Coordinator plan | Unset, one named-rep request, or mark-to-reschedule; previous plan is superseded | Only an explicit coordinator action commits/replaces a plan. Reschedule has no rep acceptance and makes no external-booking claim. Backups are candidates, not live requests. |
+| Support arrangement | Not requested / requested / accepted / unavailable; connection is separate | Name the person/role and current plan. A late acceptance of a superseded plan cannot activate it. Availability and capability do not imply acceptance. |
 | Connection | Local demo / connecting / connected / reconnecting / disconnected | Acceptance persists separately from transport state. On disconnect, remove the live-connected presentation and show the last confirmed state and time. |
 | Message | Local-only, sending, sent, delivered, acknowledged, or failed, as actually supported | “Delivered” requires delivery evidence; “acknowledged” requires an explicit recipient action. Do not invent backend acknowledgments. |
 | Voice | Off / listening / processing / unavailable | Show an explicit state, start/stop control, and touch alternative. Indicate the recognized action and prevent duplicate commands. |
@@ -116,7 +117,7 @@ Token calculation on 2026-10-24: `ink` on `bgBase` is 16.38:1 and `inkMuted` is 
 
 The logo and shared neutral typography/flat-control foundation landed in PRs #9 and #8. Full screen layouts and workflow-state behavior remain starter work. Follow [the ordered UX delivery plan](TASKS.md#ux-delivery-order).
 
-The first implementation slices must resolve adaptive layout, scalable typography and meaningful status contrast, then the explicit support/checklist state prerequisites. Polish the Co-pilot touch journey before expanding maps, camera, AI, or decorative visuals. Planner and Remote Support must support that same fictional journey.
+Start with the coherent fictional fixture and the explicit session, plan, support and checklist contracts (F03–F07). Shared typography, status contrast and viewport work can progress in a separate checkout; it is not the first claim. Both state and visual foundations must land before the final screen integration. Polish the connected touch journey before maps, camera or AI. Use [DEMO_READINESS.md](DEMO_READINESS.md) for the presentation proof and rehearsal gate.
 
 Known gaps include fixed Co-pilot sidebars, unscaled font sizes, 12 pt label text, low-contrast upcoming icons, missing support acceptance/delivery state, missing correction/deferred-item behavior, and clinical-direction sample copy. Track fixes as implementation tasks; do not describe the targets in this guide as already shipped.
 

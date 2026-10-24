@@ -2,6 +2,8 @@
 
 Planning baseline: `main` at `ff639ed`, inspected on **2026-10-24**. This is an implementation blueprint, not a claim that pending features are shipped. Recheck the task board and open PRs before claiming a slice; estimates and priorities must change when the baseline changes.
 
+Presentation review: the owner's subsequent scope edits were checked against `29d999f` on 2026-10-24; app code was unchanged. Keep one coordinator plan, no Planner preparation checklist, a pinned warning item, and fixture/contracts-first implementation. [DEMO_READINESS.md](DEMO_READINESS.md) defines the presentation proof matrix, timed primary path, alternate-path checks, and submission gate. No rehearsal or readiness is claimed by writing these plans.
+
 The product scope stays in [PRODUCT.md](PRODUCT.md), visual and interaction rules in [DESIGN.md](DESIGN.md), and ownership/completion in [TASKS.md](TASKS.md). This document supplies the implementation detail behind those documents. Proposed names below describe contracts; adapt them to the existing code rather than introducing an architecture rewrite.
 
 ## 1. The outcome we are building toward
@@ -51,7 +53,7 @@ These are source-review findings, not a fresh device or accessibility audit. The
 ### Required core
 
 - One fictional pacemaker coordination scenario, with a stable scenario clock and reset action.
-- Named technical-support role, one active plan (request one named rep, or reschedule), explicit acceptance, and a separately displayed connection mode. Unchosen options stay visible as backup.
+- Named technical-support role, one committed plan (request one named rep, or mark to reschedule), explicit acceptance for the named-rep branch, and a separately displayed connection mode. Unchosen options stay visible as backup; before commitment the plan is unset.
 - Team-reported item confirmation, deferral, acknowledgment, and correction through touch. A pending acknowledgment pins the selected item. Requesting support stays available during that warning.
 - Support requested at any time with the team's question and a timestamped context snapshot.
 - Recipient acknowledgment and a technical-support reply surfaced in Co-pilot.
@@ -71,10 +73,12 @@ Voice, separate-device transport, durable recovery, a narrow mock-label camera o
 | 2. Arrange support | Coordinator commits to one plan: request Ana, request Marcus, or mark the case to reschedule. Unchosen options stay visible as backup | A named-rep plan is requested, and remote capability is not acceptance. Reschedule is recorded without a rep acceptance. The backup is not a second live request |
 | 3. Accept | Rep explicitly accepts in the support view | Accepted actor/time; connection mode shown separately; in one process, role switching remains labeled as a demo |
 | 4. Record progress | Team records a confirmation and deliberately defers a required fictional item | Explicit action source/time, deferred state, required acknowledgment |
-| 5. Acknowledge | Team acknowledges the alert | Alert gate clears; the deferred item and unresolved count remain |
-| 6. Ask a question | Team asks “Which fictional model reference should we use for this mock label?” | Exact question, recipient, session/case IDs, snapshot time/version, unresolved items, relevant recent events |
+| 5. Ask while the warning remains | Team asks “Which mock model reference should we use?” | Exact question, recipient, session/case IDs, snapshot time/version, unresolved items, relevant recent events; warning and selected item remain |
+| 6. Acknowledge the warning | Team returns and acknowledges the alert | Alert gate clears; the item remains selected/deferred and the unresolved count remains |
 | 7. Respond | Rep acknowledges and replies with a fictional technical reference | Recipient acknowledgment and reply are separate events; Co-pilot shows the new reply prominently |
 | 8. Correct and review | Team corrects a previously recorded item, then opens review | Original event remains; correction identifies its target; review still shows any unresolved item |
+
+For the timed primary demonstration, request **Ana** and follow the acceptance branch. Marcus, reschedule, plan replacement, and failed send are alternate-path verification, not extra live branches to improvise. Reschedule records a coordinator's planning choice; it does not require rep acceptance or change a hospital booking. The presentation retains Worthington and Bemidji as browsable ranking context, with Grand Marais as the only active Co-pilot case.
 
 A separate failure rehearsal disconnects the transport or injects a send failure. The app must preserve the question, show the actual failure or pending state, and avoid claiming delivery. This failure rehearsal is required even if the presentation uses the happy path.
 
@@ -104,6 +108,8 @@ Proposed domain shape: item status is `unrecorded`, `deferred`, or `teamConfirme
 
 Choose a narrow gate: while acknowledgment is pending, block confirmation, deferral, and any change of the selected item, across touch, voice, keyboard, and remote commands. Keep support request, review, and correction of the pinned item available. A correction that invalidates the triggering deferral supersedes its gate through a logged transition; it must not silently acknowledge it. Requesting support during the warning does not clear the warning or move the selection.
 
+The required-item deferral must pin the **item just deferred**, before any sequential advance; the starter's skip-then-advance behavior must change. Acknowledgment clears only the gate and leaves that item selected and deferred until the user explicitly navigates or corrects it. Opening/closing support or review, changing tabs, and receiving a reply do not change the selection. Review is read-only while this gate is pending except through the pinned item's explicit correction action.
+
 Every checklist mutation carries a stable intent ID, session ID, target item ID, and expected relevant state/version. Disable buttons while applying an action, but enforce the rule in the domain layer too. Duplicate callbacks are no-ops. A stale voice or touch intent must be rejected or reviewed against its original target rather than applied to the next item. Deliberately taking the same action on another item remains possible with a new intent.
 
 “Checklist complete” requires all items in the displayed checklist to be team-confirmed, with no deferred or unrecorded items. If the team has merely browsed all items, use “Review session” and display unresolved counts. Completion never describes clinical readiness or outcome.
@@ -119,12 +125,17 @@ Do not overload one `reducedSupport: Bool` to represent all of this. It may rema
 
 | Domain | Minimum state / fields | Important transition |
 | --- | --- | --- |
+| Coordinator plan | Case ID, plan ID/revision, one named-rep request or mark-to-reschedule, author/time, current/superseded | Initially unset; only a deliberate coordinator action commits or replaces a plan |
 | Arrangement | ID, session, requested recipient/role, mode, requested/accepted/unavailable, timestamps | Only an explicit recipient action produces acceptance; declining/unavailable retains a visible outcome |
 | Question request | ID, session, author/recipient, actual question, snapshot, open/acknowledged, timestamps | Acknowledging this question does not confirm any checklist item or resolve the question automatically |
 | Connection | Local demo / connecting / connected / reconnecting / disconnected, peer and last contact | Acceptance survives a disconnect; current connectivity does not |
 | Message | ID, request/session, sender/recipient, body, local/send/receipt state | Sender submission, receiver receipt, and human acknowledgment are different facts |
 
 The UI may display “not requested” when no arrangement exists. “Connected” is derived from a live connection plus the appropriate participant, rather than replacing the arrangement's accepted state. The coordinator's active plan is exactly one of: a request to one named technical rep, or reschedule. Reschedule is a recorded plan with no recipient and no acceptance step. Switching plans replaces the previous one and preserves its history. Options that were not chosen stay visible as backup and are not a second live request. Start with one accepted technical recipient per session. Multi-party clinical coverage is later scope.
+
+Plan replacement is a validated command referencing the expected current plan ID/revision. Supersede the old request and create the new plan as one local transition. Every acceptance references its arrangement and plan IDs; a late acceptance of a superseded plan cannot reactivate that rep, create a second accepted plan, or change the current header. Preserve the old event as historical/stale rather than silently representing it as current. A former option remains a candidate only if still eligible, with its current availability visible; historical acceptance is not acceptance of a new request.
+
+“Mark to reschedule” records the coordinator's intent inside this prototype. It does not claim a new date, change an external schedule, stop a clinical procedure, or erase an existing session. A later switch back to a rep requires a new explicit request and acceptance. A team's contextual question has its own chosen recipient and may still be sent when no coverage plan is accepted; sending it never commits a coverage plan implicitly.
 
 ### 4.4 Context, event history, and receipt evidence
 
@@ -239,9 +250,9 @@ Priority **P0** means necessary for the coherent touch demonstration. **P1** str
 | F03 | P0 / shared data + coordinated copy | `pitch/coherent-demo-fixture` | Current main | One resettable fictional pacemaker scenario, corrected non-directive copy. Worthington and Bemidji stay on the planner list for ranking. The ICD row never becomes the active co-pilot checklist |
 | F04 | P0 / shared contracts | `sync/session-event-contracts` | F03 agreement | Session/actor/source IDs, structured events/intents, independent item/selection and acknowledgment types |
 | F05 | P0 / Co-pilot state | `copilot/explicit-recording-state` | F04 | Guarded confirmation/defer/acknowledgment/correction with idempotence and target validation |
-| F06 | P0 / shared support contracts | `sync/support-state-contracts` | F04 | Arrangement, question, immutable context snapshot, message and receipt identities |
+| F06 | P0 / shared support contracts | `sync/support-state-contracts` | F04 | One coordinator plan/revision, named arrangement or reschedule, supersession, question, immutable snapshot, and message/receipt identities |
 | F07 | P0 / shared orchestration | `sync/local-support-journey` | F05, F06 | Local arrangement/request/ack/reply flow, main-actor routing, case/session isolation and injectable failures |
-| F08 | P0 / Planner matcher | `planner/explainable-coverage` | F03 | Availability handling, truthful constraint reasons, coordinator-review fallback and boundary tests |
+| F08 | P0 / Planner matcher | `planner/explainable-coverage` | F03 | Availability handling, truthful constraint reasons, explicit Reschedule candidate without automatic commitment, no-option explanation and boundary tests |
 | F09 | P0 / Co-pilot layout | `copilot/adaptive-workspace` | F01, F02, F05 | Responsive progress/work/activity hierarchy, explicit actions and persistent unresolved display |
 | F10 | P0 / Co-pilot interaction | `copilot/recording-and-corrections` | F09 | Reviewable confirmation/defer/ack/correction interactions; focused behavior/visual verification |
 | F11 | P0 / Planner UI | `planner/support-arrangements` | F01, F06, F07, F08 | Reasons/options/detail, one active plan (named rep or reschedule), visible backup, and actual acceptance state. No preparation checklist |
@@ -253,7 +264,7 @@ Priority **P0** means necessary for the coherent touch demonstration. **P1** str
 | F17 | P1 / Co-pilot + voice | `copilot/explicit-voice-commands` | F05, F10 | Bounded parser, listening state, explicit permissions/capability, one command application, touch fallback |
 | F18 | P1 / services + shared state | `sync/session-recovery` | F04–F07, F14; retention decision | Bounded durable prototype record/drafts, schema version, corruption/reset/relaunch behavior |
 | F19 | P0 / integration and workflow feedback | `pitch/core-journey-verification` | F11–F14; include P1 only if passing | Named-device/accessibility/failure evidence, fictional walkthrough feedback, issue list with severity |
-| F20 | P0 / pitch | `pitch/demo-submission` | F19; can draft earlier | Three-minute script, accurate slides/credits, backup recording, submission-ready repo |
+| F20 | P0 / pitch | `pitch/demo-submission` | F19 gates final assets; script/deck draft starts at F03 | Timed script, owner-assigned slides/operation, accurate capability claims, verified-build backup and submission checks from DEMO_READINESS.md |
 | F21 | P2 / shared observation contract | `sync/observation-review-contract` | Stable core, F04 | Evidence/source/review states for optional observations, no automatic checklist mutation |
 | F22 | P2 / camera | `copilot/mock-label-observation` | F21; explicit mock dataset | Single captured label, extracted text, proposed comparison, human confirm/correct and unknown state |
 | F23 | P2 / AI | `sync/reviewable-handoff-draft` | Stable review/events; provider decision | Grounded summary/draft service through SyncService, evidence links, review-before-share and unavailable state |
@@ -267,9 +278,9 @@ Priority **P0** means necessary for the coherent touch demonstration. **P1** str
 
 ### State and orchestration review criteria: F05–F08
 
-- **F05:** prove that acknowledgment does not resolve a deferred item; duplicate or stale intents cannot advance another item; corrections preserve original history; selection alone changes no recorded status. Tests call domain methods directly, not only disabled UI buttons.
-- **F06:** demonstrate that arrangement acceptance, transport connection, question acknowledgment, and checklist confirmation are independently representable. Snapshot the exact question and unresolved items; serializing it must not depend on live view references.
-- **F07:** route all local support actions through validated application commands and SyncService where they cross feature/device boundaries. Reject wrong-session events, avoid subscription retain cycles, retain drafts until a successful local submission, and support deterministic failure/duplicate tests. Mark local interactions as local.
+- **F05:** prove that required deferral pins that item before advance; acknowledgment keeps it selected/deferred; pending acknowledgment rejects item switching from domain methods and every UI route. Duplicate/stale intents cannot advance another item; corrections preserve history; selection alone changes no recorded status. Support/review/tab return and incoming replies preserve the pinned selection. Tests call domain methods directly, not only disabled UI buttons.
+- **F06:** demonstrate that coordinator plan, arrangement acceptance, transport connection, question acknowledgment, and checklist confirmation are independently representable. Represent unset, rep, reschedule, and superseded plans; require plan IDs/revisions for acceptance. Snapshot the exact question and unresolved items; serializing it must not depend on live view references.
+- **F07:** route all local support actions through validated application commands and SyncService where they cross feature/device boundaries. Reject wrong-session and obsolete-plan activation, avoid subscription retain cycles, retain drafts until a successful local submission, and support deterministic failure/duplicate tests. Verify Ana → Marcus with late Ana acceptance, rep → reschedule with late acceptance, and reschedule → new rep request. Mark local interactions as local.
 - **F08:** cover unavailable remote reps, no qualified rep, missing drive time, absent forecast, setup/closure equality, past schedule, and tied options with stable ordering. Choose and document boundary policy. Assert reasons identify the actual failed constraint and risk remains logistical. No opaque numeric score is required. The high-risk Grand Marais case offers named remote reps and Reschedule as choices. Committing to Reschedule is a later UI action, not something the matcher applies.
 
 ### Screen and integration review criteria: F09–F14
@@ -316,6 +327,8 @@ flowchart TD
 ```
 
 This is a dependency map, not an instruction to run every node concurrently. If there are two builders, assign one to Co-pilot/UI and one to shared contracts/support/Planner, with a single driver for each shared-files PR. Agree interfaces before the two feature branches diverge. With a single builder, use the topological order and cut optional work earlier.
+
+Draft the presentation script and slide skeleton once F03 settles the scenario; F20 does not wait until the final hours to begin. Populate proof screenshots, capability labels, the backup recording and final timing only from the verified integrated build. Assign the presenter, device operator and submission owner in DEMO_READINESS.md; these roles are unassigned until people actually claim them.
 
 ### Relative effort assumptions
 
@@ -371,7 +384,7 @@ Add tests when the corresponding behavior exists; do not add placeholders or ass
 | Layer | Required cases | Main failure this catches |
 | --- | --- | --- |
 | Checklist domain | Confirm/defer, acknowledgment invariants, correction, arbitrary selection, duplicate/stale target, pending gate from every action route | False completion or advancing an unrelated item |
-| Support domain | Capability vs acceptance, arrangement vs question acknowledgment, request without deviation, wrong recipient/session, immutable snapshot | False coverage or context routed to the wrong session |
+| Support domain | Capability vs acceptance, one current plan, unset/reschedule, plan replacement/late old acceptance, arrangement vs question acknowledgment, request without deviation, wrong recipient/session, immutable snapshot | False coverage, two active plans, or context routed to the wrong session |
 | Matcher | Availability, qualification, missing drive/forecast, setup/closure boundaries, elapsed schedules, stable ties, truthful reasons | Misleading logistical recommendation |
 | App integration | Planner browsing vs active session; request → recipient ack → reply → Co-pilot; two separate sessions; reset | Cross-tab drift and record contamination |
 | Transport, if included | Submit failure, duplicate/reordered event, receipt loss, retry, schema mismatch, host loss, reconnect snapshot and late old-session event | False delivery, duplicated mutation, silent stale state |
@@ -399,13 +412,15 @@ Store a compact record in a future `docs/validation/` note: commit, device/OS/wi
 
 The demo build is ready only when all of these hold:
 
-1. One clean run from reset reaches coverage review, explicit acceptance, touch confirmation, deferral, acknowledgment, a contextual question, explicit recipient acknowledgment, reply, correction and review.
+1. One clean run from reset reaches coverage review, explicit acceptance, touch confirmation, deferral, a contextual question while the warning remains, warning acknowledgment, explicit recipient acknowledgment, reply, correction and review.
 2. Deferred items remain unresolved after acknowledgment; no input bypasses the gate or applies an old intent to the next item.
+   The deferred item stays pinned while the gate is pending; support still works. Plan replacement, reschedule without acceptance, late old-plan acceptance, and secondary-case isolation pass their alternate-path checks in DEMO_READINESS.md.
 3. Every support/transport label reflects implemented evidence; the local demo is clearly labeled when applicable.
 4. Failed send and unavailable support are understandable; a draft survives the tested recovery path.
 5. Named-size/enlarged-text evidence is reviewed, essential controls remain usable, and no known layout issue hides required actions.
 6. Focused behavior tests, repository checks and required CI pass. Manual gaps are documented; a known failure that loses/misattributes records, creates false confirmation/delivery, or blocks the core journey prevents a readiness claim.
 7. Slides, README, script, and credits describe the build actually being shown. Backup recording uses that same working build.
+8. Complete the timed-run and submission evidence in [DEMO_READINESS.md](DEMO_READINESS.md). The planning document itself is not evidence that the app or presentation has passed.
 
 ## 11. After the hackathon: a disciplined path toward institutional evaluation
 
