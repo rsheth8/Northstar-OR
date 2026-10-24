@@ -172,7 +172,7 @@ struct PlannerView: View {
             Text(option.title).font(Northstar.Fonts.bodyStrong)
             switch option {
             case .inPersonRep(let rep, _), .remoteRep(let rep):
-                Text("\(rep.statedRole?.rawValue ?? "Role not recorded") · Not requested")
+                Text("\(rep.statedRole.map(roleLabel) ?? "Role not recorded") · Not requested")
                     .font(Northstar.Fonts.supporting).foregroundStyle(Northstar.Palette.inkMuted)
             case .reschedule(let reason):
                 Text("Coordinator option · \(reason)")
@@ -196,6 +196,15 @@ struct PlannerView: View {
         formatter.timeStyle = .short
         let zone = formatter.timeZone.abbreviation(for: procedure.scheduledAt) ?? formatter.timeZone.identifier
         return "\(formatter.string(from: procedure.scheduledAt)) \(zone)"
+    }
+
+    private func roleLabel(_ role: ParticipantRole) -> String {
+        switch role {
+        case .coordinator: "Coordinator"
+        case .orTeam: "OR team"
+        case .technicalRep: "Technical rep"
+        case .clinicalSpecialist: "Clinical specialist"
+        }
     }
 
     private func riskTone(_ risk: RiskLevel) -> NorthstarTone {
