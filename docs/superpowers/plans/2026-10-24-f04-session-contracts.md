@@ -36,7 +36,7 @@
 - [x] Run the tests before implementation; confirm missing contract types fail compilation.
 - [x] Implement the contracts with command kinds for select/confirm/defer/ack/correct and event payloads for selection/confirmation/deferral/ack/correction. Require version >= 0 on commands/state and positive accepted version on events. Require explicit intent IDs for user recording events. Preserve actor snapshot and absolute time. Pending gate state requires the same selected item with deferred status.
 - [x] Run repository checks and the full iPad test suite; inspect actual output.
-- [ ] Review the diff and obtain a read-only independent review if available. Address correctness findings, then satisfy required CI and merge through normal protected-branch flow.
+- [x] Review the diff and obtain a read-only independent review if available. Address correctness findings, then satisfy required CI and merge through normal protected-branch flow.
 
 ## Execution record
 
@@ -58,3 +58,5 @@
 `RecordedItemStatus` has unrecorded/deferred/teamConfirmed; selection remains separate. Commands carry stable intent ID, target item and expected version. Accepted events carry their own ID, intent ID, actor/source/time and positive accepted version. Warning acknowledgment names its own ID, target item and deferral event. Correction points to the original event and explicit superseded/new warning IDs; it does not erase or acknowledge history.
 
 F05 checks catalog/template membership, exact active identity/version/target, duplicates and history/gate links; the contract alone does not apply or accept commands. F18 stores the validated state and accepted history after F06 lands; F07 migrates SyncService and app routing. No persistence, delivery, clinical validation, or new guarded recording behavior is claimed by F04.
+
+- Required GitHub repository and iPad build/test checks passed on `f0aef1b`; PR #25 merged as `b25cf27e9c78f868a2242b96ba65c732589f511e`. F04 is complete. Next priority is F05 pinned required deferral and guarded recording, per the newer local priority correction; F06 remains the next shared-contract slice. Neither is claimed by this status update.
