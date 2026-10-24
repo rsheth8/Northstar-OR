@@ -72,6 +72,7 @@ Camera, AI, maps, and additional procedure types follow the working core journey
 - [ ] Stream co-pilot log entries to the remote rep view
 
 ## Lane D: Pitch and demo
+- [~] (Codex) Review the owner's implementation-plan edits and align product/design/task scope; close plan-switch and pinned-warning edge cases; define presentation-critical proof, timed script, rehearsal, fallback, and submission checks (`docs/`; planning only).
 - [x] (Codex) Write the detailed product implementation blueprint: verified starter gaps, shared state contracts, screen-level work, dependency-sized PRs, acceptance tests, demo cut lines, and the path to institutional evaluation (`docs/IMPLEMENTATION_PLAN.md`; documentation only; merged in [PR #13](https://github.com/rsheth8/Northstar-OR/pull/13)).
 - [x] (Codex) Publish the approved UI/UX rules, screen contracts, implementation order, and review criteria; align teammate/agent instructions and remove outdated decorative-UI tasks (`docs/`, shared agent instructions, PR template; merged in [PR #11](https://github.com/rsheth8/Northstar-OR/pull/11)).
 - [x] (Codex) Refine the identity for institutional medical software: a restrained connected star/pulse, neutral wordmark, editable masters, and app assets (`docs/brand/`, app asset catalog; merged in [PR #9](https://github.com/rsheth8/Northstar-OR/pull/9)). Rural scenes are preserved as presentation artwork.
