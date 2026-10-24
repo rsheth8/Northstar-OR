@@ -4,6 +4,8 @@ The approved direction is a calm, precise workspace for institutional medical te
 
 This is the canonical product design guide. [The brand kit](brand/README.md) governs artwork; [TASKS.md](TASKS.md#ux-delivery-order) governs implementation order and ownership. Changes to shared components, state, and feature screens ship in separate small PRs.
 
+[DESIGN_REFERENCES.md](DESIGN_REFERENCES.md) records the public medical-software examples inspected and our resulting decisions. The target is a clinical operations workspace: aligned case worklists, persistent context, task-focused controls, quiet statuses and retained records. Optional AI drafts stay secondary. Reference products inform hypotheses; Northstar earns its usability claims through its own task-based testing.
+
 ## 1. The design bar
 
 Every screen must make the active fictional case, current work, unresolved items, and support arrangement easy to identify. The next action must be explicit, and the result must remain visible after it is taken.
@@ -14,6 +16,7 @@ Every screen must make the active fictional case, current work, unresolved items
 - Pair meaningful status with a label and icon. Color, sound, animation, and position alone are insufficient.
 - Keep the team in control. Recording an item, acknowledging a warning, requesting support, and receiving support are separate actions.
 - Keep decorative illustration in presentation material. The product uses the connected star/pulse signature and neutral wordmark.
+- Make the app usable from a blank workspace. Actual setup/forms, clear empty states and save/relaunch behavior are part of professional quality; a prepared case is optional sample content.
 
 This guide sets a professional design target. It does not establish clinical readiness or replace the workflow feedback described in PRODUCT.md.
 
@@ -53,8 +56,10 @@ Coverage risk describes logistics. Label it “Coverage risk” and show its rea
 The primary demo is a landscape iPad. Layout must respond to the actual window width, safe areas, text size, and keyboard. Preserve functionality when panels stack or move into detail views. Apple's [layout guidance](https://developer.apple.com/design/human-interface-guidelines/layout) supports this adaptive approach.
 
 - Keep the three destinations recognizable: **Co-pilot**, **Planner**, and **Remote Support**. Use familiar native navigation and selection behavior.
+- On first launch offer real workspace setup or explicit sample loading. Restore the configured worklist on later launch; provide Workspace settings in the shell. Do not silently open/reset an array-zero sample session.
 - Show consistent active-case context and support status across destinations. Make an intentional case change explicit; preserve selection when switching tabs.
 - Keep case identity, unresolved-item count, and support availability visible while working. Until cross-device delivery exists, label the actual mode as a local demo.
+- If no session exists, show the actual empty state and a case-selection/start action rather than invented progress. Use an honest communication label such as “On this device”; identity/connection verification requires implemented evidence.
 - Give the current task the most space. Avoid a tiny task panel between rigid sidebars or a large empty presentation-style canvas.
 - In Co-pilot, use progress / current work / recent activity columns only when the current work area can remain at least 360 pt wide. Otherwise move secondary history into a labeled panel or stack the regions. Keep warnings, current actions, and support access reachable.
 - Grow rows and controls for wrapped text. Essential labels, recipients, questions, and warnings must not be clipped or reduced to unreadable text.
@@ -68,7 +73,8 @@ These describe the target experience, including behavior still pending in TASKS.
 | Destination | Information priority | Essential interaction and result |
 | --- | --- | --- |
 | Co-pilot | Active case and facility → named support arrangement and connection → current item and unresolved items → recent activity | Record a team confirmation, defer with context, acknowledge when required, correct a record, and request support at any time. Each action leaves a visible, timestamped result. |
-| Planner | Upcoming cases and logistical risk → selected case and risk reasons → named options/roles → one current plan and visible backups | Commit to one named-rep request or mark to reschedule; only a named-rep request has recipient acceptance. Backups stay unrequested. No preparation checklist. A map is optional supplementary information. |
+| Planner | Case worklist/filter and New case → selected case/risk reasons → named options/roles → one current plan/backups | Create/edit a compatible fictional case, commit one named-rep or reschedule plan, and explicitly start/resume its record. Backups stay unrequested. No preparation checklist. |
+| Setup / Workspace settings, secondary flow | Fictional site/time zone → local participant and support directory → supported template selection → communication mode | Save/edit actual configuration with field validation and retained state; optional sample loading is explicit. This is not a fourth primary tab. |
 | Remote Support | Named sender/recipient and role → team's question → current context and unresolved items → conversation and recent events | Acknowledge a request, reply with technical support, and show actual message/connection state. Make incoming responses prominent in Co-pilot too. |
 | Session review, when implemented | Session identity → unresolved items → recorded confirmations/corrections → support exchanges → sources and times | Review the record. Use “Checklist complete” only for the relevant recorded checklist state, with any unresolved items still visible. Export is a separate scoped task. |
 
@@ -87,6 +93,8 @@ Use one dominant next action in the current work area. Keep support and correcti
 | Camera or AI | Observation / human confirmation / AI draft | Preserve source, timestamp, uncertainty, and review state. Automated output must not silently complete an item or send a handoff. |
 
 Loading, empty, unavailable, and error states are part of each screen's design. Explain what is known, what is pending, and what the user can do next. A blank log can say “No activity recorded.” A failed request retains the question and context and offers an explicit retry or edit. Show queued/offline behavior only if it has been implemented; do not imply persistence the prototype lacks.
+
+The target core includes versioned local persistence under PRODUCT_FOUNDATION.md. A failed save keeps the draft and shows an actionable error; never show “Saved” on failed storage or reset corrupted data silently. The current starter still lacks this implementation.
 
 ## 6. Interaction, alerts, and copy
 
@@ -117,7 +125,7 @@ Token calculation on 2026-10-24: `ink` on `bgBase` is 16.38:1 and `inkMuted` is 
 
 The logo and shared neutral typography/flat-control foundation landed in PRs #9 and #8. Full screen layouts and workflow-state behavior remain starter work. Follow [the ordered UX delivery plan](TASKS.md#ux-delivery-order).
 
-Start with the coherent fictional fixture and the explicit session, plan, support and checklist contracts (F03–F07). Shared typography, status contrast and viewport work can progress in a separate checkout; it is not the first claim. Both state and visual foundations must land before the final screen integration. Polish the connected touch journey before maps, camera or AI. Use [DEMO_READINESS.md](DEMO_READINESS.md) for the presentation proof and rehearsal gate.
+Start with reusable fictional template/seed content (F03), workspace/case contracts (F24), then session/support contracts, guards and P0 persistence (F04/F06/F05/F18/F07). Shared visuals can progress separately. Setup/directory/case/start-resume flows (F25–F28) and both visual/state foundations precede final product verification. Use [PRODUCT_FOUNDATION.md](PRODUCT_FOUNDATION.md) for repeatability and [DEMO_READINESS.md](DEMO_READINESS.md) for the five-minute presentation gate.
 
 Known gaps include fixed Co-pilot sidebars, unscaled font sizes, 12 pt label text, low-contrast upcoming icons, missing support acceptance/delivery state, missing correction/deferred-item behavior, and clinical-direction sample copy. Track fixes as implementation tasks; do not describe the targets in this guide as already shipped.
 

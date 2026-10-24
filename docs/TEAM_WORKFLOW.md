@@ -4,7 +4,7 @@
 
 ## Start one task
 
-1. Read `AGENTS.md`, `CLAUDE.md`, `PRODUCT.md`, `DESIGN.md`, and `TASKS.md`. Check open PRs for work already in progress.
+1. Read `AGENTS.md`, `CLAUDE.md`, `PRODUCT.md`, `PRODUCT_FOUNDATION.md`, `DESIGN.md`, and `TASKS.md`. Check open PRs for work already in progress. The owner-confirmed presentation is five minutes; setup, normal case creation and retained state are core product requirements.
 2. Update local `main` with `git pull --ff-only` while your workspace is clean. Never discard local edits to make it clean.
 3. Create a task branch: `copilot/<task>`, `planner/<task>`, `sync/<task>`, or `pitch/<task>`.
 4. Mark the task `[~] (your name)` in `TASKS.md` and push an early draft PR so the other teammate can see the claim. A claim sitting only on your laptop is invisible to them.

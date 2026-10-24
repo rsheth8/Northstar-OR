@@ -4,6 +4,8 @@ Planning baseline: `main` at `ff639ed`, inspected on **2026-10-24**. This is an 
 
 Presentation review: the owner's subsequent scope edits were checked against `29d999f` on 2026-10-24; app code was unchanged. Keep one coordinator plan, no Planner preparation checklist, a pinned warning item, and fixture/contracts-first implementation. [DEMO_READINESS.md](DEMO_READINESS.md) defines the presentation proof matrix, timed primary path, alternate-path checks, and submission gate. No rehearsal or readiness is claimed by writing these plans.
 
+**Scope correction, owner-confirmed on 2026-10-24:** the presentation is **five minutes** and must demonstrate a configurable app, beyond a prepared case. [PRODUCT_FOUNDATION.md](PRODUCT_FOUNDATION.md) makes blank setup, managed contacts, case creation/start/resume, retained records and independent second-case verification core work. It supersedes the older single-seeded-case and optional-persistence minimum. [DESIGN_REFERENCES.md](DESIGN_REFERENCES.md) records institutional software research and the resulting design decisions. These remain planned capabilities.
+
 The product scope stays in [PRODUCT.md](PRODUCT.md), visual and interaction rules in [DESIGN.md](DESIGN.md), and ownership/completion in [TASKS.md](TASKS.md). This document supplies the implementation detail behind those documents. Proposed names below describe contracts; adapt them to the existing code rather than introducing an architecture rewrite.
 
 ## 1. The outcome we are building toward
@@ -21,11 +23,11 @@ The primary product is the connected journey across three destinations. A polish
 
 There are three different delivery targets:
 
-1. **Hackathon demonstration:** one coherent simulated case, reliable touch interactions, explicit support acceptance and acknowledgment, restrained adaptive UI, honest local/transport labels, and a reviewable in-memory record.
+1. **Configurable evaluation app:** fictional workspace setup, managed contacts, ordinary case creation from a supported template, guarded touch workflows, explicit support exchange, retained records/drafts, and a restrained adaptive UI. Present a selected journey through that app in five minutes.
 2. **Evaluable product prototype:** repeatable multi-device exchanges, recovery, bounded persistence, usability evidence, and well-defined ownership of the record. Still simulated data.
 3. **Candidate for institutional evaluation:** a separately scoped program with workflow partners, security and privacy owners, content governance, operational support, and formal entry criteria. Visual polish and passing CI do not establish this status.
 
-The full blueprint is larger than the remaining hackathon. Deliver target 1 first; use targets 2 and 3 as an ordered continuation, rather than promising every feature by Sunday.
+The full blueprint is larger than the remaining hackathon. Deliver the smallest repeatable version of target 1 first; use targets 2 and 3 as an ordered continuation. A local prototype can have functional setup and persistence while its remote transport and institutional deployment remain unfinished.
 
 ## 2. Verified starting point and highest-priority gaps
 
@@ -52,18 +54,18 @@ These are source-review findings, not a fresh device or accessibility audit. The
 
 ### Required core
 
-- One fictional pacemaker coordination scenario, with a stable scenario clock and reset action.
+- A configurable fictional workspace, support directory and normal case-creation flow using a versioned pacemaker coordination template. Optional sample data uses the same repository and actions; new cases do not require sample IDs.
 - Named technical-support role, one committed plan (request one named rep, or mark to reschedule), explicit acceptance for the named-rep branch, and a separately displayed connection mode. Unchosen options stay visible as backup; before commitment the plan is unset.
 - Team-reported item confirmation, deferral, acknowledgment, and correction through touch. A pending acknowledgment pins the selected item. Requesting support stays available during that warning.
 - Support requested at any time with the team's question and a timestamped context snapshot.
 - Recipient acknowledgment and a technical-support reply surfaced in Co-pilot.
-- Review of unresolved items, confirmations, corrections, and support exchanges.
+- Retained review of unresolved items, confirmations, corrections, support exchanges and drafts, with tested relaunch/start/resume across at least two cases.
 - Readable, adaptive layouts using the approved brand and design guide.
 - A clearly labeled local demonstration if cross-device transport has not passed its gate.
 
 ### Conditional additions after the core passes
 
-Voice, separate-device transport, durable recovery, a narrow mock-label camera observation, and session-grounded AI drafts each have their own acceptance gate. Add them individually. Maps, live weather, broad procedure coverage, video calls, EHR integration, and automated interpretation of surgical activity are outside the required demonstration.
+Voice, separate-device transport, a narrow mock-label camera observation, and session-grounded AI drafts each have their own acceptance gate. Add them individually. Durable local storage, normal setup and repeatable case creation are core. Maps, live weather, broad procedure content, video calls, EHR integration, and automated interpretation of surgical activity remain outside the required build.
 
 ### Script and expected record
 
@@ -78,7 +80,7 @@ Voice, separate-device transport, durable recovery, a narrow mock-label camera o
 | 7. Respond | Rep acknowledges and replies with a fictional technical reference | Recipient acknowledgment and reply are separate events; Co-pilot shows the new reply prominently |
 | 8. Correct and review | Team corrects a previously recorded item, then opens review | Original event remains; correction identifies its target; review still shows any unresolved item |
 
-For the timed primary demonstration, request **Ana** and follow the acceptance branch. Marcus, reschedule, plan replacement, and failed send are alternate-path verification, not extra live branches to improvise. Reschedule records a coordinator's planning choice; it does not require rep acceptance or change a hospital booking. The presentation retains Worthington and Bemidji as browsable ranking context, with Grand Marais as the only active Co-pilot case.
+The table is an example fixture journey, not an application restriction. The five-minute presentation shows workspace settings, a newly created fictional case, the core support loop and persisted resume. Rehearsal may choose Ana and the Grand Marais story, but configured contacts/sites and every compatible newly created case must use the same behavior. Marcus, reschedule, plan replacement and failed send remain independently verified branches. Reschedule records a coordinator's planning choice without changing an external booking. Supported cases can explicitly start/resume their own sessions; the unsupported ICD template remains unavailable.
 
 A separate failure rehearsal disconnects the transport or injects a send failure. The app must preserve the question, show the actual failure or pending state, and avoid claiming delivery. This failure rehearsal is required even if the presentation uses the happy path.
 
@@ -87,7 +89,7 @@ A separate failure rehearsal disconnects the transport or injects a send failure
 ### 4.1 Case, session, actors, and time
 
 - Keep `Procedure.id` as the fictional scheduled case identifier. Add a unique **session ID** per run; case ID alone cannot isolate a reset or a second run of the same procedure.
-- Keep `selectedCaseID` for Planner browsing separate from `activeSession`. Browsing a case must not replace an in-progress session. Starting or changing the active session is explicit and preserves or deliberately discards unsent drafts with a clear choice.
+- Keep `selectedCaseID` for Planner browsing separate from the optional active session. Store sessions by workspace/case/session identity; starting/resuming another supported case is explicit, retains prior records/drafts, and cannot bypass a pending acknowledgment. Blank installation has no active session. F24 defines setup/case/template types; F18 supplies the repository.
 - Use stable IDs for participants and their stated role. Device-rep technical support and clinical specialist support are different roles. Demo role selection is simulated identity, not authentication or credential verification.
 - Store absolute timestamps and format the relevant date/time zone for coverage. Inject the clock for fixtures and rules. A relative forecast needs an `asOf` time so “90 minutes” does not restart on every refresh.
 - Show a session version or last-updated time where stale context matters. Do not derive causal ordering from two devices' wall clocks.
@@ -143,7 +145,7 @@ Extend `ContextPackage` into a **request-time snapshot** with session/case IDs, 
 
 Use structured events for state changes; render human-readable `LogEntry` text from them or attach structured metadata during a staged migration. Required metadata: event ID, intent ID when applicable, session/case ID, event kind, entity/target ID, actor ID/role, input source, occurrence time, and accepted session sequence/version. Correction events reference the prior event. Avoid building two independent sources of truth for the same status.
 
-The first implementation can remain in-memory. Append-only history here means the application preserves prior records in its UI/state; it does not mean immutable, durable, or tamper-evident storage.
+In-memory implementations remain useful for tests/previews, but the revised product core requires F18's versioned local persistence. Preserve prior event/correction history and restore the accepted state consistently. Neither an append-only UI projection nor a local file establishes immutable or institutionally authoritative audit storage.
 
 For cross-device delivery, add a versioned event envelope and per-recipient receipt tracking. A message can be labeled delivered only after the receiving application has applied it and returned its ID. Human acknowledgment is another explicit event. On reconnect, compare session/version and request a snapshot or missing events; discard duplicates and reject incompatible sessions/schema versions visibly. Reset starts a new session ID, preventing late events from reviving an old run.
 
@@ -166,19 +168,21 @@ flowchart LR
 - Keep mutable presentation/session state on the main actor. Transport callbacks arrive through one controlled hop before modifying observable state. Test this boundary when adding asynchronous delivery.
 - Views invoke domain actions, rather than writing statuses or interpreting network callbacks. Touch, voice, and keyboard share those actions and their preconditions.
 - Keep `CoverageMatcher` pure. Inject time, scenario inputs, and rule parameters; return reasons with the actual constraint, rather than a generic road-closure explanation.
-- Grow `AppModel` only with shared coordination responsibilities. Keep checklist transitions in `CoPilotSession`; extract a small support-state type when needed rather than moving all feature logic into `AppModel`.
+- Grow `AppModel` only with shared coordination responsibilities. Inject repository/seed dependencies rather than unconditionally loading SampleData or `procedures[0]`. Represent no workspace/case/active session explicitly. Keep checklist transitions in `CoPilotSession`; extract small support-state types as needed.
 - Evolve `SyncService.send` to provide an asynchronous submission outcome and observable connection/receipt events. Preserve a local implementation and an injectable failure/duplicate/reorder test implementation.
 - Choose one authority for each domain in the first multi-device prototype: OR host owns checklist/session sequence; the selected recipient owns its acceptance, acknowledgment, and reply intents. The host validates and applies those intents. Do not let two devices independently overwrite checklist dictionaries.
 - A server implementation can later own sequencing. Automatic host election, multi-writer offline merge, and seamless failover are outside the initial prototype. On host loss, show disconnected and limit remote mutations until explicit reconnection/recovery.
 - Migrate in compiling slices: introduce contracts and compatibility adapters; move one domain action at a time; update tests and consumers; remove obsolete `StepStatus.current`/`skipped`, text-only routing, and boolean shortcuts once no consumer relies on them.
 
-Proposed placement: shared identities/events in `Models/`; orchestration in `App/AppModel.swift`; checklist transitions in `Features/CoPilot/`; support views/context in `Features/RemoteSupport/`; transport/voice/persistence implementations in `Services/`; fixtures in `Data/`; reusable UI in `DesignSystem/`. Shared changes get their own PR before dependent screens.
+Proposed placement: shared identities/events/configuration in `Models/`; orchestration in `App/AppModel.swift`; setup/settings/directory in `Features/Workspace/`; case forms/worklist in `Features/Planner/`; checklist transitions in `Features/CoPilot/`; support views/context in `Features/RemoteSupport/`; transport/voice/persistence implementations in `Services/`; fixtures in `Data/`; reusable UI in `DesignSystem/`. Shared changes get their own PR before dependent screens.
 
 ## 6. Screen-level implementation specification
 
 ### 6.1 Shared shell and components
 
 The shell consistently identifies the active fictional case, facility, unresolved count, support role/state, and actual communication mode. Keep the logo modest. Planner's browsed selection remains separate from this active-session context.
+
+First launch offers actual workspace setup or explicit sample loading. Later launch restores the configured workspace/worklist; it never silently resets into a preselected sample session. Workspace settings are available from the shell. See PRODUCT_FOUNDATION.md for fields, empty states and storage; see DESIGN_REFERENCES.md for the institutional worklist/context/header direction.
 
 Build only components needed by at least one immediate screen: status label, persistent attention banner, primary/secondary action, section heading, empty/error state, and readable event row. A reusable case header can follow after the shell/feature boundary is clear. Do not create a large unused component library.
 
@@ -210,7 +214,7 @@ Verify landscape presentation with the actual generated project and installed iP
 - Keep Reschedule as a real option the coordinator can commit to, alongside requesting Ana or Marcus. The matcher may rank it. It must not apply itself. Committing to it records that plan and does not invent a rep acceptance. Preserve the logistical reason.
 - Selecting an option opens its details. “Request support arrangement” on a named rep creates one request; the result says “Awaiting acceptance.” Only the recipient can produce acceptance in the demo role flow. “Mark to reschedule” records the reschedule plan. One plan is active. Choosing another replaces it and leaves the previous option visible as backup, not as a second live request.
 - The Planner does not collect a preparation checklist. The coordinator's actions end at reading the risk, committing to one plan, and watching whether a named rep accepts.
-- A selected non-active case cannot mutate the current session by accident. Starting it is explicit; display both contexts clearly if browsing while a session is active. Worthington and Bemidji stay on the list so the ranking is visible. The ICD generator-change row must not become the active co-pilot checklist.
+- “New case” and workspace-directory/settings actions use normal validated forms. A selected non-active case cannot mutate the current session by accident. Explicit start/resume restores its own record. Sample Worthington and Bemidji rows may illustrate ranking, but arbitrary compatible cases are supported; only unsupported workflow content such as the reused ICD checklist is blocked.
 
 **Acceptance:** high-risk scenario reasons are reproducible; availability is distinct from capability and acceptance; missing drive/forecast/qualification inputs do not create false certainty; browsing another case leaves Co-pilot untouched.
 
@@ -233,7 +237,7 @@ Verify landscape presentation with the actual generated project and installed iP
 
 Place review within the current session, initially as a sheet or detail view; do not add a fourth main tab. Present session identity and communication mode first, unresolved items next, then confirmations/corrections and support exchanges with actor/source/time.
 
-Offer a chronological record and a compact grouped summary from the same events. Show original and corrected records together. Distinguish a human confirmation, a received message, and any future automated observation. An in-memory review labels its retention limits honestly. Export, sign-off, EHR write-back, and legally authoritative records are separate decisions.
+Offer a chronological record and a compact grouped summary from the same retained events. Show original and corrected records together. Distinguish a human confirmation, a received message, and any future automated observation. F18 restores this record and drafts after relaunch; pending sends require reconciliation, never assumed delivery. Export, sign-off, EHR write-back, and legally authoritative records are separate decisions.
 
 **Acceptance:** counts match domain state; corrected records retain history; acknowledged deferrals remain unresolved; ending navigation does not imply that the clinical procedure ended.
 
@@ -241,39 +245,44 @@ Offer a chronological record and a compact grouped summary from the same events.
 
 The IDs below identify planned slices, not claims or GitHub issues. Claim the corresponding task in TASKS.md before work. A row that grows beyond a focused review should be split, keeping the same outcome and dependencies. Do not combine shared interfaces with every dependent screen in one PR.
 
-Priority **P0** means necessary for the coherent touch demonstration. **P1** strengthens the prototype after that path works. **P2** is an optional extension. Lane labels indicate folder ownership; they do not authorize spawning more agents.
+Priority **P0** means necessary for the smallest configurable product and its five-minute presentation. **P1** strengthens communication/input after that path works. **P2** is an optional extension. Lane labels indicate folder ownership; they do not authorize spawning more agents. F24–F28 extend the original IDs; F18 is promoted to P0.
 
 | ID | Priority / owner | Branch suggestion | Depends on | Concrete deliverable |
 | --- | --- | --- | --- | --- |
 | F01 | P0 / shared design | `pitch/accessible-components` | Current main | Scalable typography, readable status treatment, accessible action/banner primitives |
 | F02 | P0 / shared app shell | `pitch/adaptive-app-shell` | Current main; F01 for final visuals | Diagnose viewport, adaptive shell, stable navigation and active-case presentation |
-| F03 | P0 / shared data + coordinated copy | `pitch/coherent-demo-fixture` | Current main | One resettable fictional pacemaker scenario, corrected non-directive copy. Worthington and Bemidji stay on the planner list for ranking. The ICD row never becomes the active co-pilot checklist |
-| F04 | P0 / shared contracts | `sync/session-event-contracts` | F03 agreement | Session/actor/source IDs, structured events/intents, independent item/selection and acknowledgment types |
+| F03 | P0 / shared data + coordinated copy | `pitch/coherent-demo-fixture` | Current main | Versioned fictional pacemaker coordination template and optional seed factory; arbitrary case/contact IDs; normal empty entry; unsupported ICD content cannot launch |
+| F04 | P0 / shared contracts | `sync/session-event-contracts` | F03, F24 | Workspace/case/session/actor/source IDs, structured intents/events, independent item/selection and acknowledgment types |
 | F05 | P0 / Co-pilot state | `copilot/explicit-recording-state` | F04 | Guarded confirmation/defer/acknowledgment/correction with idempotence and target validation |
 | F06 | P0 / shared support contracts | `sync/support-state-contracts` | F04 | One coordinator plan/revision, named arrangement or reschedule, supersession, question, immutable snapshot, and message/receipt identities |
-| F07 | P0 / shared orchestration | `sync/local-support-journey` | F05, F06 | Local arrangement/request/ack/reply flow, main-actor routing, case/session isolation and injectable failures |
+| F07 | P0 / shared orchestration | `sync/local-support-journey` | F05, F06, F18 | Repository-backed local arrangement/request/ack/reply, main-actor routing, case/session isolation and injectable failures |
 | F08 | P0 / Planner matcher | `planner/explainable-coverage` | F03 | Availability handling, truthful constraint reasons, explicit Reschedule candidate without automatic commitment, no-option explanation and boundary tests |
 | F09 | P0 / Co-pilot layout | `copilot/adaptive-workspace` | F01, F02, F05 | Responsive progress/work/activity hierarchy, explicit actions and persistent unresolved display |
 | F10 | P0 / Co-pilot interaction | `copilot/recording-and-corrections` | F09 | Reviewable confirmation/defer/ack/correction interactions; focused behavior/visual verification |
-| F11 | P0 / Planner UI | `planner/support-arrangements` | F01, F06, F07, F08 | Reasons/options/detail, one active plan (named rep or reschedule), visible backup, and actual acceptance state. No preparation checklist |
-| F12 | P0 / Remote Support | `planner/contextual-support-exchange` | F01, F07 | Request composer, arrangement acceptance, question acknowledgment, reply and retained failure draft |
+| F11 | P0 / Planner UI | `planner/support-arrangements` | F01, F06, F07, F08, F26, F27 | Configured case/contact detail, one rep-or-reschedule plan, visible backup and actual acceptance. No preparation checklist |
+| F12 | P0 / Remote Support | `planner/contextual-support-exchange` | F01, F07, F26, F27 | Configured sender/recipient, question composer, acceptance, acknowledgment, reply and retained failure draft |
 | F13 | P0 / Co-pilot integration | `copilot/support-reply-and-request` | F10, F12 | Always-available request entry, contextual banner, recipient/role and prominent incoming reply |
-| F14 | P0 / review | `copilot/session-review` | F05, F07, F13 | In-memory unresolved-first review with corrections, sources, and support history |
+| F14 | P0 / review | `copilot/session-review` | F05, F07, F13, F18 | Retained unresolved-first review with corrections, sources, support history and resumed case identity |
 | F15 | P1 / sync spike | `sync/transport-proof` | F06, F07; devices chosen | Time-boxed real-device proof and decision record; no production delivery claim |
 | F16 | P1 / sync implementation | `sync/device-receipts-and-recovery` | F15 passes | Selected transport, connection state, application receipts, deduplication, reconnect and stale-session rejection |
 | F17 | P1 / Co-pilot + voice | `copilot/explicit-voice-commands` | F05, F10 | Bounded parser, listening state, explicit permissions/capability, one command application, touch fallback |
-| F18 | P1 / services + shared state | `sync/session-recovery` | F04–F07, F14; retention decision | Bounded durable prototype record/drafts, schema version, corruption/reset/relaunch behavior |
-| F19 | P0 / integration and workflow feedback | `pitch/core-journey-verification` | F11–F14; include P1 only if passing | Named-device/accessibility/failure evidence, fictional walkthrough feedback, issue list with severity |
+| F18 | P0 / services + shared state | `sync/session-recovery` | F24, F04, F06 | Versioned local repository for workspace/contacts/cases/sessions/drafts; explicit save errors, corruption/schema and relaunch recovery; no assumed delivery |
+| F19 | P0 / integration and workflow feedback | `pitch/core-journey-verification` | F11–F14, F25–F28; include P1 only if passing | Blank setup, independently created second case, input change, relaunch/isolation, accessibility/failure and workflow evidence |
 | F20 | P0 / pitch | `pitch/demo-submission` | F19 gates final assets; script/deck draft starts at F03 | Timed script, owner-assigned slides/operation, accurate capability claims, verified-build backup and submission checks from DEMO_READINESS.md |
 | F21 | P2 / shared observation contract | `sync/observation-review-contract` | Stable core, F04 | Evidence/source/review states for optional observations, no automatic checklist mutation |
 | F22 | P2 / camera | `copilot/mock-label-observation` | F21; explicit mock dataset | Single captured label, extracted text, proposed comparison, human confirm/correct and unknown state |
 | F23 | P2 / AI | `sync/reviewable-handoff-draft` | Stable review/events; provider decision | Grounded summary/draft service through SyncService, evidence links, review-before-share and unavailable state |
+| F24 | P0 / shared models | `sync/workspace-case-contracts` | F03 | Workspace/site/contact/template/case contracts, stable IDs and pinned reviewed template version |
+| F25 | P0 / workspace UI | `pitch/workspace-setup` | F01, F02, F24, F18 | Functional blank setup/settings and explicit optional sample loading, retained after relaunch |
+| F26 | P0 / workspace directory | `planner/support-directory` | F25, F24, F18 | Add/edit fictional support contacts, roles, capabilities and availability; same contacts drive requests |
+| F27 | P0 / Planner forms | `planner/case-creation` | F25, F24, F04, F18 | Validated new/edit case from supported template; multiple independently named cases without seed IDs |
+| F28 | P0 / Planner and app orchestration | `planner/case-start-resume` | F27, F05, F07, F11, F18 | Useful worklist/filter and explicit start/resume retaining separate case records, drafts and acknowledgment gates |
 
 ### Foundation PR review criteria: F01–F04
 
 - **F01:** show reusable components at default, XXXL, and largest accessibility text; measure relevant contrast pairs including essential icon/boundary states. Demonstrate touch/keyboard focus and Reduce Motion. Do not add tests that merely assert token literals.
 - **F02:** record actual device/runtime/window dimensions, investigate the letterbox cause, and verify safe areas, tab navigation, narrowed window, and keyboard. Any project setting change must name the observed cause. Coordinate case/role fields with F04/F06 instead of inventing parallel booleans.
-- **F03:** keep every fictional record under Data; use an injected scenario start and `asOf` times. Rehearsal reset recreates the same offsets and a new session ID. Review each prompt for recording/coordination language. Keep the Worthington and Bemidji rows on the planner list. Do not launch the ICD generator-change row as the co-pilot checklist, and do not present pacemaker implant steps as a generator-change workflow.
+- **F03:** keep source fixtures/templates under Data; inject clock/IDs and use as-of times. Optional sample loading creates ordinary records, never a special script state machine. Empty repository is valid; a new case can use the supported template without Grand Marais/Ana/array-index assumptions. Unsupported ICD content stays unavailable.
 - **F04:** encode/decode the shared event/intent envelope, verify stable identities and source labels, and keep existing consumers compiling through a small adapter. Declare supported schema version and invalid-input handling. Avoid a broad persisted-data migration before persistence exists.
 
 ### State and orchestration review criteria: F05–F08
@@ -286,33 +295,40 @@ Priority **P0** means necessary for the coherent touch demonstration. **P1** str
 ### Screen and integration review criteria: F09–F14
 
 - **F09/F10:** verify the displayed target remains the command target, primary actions survive larger text, a deferred item remains available for correction, and pending acknowledgment cannot be bypassed by alternate input. While the warning is up, selecting another item fails and request support still succeeds. Keep evidence of warning and review states.
-- **F11:** demonstrate two different browsed/active cases without cross-contamination, no-result and unavailable options, one active plan, a visible non-requested backup, request pending, accepted arrangement, and a committed reschedule with no rep acceptance. Do not add a preparation checklist. Browsing Worthington or Bemidji leaves the Grand Marais co-pilot session untouched, and the ICD row cannot be started as that session.
+- **F11:** demonstrate independently created browsed/active cases without cross-contamination, no-result/unavailable options, one plan, unrequested backup, pending/accepted arrangement and explicit reschedule. Do not add a preparation checklist. Supported cases can explicitly start/resume; unsupported templates cannot launch.
 - **F12:** exercise a request with no deferred items, acknowledgment, one reply, failure/retry with the same message ID, keyboard occlusion, and draft preservation. Acceptance must not accidentally acknowledge the question. Remove hard-coded sender identity from the send path; use the simulated selected role.
 - **F13:** support request remains accessible during a required acknowledgment; incoming reply shows the correct sender/session and does not change checklist state. A reply arriving while the team reviews history must not destroy their position or draft.
-- **F14:** compare review totals to domain state; verify deferral plus acknowledgment, later correction, and unanswered question. Explicitly state in-memory retention until F18 lands.
+- **F14:** compare review totals to retained domain state; verify deferral plus acknowledgment, later correction, unanswered question, relaunch and correct case/session identity.
 
-### Optional capability gates: F15–F18, F21–F23
+### Persistence and optional capability gates: F18 and F15–F17/F21–F23
 
 - **F15:** two chosen physical devices exchange one session-scoped request and explicit application receipt, then disconnect and reconnect. Record permission/network/background behavior and SDK/deployment compatibility. Stop the spike after about 60–90 minutes if there is no reliable path; retain the labeled local demo.
 - **F16:** the recipient applies an event at most once; receipt/ack labels are evidence-based; delayed events from a reset session are rejected; schema mismatch and host loss are visible; reconnect updates from a canonical snapshot or missing sequence range. Background/resume is part of the test, not an assumed guarantee.
 - **F17:** use deliberately bounded command phrases such as “Northstar, record confirmation,” “Northstar, defer item,” and “Northstar, acknowledge warning.” Process a finalized command or explicit push-to-talk result, reject negation/extra ambiguous speech, and deduplicate recognition sessions. Test “do not complete,” incidental “next,” partial repeats, stale target, denied permission, unavailable recognition, audio interruption, and spoken-alert feedback. Avoid self-triggering from text-to-speech.
-- **F18:** agree what survives termination before writing storage. A proposed prototype scope is one simulated session, pending drafts, message IDs, and receipts; version the format, write atomically, surface corrupt/unsupported records, and make reset/delete explicit. Test relaunch mid-draft and mid-send. Restore pending sends as needing reconciliation, not as delivered. This is prototype recovery, not an institutional audit record.
+- **F18 (core):** persist one configured fictional workspace, contacts, cases, session states/events and drafts using a versioned atomic store. Exercise failed write, corrupt/version-mismatched data, relaunch mid-draft/send and explicit scoped sample reset. Restore pending sends for reconciliation, never as delivered. Use an in-memory store for tests/previews. Full field/rule acceptance for F24–F28 is in PRODUCT_FOUNDATION.md.
 - **F21:** represent a captured observation, proposed comparison, and human confirm/correct/reject action separately. Keep an unknown outcome and evidence/source/time; round-trip the contract without marking an item confirmed. Sharing an observation requires an explicit request/message action.
 - **F22:** evaluate independently labeled mock examples for readable/correct, readable/mismatch, blurred/unreadable, and absent label. Show the image, extracted text, comparison basis, and uncertainty. Record human correction separately. No clinical suitability/sterility/placement inference and no automatic completion. If extraction is not reliable, display “Unable to determine.”
 - **F23:** restrict initial questions to unresolved confirmations, changes since a given event, and a handoff draft. Provide structured session evidence, preserve unknowns, identify supporting event IDs, and review before send. Model output has no direct access to mutation commands. Evaluate omitted deferrals, invented confirmations, injected instructions in message text, timeout, and provider failure. Select/credit a provider and define data sent before implementation.
 
 ## 8. Critical path, working order, and schedule
 
-The path is **contracts → guarded local state → connected touch journey → evidence → presentation**. Claim the fictional fixture and the support-state contracts first (F03 through F07). Typography and viewport diagnosis can proceed in parallel in another checkout, and they must not be the first claim. Feature UI must wait for the state it displays.
+The path is **reusable template/seed → workspace/case/session/support contracts → retained state and setup → normal case/support journey → independent-case/relaunch proof → five-minute presentation**. First claim F03, then F24/F04/F06; F05 and F18 unblock F07 and setup/forms. Shared visuals can progress in a separate checkout. Feature UI waits for its merged contracts and storage.
 
 ```mermaid
 flowchart TD
     A[F01 shared UI and F02 viewport] --> H[F09-F10 Co-pilot touch]
-    B[F03 coherent fictional fixture] --> C[F04 session and event contracts]
+    B[F03 reusable fictional template and seed] --> W[F24 workspace and case contracts]
+    W --> C[F04 session and event contracts]
     C --> D[F05 checklist transitions]
     C --> E[F06 support contracts]
     D --> F[F07 local orchestration]
     E --> F
+    E --> S[F18 local persistence]
+    C --> S
+    S --> F
+    S --> U[F25 setup and F26 contacts and F27 cases]
+    A --> U
+    U --> I
     B --> G[F08 matcher]
     D --> H
     F --> I[F11 Planner and F12 support exchange]
@@ -321,6 +337,8 @@ flowchart TD
     H --> J[F13 integrated Co-pilot support]
     I --> J
     J --> K[F14 review]
+    I --> R[F28 case start and resume]
+    R --> L
     K --> L[F19 verification and F20 submission]
     F --> M[F15-F16 optional transport]
     H --> N[F17 optional voice]
@@ -336,14 +354,15 @@ Treat these as planning ranges for focused work on the current starter, excludin
 
 | Workstream | Rough person-hours | How to reduce scope |
 | --- | --- | --- |
-| Shared UI, viewport, fixture | 4–7 | Implement only the components and one case needed by the core path |
-| Checklist/support contracts and guarded local orchestration | 6–10 | One session, one technical recipient, in-memory record, explicit local role switch |
+| Shared UI, viewport, template/seed | 4–7 | Implement only the components and one supported coordination template needed by normal product flows |
+| Checklist/support contracts and guarded local orchestration | 6–10 | One active recording context and one current technical recipient per case; keep independent retained sessions |
 | Co-pilot, Planner, request/reply and review screens | 8–14 | One adaptive wide/stacked pattern; simple review sheet; no map or rich attachments |
 | Manual evidence, focused tests, rehearsal and presentation | 4–7 | Keep one scenario and one failure drill; simplify presentation rather than dropping correctness checks |
+| Configurable workspace, directory, case forms and persistence | 10–18 | One local workspace, small directory, one supported template, useful case worklist and bounded versioned store |
 | Optional cross-device transport | 3–6+ after spike | Stop after failed spike; preserve honest local demo |
 | Optional voice | 2–4+ with real-device time | Touch-only demo if command reliability or availability is unclear |
 
-The core estimate is **22–38 person-hours**, so it is tight even with two people and does not fit a single builder's remaining hackathon window. Do not count two people as a perfect 2× speedup: shared-model merges, CI, physical-device work, and rehearsal remain serial. No camera/AI/persistence estimate belongs in the deadline promise before the core is working.
+The revised core estimate is **32–56 person-hours**, superseding the prior 22–38 range for a narrower in-memory journey. This is a scope increase, not a deadline promise. Do not count two people as a perfect 2× speedup: shared-model merges, CI, device work and rehearsal remain serial. Protect setup, ordinary case creation, retained state and the support loop; cut advanced configuration, maps, camera/AI and unproven voice/transport first.
 
 ### Deadline-based cut lines
 
@@ -351,8 +370,8 @@ The recorded deadline is **Sunday, October 25, 2026 at 12:00 PM CT**. This plan 
 
 | Gate | Decision and expected evidence |
 | --- | --- |
-| First 60–90 minutes of implementation | Confirm actual demo device(s), claim F03 then the session and support contracts, fix highest-risk state/copy issues. Viewport diagnosis may run in parallel. Do not claim the shared UI pass first, and do not start camera/AI |
-| At least 12 hours before deadline | Core local path should be integrated enough to rehearse. If behind, remove maps, extra cases, rich composition, transport, and voice from the demo scope |
+| First 60–90 minutes of implementation | Confirm devices; claim F03 reusable content, then F24/F04/F06 contracts and F18 storage. Settle minimal setup/case fields and guards. Viewport work may run separately; do not start camera/AI |
+| At least 12 hours before deadline | Exercise blank setup, a normal new case and the local support loop early. If behind, remove maps, extra template types, rich composition, advanced administration and unproven transport/voice; do not hide missing setup behind seed-only behavior |
 | At least 6 hours before deadline | Freeze feature scope. Decide transport/voice inclusion from actual evidence; keep local/touch fallbacks. No new provider integration |
 | At least 3 hours before deadline | Complete device rehearsal, unresolved-issue triage, accurate slides, credits and backup recording; fix only demo-blocking or correctness issues |
 | Final hour | Confirm submission, repository/CI status and backup access; avoid risky redesigns or dependency upgrades |
@@ -421,6 +440,7 @@ The demo build is ready only when all of these hold:
 6. Focused behavior tests, repository checks and required CI pass. Manual gaps are documented; a known failure that loses/misattributes records, creates false confirmation/delivery, or blocks the core journey prevents a readiness claim.
 7. Slides, README, script, and credits describe the build actually being shown. Backup recording uses that same working build.
 8. Complete the timed-run and submission evidence in [DEMO_READINESS.md](DEMO_READINESS.md). The planning document itself is not evidence that the app or presentation has passed.
+9. Pass PRODUCT_FOUNDATION.md's blank-workspace, independently named contact/case, two-case isolation, input-change and relaunch tests. No hard-coded site/person/sequence may be required. Persistence and setup are core, not presentation-only placeholders.
 
 ## 11. After the hackathon: a disciplined path toward institutional evaluation
 
@@ -445,12 +465,12 @@ Evaluate product quality with task completion, time to find the question/unresol
 
 | Decision | Proposed default | Evidence needed to change it |
 | --- | --- | --- |
-| First demo scope | One fictional pacemaker coordination case | Reviewed separate fixture/workflow before adding another procedure |
+| First product scope | One configurable fictional workspace, contacts and multiple cases using one supported pacemaker coordination template | Separate reviewed template/content before adding another procedure type |
 | Core input | Touch; explicit voice only after F17 passes | Physical-device command/noise/permission testing |
 | Communication mode | Labeled local demo until a transport gate passes | F15/F16 end-to-end receipt/disconnect evidence |
 | First remote participant device | Second iPad if available; otherwise verify actual available Mac/iPad build before choosing | Installed runnable build, pairing/permissions and usable role view; do not assume Mac compatibility from the project name |
-| Session ownership | One active session and one OR authority | A later explicit multi-session/multi-writer requirement and tested conflict policy |
-| Record retention | In-memory for core; explicit limitation | F18 scope agreed and relaunch/corruption tests passing |
+| Session ownership | One active OR recording context; separate retained sessions per case | Concurrent multi-writer editing requires a separate conflict/authority policy |
+| Record retention | P0 versioned local workspace/case/session/draft store | F18 relaunch, failed-write/corruption/schema and reconciliation tests; no institutional audit/backup claim |
 | Optional automation | None required for the core | Working narrow camera/AI slice with reviewed fictional evaluation fixtures |
 
 ### Main risks and response
@@ -465,9 +485,9 @@ Evaluate product quality with task completion, time to find the question/unresol
 
 ### The next work to claim
 
-1. **F03 → F04 → F05/F06 → F07:** settle the fictional pacemaker fixture, then the session and support contracts, then the guarded checklist and the local arrangement/request flow. This is the first claim. Reschedule is one of the plans those contracts must represent.
+1. **F03 → F24 → F04/F06 → F05/F18 → F07:** settle reusable fictional template/seed content, workspace/case/session/support contracts, guarded checklist and retained local state. This is the first implementation sequence; reschedule remains an explicit plan.
 2. **F08:** fix matcher reasons and availability in parallel once F03's fixture is stable. Reschedule stays a ranked choice the coordinator commits to later.
 3. **F01 and F02:** scalable type, contrast, and the viewport check. They may run in a separate checkout. They do not unblock the coordinator's request, and they are not the first claim. Screen PRs F09–F14 still wait on them for final visuals.
-4. **F09–F14:** integrate the touch support journey and review in small PRs after the contracts they display are merged.
+4. **F25/F26/F27 → F11/F12/F28, with F09–F14:** build functional setup/directory/case creation, then the normal start/resume/support/review journey. Verify a new independent case and relaunch rather than relying only on the prepared scenario.
 
 Do not claim all of these at once. Keep the task board authoritative, preserve other writers' work, use one branch/PR per slice, credit any later provider/asset in that PR, and update shipped-status documentation only after the corresponding work is merged.
