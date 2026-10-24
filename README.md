@@ -16,9 +16,11 @@ When a blizzard prevents an expert from reaching a small-town hospital, Northsta
 
 Read [the product brief](docs/PRODUCT.md) for the agreed experience, boundaries, camera/AI scope, and demo. Follow [the UI/UX rules](docs/DESIGN.md) for screen layouts, truthful states, accessibility, and review criteria. Read [the team workflow](docs/TEAM_WORKFLOW.md), then claim one task in [the task board](docs/TASKS.md). Build one coherent simulated procedure before broadening to other procedure types.
 
-[The detailed implementation plan](docs/IMPLEMENTATION_PLAN.md) maps the inspected starter to shared state contracts, 23 dependency-sized implementation slices, screen specifications, acceptance tests, deadline cut lines, and later institutional evaluation gates. Its backlog is proposed work; TASKS.md remains the ownership and completion record.
+[The detailed implementation plan](docs/IMPLEMENTATION_PLAN.md) maps the inspected starter to shared state contracts, 28 dependency-sized implementation slices, screen specifications, acceptance tests, deadline cut lines, and later institutional evaluation gates. Its backlog is proposed work; TASKS.md remains the ownership and completion record.
 
 [The presentation delivery plan](docs/DEMO_READINESS.md) narrows that backlog to the must-work demonstration, a timed script, alternate-path tests, rehearsal evidence, fallback and submission checks. Implementation starts with the fictional fixture and shared state contracts; presentation drafting starts before final integration.
+
+**Revised product target:** a configurable fictional workspace with editable support contacts, normal case creation, explicit start/resume and retained records/drafts. [The product foundation](docs/PRODUCT_FOUNDATION.md) defines those core capabilities; optional samples use the same workflows. The owner-confirmed presentation is **five minutes**, including setup and repeatability proof. [The institutional interface study](docs/DESIGN_REFERENCES.md) explains the worklist/context/task direction using public medical-software references. These setup/storage features are planned, not implemented by this documentation change.
 
 **Core journey:** coverage disruption → a human accepts support → the team records progress → a team member requests help → the expert receives context → the team reviews the session record.
 
@@ -39,7 +41,8 @@ This repository contains a starter app, not the full experience described above.
 | Sync | `LocalSyncService` distributes events within one process | Separate-device transport with honest delivery/connection status |
 | Camera / computer vision | Not implemented | Narrow observations of fictional labels or training materials, shown for human confirmation |
 | Conversational AI | Not implemented; spoken alerts use text-to-speech | Session-grounded questions and reviewable handoff drafts |
-| Session record | In-memory log; no durable export | Reviewable summary with source labels; persistence/export scope still to be decided |
+| Setup and case management | Fixed SampleData initialization; no setup or new-case form | Blank workspace/settings, contact directory, validated new/edit case and isolated start/resume |
+| Session record | In-memory log; no durable export | Core versioned local workspace/case/session/draft storage and review; export separately scoped |
 
 Known scaffold gaps: the ICD generator-change sample reuses pacemaker implant steps; some sample copy sounds like clinical instruction; the completion screen says "Procedure complete" although it only tracks checklist progress. These are explicit follow-up tasks, not validated procedure workflows.
 
@@ -92,4 +95,4 @@ Required by the hackathon rules. Keep this list up to date.
 - Blender (GPL) and Google Chrome (headless) produced the earlier 3D emblem, preserved in `docs/brand/archive/rural-emblem-v1/`.
 - Institutional shooting-star identity: OpenAI Codex created the connected star/pulse SVG artwork, neutral wordmark composition, and export tooling, informed by the team's direction and earlier OpenAI image-generation exploration. Rural scenes are preserved as presentation illustrations in `docs/brand/archive/`. AppKit/Swift and Pillow export the production PNGs; these are build tools only, with no new app dependency.
 - AI assistance: Claude (Anthropic) helped with brainstorming, the pitch proposal, the brand and logo, and the starter code scaffold. All code was written during the event.
-- AI assistance: OpenAI Codex helped review the starter implementation and document the product direction, implementation status, UI/UX rules, detailed implementation blueprint, presentation delivery plan, and task roadmap. No AI runtime or new camera library was added by this documentation update.
+- AI assistance: OpenAI Codex helped review the starter and document the product direction/status, UI/UX rules, configurable product foundation, institutional interface reference study, implementation blueprint, five-minute presentation plan, and task roadmap. No vendor screenshots/assets, AI runtime or camera library were added by this documentation update.

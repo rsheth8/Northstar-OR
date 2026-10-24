@@ -8,6 +8,8 @@ The approved visual and interaction rules are in [DESIGN.md](DESIGN.md). Use its
 
 [DEMO_READINESS.md](DEMO_READINESS.md) defines the presentation-critical proof, timed primary path, alternate checks, rehearsal and submission gates. Start implementation with the fictional fixture and shared state contracts; shared visual work can progress in a separate checkout.
 
+The owner confirmed a **five-minute presentation** and a configurable-product target. [PRODUCT_FOUNDATION.md](PRODUCT_FOUNDATION.md) defines functional workspace setup, contacts, ordinary case creation, multiple retained case records and relaunch. [DESIGN_REFERENCES.md](DESIGN_REFERENCES.md) grounds the institutional interface direction. A prepared story demonstrates the normal app; it does not restrict which supported cases can use it.
+
 ## Purpose and users
 
 Help a rural OR team coordinate technical support, maintain shared workflow context, and hand off information when weather disrupts the usual support arrangement.
@@ -15,6 +17,12 @@ Help a rural OR team coordinate technical support, maintain shared workflow cont
 The initial users are a coordinator arranging coverage, an OR team member recording confirmations and requesting help, and a remote device representative providing technical support. Clinical specialists are a distinct role; availability of a device rep must not imply clinical coverage.
 
 Every feature must answer: whose work does this make easier, at what moment, and how will we demonstrate that it worked?
+
+## Setup and repeatable use
+
+A new installation offers blank workspace setup or explicit sample loading. Configure a fictional facility/time zone and support contacts, create cases from a versioned supported coordination template, and start/resume the selected case through normal controls. Setup remains editable in Workspace settings. No patient fields or real records are needed for this prototype.
+
+Workspace configuration, contacts, cases, session records and drafts must survive a tested relaunch. Empty worklists, absent contacts, unknown logistical inputs and no active session have useful next actions. Sample names, a particular site, array index zero, weather disruption and a fixed tap order must never be required for the core behavior. Case browsing stays separate from the explicitly active recording context; records remain isolated when switching/resuming cases.
 
 ## Product boundaries
 
@@ -47,7 +55,7 @@ Show the recipient, role, request state, and acknowledgment. Do not equate sendi
 
 ### After the session: review the record
 
-Prepare a reviewable summary of confirmations, deferred items, corrections, support exchanges, and automated observations. Keep sources and timestamps visible. "Checklist complete" describes checklist state; it does not certify the procedure or clinical outcome. Decide durable storage and export scope in a separate implementation task.
+Prepare a retained, reviewable summary of confirmations, deferred items, corrections, support exchanges, and automated observations. Keep sources/timestamps visible and restore state/drafts after relaunch through the core local store. "Checklist complete" describes recorded checklist state; it does not certify the procedure or clinical outcome. Export and institutional record requirements are separate scope.
 
 ## Camera and AI: narrow jobs with visible evidence
 
@@ -75,17 +83,17 @@ Use independently labeled fictional examples for readable, unreadable, mismatche
 
 Reuse the coordination framework: support requests, explicit confirmations, observations, messages, and review. Give each supported procedure its own reviewed fictional workflow, device requirements, support roles, and references.
 
-Start with one coherent Grand Marais pacemaker demonstration. Keep Worthington and Bemidji in Planner to demonstrate ranking and case browsing, without changing the active Co-pilot session. The current ICD generator-change example reuses implant steps; its Planner row must not launch an active checklist or imply a reviewed generator-change workflow. Broad autonomous recognition across procedures is outside the hackathon scope.
+Start with one reviewed fictional pacemaker coordination template, usable by multiple independently created cases/sites. Grand Marais, Worthington and Bemidji are optional sample content; compatible new cases can start/resume their own records explicitly. The current ICD generator-change example reuses implant steps; its row must not launch that unsupported workflow. Additional procedure content requires separate review. Broad autonomous recognition across procedures is outside the hackathon scope.
 
 ## Intended demonstration
 
-1. A fictional Grand Marais hospital has a case in eight hours. Roads are expected to close in 90 minutes; the qualified rep is 110 minutes away.
+1. Show the configured fictional workspace/contact settings and create a case with the normal form. The Grand Marais sample can explain the travel disruption, but a newly created compatible case uses the same product behavior.
 2. Planner explains the coverage risk and retains visible unrequested backup options. On the primary presentation path the coordinator requests Ana; she explicitly accepts. Verify Marcus/reschedule/plan replacement separately.
 3. The OR view reflects the support arrangement. A team member records progress with voice or touch.
 4. A fictional required confirmation is deferred. Co-pilot pins that item, displays and speaks a short alert, and still allows a support request. Acknowledgment leaves the item selected and unresolved.
 5. While the warning remains, the team sends its question with current context, then acknowledges the warning without resolving the item. The rep explicitly acknowledges the question; a reply appears prominently in Co-pilot.
 6. If implemented and tested, capture a mock label and confirm its proposed match. If AI is implemented, request a session-grounded handoff draft and review it.
-7. Review the session record, including unresolved items and information sources.
+7. Review the session record, including unresolved items and sources. Show a distinct retained case and/or relaunch/resume to demonstrate that the record is not tied to a scripted screen sequence. The five-minute timings are in DEMO_READINESS.md.
 
 For the current starter, support interactions only work between tabs on the same app instance. Use that honestly until cross-device sync is implemented. Keep a reliable touch-based demo; camera and AI are additions after the core support journey works.
 
