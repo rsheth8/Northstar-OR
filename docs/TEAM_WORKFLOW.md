@@ -50,6 +50,6 @@ Stop dependent merges. Open a small fix PR or revert the offending PR through Gi
 
 ## Repository steward
 
-The owner has authorized an agent to monitor this repository and manage routine PR integration without mandatory teammate approvals. GitHub enforces required checks continuously; the recurring agent run handles follow-up on a schedule. This is not continuous live supervision.
+The owner has authorized an agent to monitor this repository and manage routine PR integration without mandatory teammate approvals. A heartbeat named **Northstar OR repo steward** is scheduled every 15 minutes in the owner’s Codex chat; this schedule is an app setting and does not travel with a Git clone. GitHub enforces required checks continuously; the recurring agent run handles follow-up on a schedule. This is not continuous live supervision.
 
 For ready PRs, the steward reviews the diff and CI, updates the branch from `main` when needed, and enables squash auto-merge. Drafts, explicit holds, failed checks, unresolved conversations, unclear intent, and unsafe conflicts block integration. The steward can propose small targeted fixes, but must not bypass protections, rewrite active teammate branches, discard work, invent completed validation, or broaden product scope. It stays quiet when there is nothing actionable and reports meaningful merges, failures, or decisions requiring the team.
