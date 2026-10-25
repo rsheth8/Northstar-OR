@@ -1,0 +1,11 @@
+# Planner recovery evidence — October 25, 2026
+
+Base includes merged #51/#55. Six PlannerScope/CaseReport unit tests and both PlannerPresentation UI tests passed on iPad Pro 13-inch (M5), iOS 27.0, Xcode 27.1. After visual review found the filter summary overlapping the empty-state title, the summary moved into the empty-state description and the default browse/filter UI check passed again. Build-for-testing, repository checks and whitespace checks passed.
+
+Original Xcode screenshots preserve their orientation metadata. Tests requested landscape (1376 × 1032 pt), default and accessibility XXXL text. Default/empty captures come from the final empty-state adjustment; the largest capture is the preceding successful worklist run. Manifests retain original provenance. The shared shell here precedes #53. Its remaining enlarged-text space costs are visible and are not claimed fixed by this Planner slice.
+
+The worklist keeps a compact filter summary; recording/date controls open from Filter cases → Recording and date filters. Browsing another case and filtering do not move the active recording. A case is selectable at largest text. Reports freeze the same saved planning-evidence revision consumed by matcher; missing snowfall is not displayed as zero.
+
+Images reviewed: selected case at default/largest text and the keyboard-open empty search state. Scope tests cover a site-local date across two zones; report tests cover wrong-case/session/workspace isolation and frozen evidence. No new physical VoiceOver traversal, keyboard traversal, Reduce Motion, contrast measurement, map offline/attribution, Catalyst, weather editing/chart, paginated export or integrated release proof is claimed. The map/list and text report are partial roadmap slices; normal evidence editing and timelines remain separate work.
+
+A subsequent focused report adapter now freezes the selected case's actual coverage-plan revision, requester, response actor and receipt state instead of always saying no plan is available. Seven scope/report tests passed after this addition, including another-case rejection and a live plan changing after snapshot. Call connection is explicitly outside this snapshot. The UI captures above precede this report-only adapter.
