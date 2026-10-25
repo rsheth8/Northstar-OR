@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Northstar rep call</title>
+  <style>
+    :root { color-scheme: light; }
+    body { margin: 0; font: 18px/1.4 -apple-system, BlinkMacSystemFont, sans-serif; background: #F4F6F8; color: #202B38; }
+    main { max-width: 880px; margin: 0 auto; padding: 24px; display: grid; gap: 16px; }
+    h1 { font-size: 28px; margin: 0; }
+    video { width: 100%; aspect-ratio: 16/9; background: #142D43; border-radius: 8px; object-fit: contain; }
+    label { display: grid; gap: 6px; font-weight: 600; }
+    textarea, button, select { font: inherit; }
+    textarea { min-height: 72px; padding: 12px; border: 1px solid #758394; border-radius: 8px; }
+    button { min-height: 72px; padding: 12px 18px; border: 0; border-radius: 8px; background: #174F85; color: white; }
+    button.secondary { min-height: 44px; background: white; color: #202B38; border: 1px solid #758394; }
+    .status { font-weight: 600; }
+    ul { margin: 0; padding-left: 20px; }
+    .note { color: #526171; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Northstar rep call</h1>
+    <p id="status" class="status" role="status">Join to allow your microphone</p>
+    <button id="join" type="button">Join call</button>
+    <button id="end" class="secondary" type="button" disabled>End call</button>
+    <button id="play" class="secondary" type="button" hidden>Play room audio</button>
+    <video id="remote" autoplay playsinline></video>
+    <p class="note">This call does not confirm a checklist item. Use headphones in the same room.</p>
+    <section>
+      <h2>Team question</h2>
+      <label>Saved question<select id="questions"></select></label>
+      <p id="context" class="note"></p>
+      <p id="question">No question from the team yet</p>
+      <p>Unresolved when the question was sent</p>
+      <ul id="lines"></ul>
+      <button id="ack" class="secondary" type="button" disabled>Acknowledge question</button>
+    </section>
+    <label>Reply
+      <textarea id="reply"></textarea>
+    </label>
+    <p id="delivery" role="status"></p>
+    <button id="send" type="button" disabled>Send reply</button>
+  </main>
+  <script type="module" src="/call.js"></script>
+</body>
+</html>

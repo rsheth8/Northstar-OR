@@ -86,12 +86,17 @@ docs/               PRODUCT.md (scope), DESIGN.md (UI/UX rules), IMPLEMENTATION_
 - Rahil Sheth ([@rsheth8](https://github.com/rsheth8))
 - Amartya
 
+## In-app rep call
+
+The local integrated call uses the laptop rep page and the same retained support exchange as Co-pilot. Setup and limits: [RepPage instructions](RepPage/README.md). Simulator/browser evidence is in [call integration](docs/evidence/nearby-support/CALL_INTEGRATION.md); physical camera/audio proof is still required.
+
 ## Tools, libraries, and AI credits
 
 Required by the hackathon rules. Keep this list up to date.
 
 - Swift, SwiftUI, Observation, AVFoundation (text-to-speech), Speech (on-device recognition), MapKit
 - Apple Multipeer Connectivity for the experimental, explicitly paired nearby two-iPad support adapter. Physical-device proof remains separately recorded in docs/evidence/nearby-support/.
+- [WebRTC](https://webrtc.googlesource.com/src), BSD-3-Clause, via [stasel/WebRTC](https://github.com/stasel/WebRTC) 155.0.0. Supplies call audio processing, Opus and video codecs. Connection flow inspired by [stasel/WebRTC-iOS](https://github.com/stasel/WebRTC-iOS), Apache-2.0. Browser RTCPeerConnection and Node.js built-in HTTP/crypto serve the laptop rep station; no paid call provider.
 - XcodeGen for project generation
 - GitHub Actions with `actions/checkout` and `actions/upload-artifact` for CI; Dependabot for action updates
 - Inter Display (SIL Open Font License) for the logo wordmark

@@ -79,6 +79,7 @@ final class AppModel {
     private(set) var linkState: NearbyLinkState = .idle
     private(set) var nearbyPeers: [NearbyPeer] = []
     private(set) var nearbyInvitation: NearbyPeer?
+    private(set) var nearbyCall: NearbyCallController?
     private(set) var nearbyError: String?
     private var supportContext: [SupportOrigin: SupportContextSnapshot] = [:]
 
@@ -443,7 +444,15 @@ final class AppModel {
     private func refreshNearbyDiscovery() {
         nearbyPeers = sync.nearby.peers; nearbyInvitation = sync.nearby.invitation; nearbyError = sync.nearby.errorMessage
     }
-    func installNearbyTransport(_ transport: NearbyTransport) { sync.installNearby(transport); bindNearby() }
+    func installNearbyTransport(_ transport: NearbyTransport) {
+        sync.installNearby(transport); nearbyCall = transport as? NearbyCallController; bindNearby()
+    }
+    func startRepCall(server: String) {
+        guard demoPost == .room else { return }
+        let call = NearbyCallController(signalingURL: server)
+        installNearbyTransport(call)
+        call.start()
+    }
     func startNearbyLink() { installNearbyTransport(MultipeerNearbyTransport(role: demoPost)); sync.nearby.start() }
     func stopNearbyLink() { sync.nearby.stop(); linkState = .idle; refreshNearbyDiscovery() }
     func inviteNearby(_ id: String) throws { try sync.nearby.invite(id) }

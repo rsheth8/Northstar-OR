@@ -2,6 +2,10 @@
 # so parallel branches never fight over project.pbxproj.
 # Generate:  brew install xcodegen && xcodegen generate && open NorthstarOR.xcodeproj
 name: NorthstarOR
+packages:
+  WebRTC:
+    url: https://github.com/stasel/WebRTC.git
+    exactVersion: 155.0.0
 options:
   bundleIdPrefix: edu.umn.northstar
   deploymentTarget:
@@ -19,12 +23,18 @@ targets:
   NorthstarOR:
     type: application
     platform: iOS
+    dependencies:
+      - package: WebRTC
+        product: WebRTC
     sources:
       - path: NorthstarOR
     info:
       path: build/NorthstarOR-Info.plist
       properties:
-        NSLocalNetworkUsageDescription: "Connect two nearby iPads to exchange fictional support questions and replies."
+        NSLocalNetworkUsageDescription: "Connect nearby iPads or a rep laptop to exchange fictional support questions, audio and video."
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
+        NSCameraUsageDescription: "Share the room camera with the nearby rep during a fictional call. Video is not saved."
         NSBonjourServices:
           - _nstar-or._tcp
     settings:
@@ -39,13 +49,16 @@ targets:
         INFOPLIST_KEY_UIUserInterfaceStyle: Light
         INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
         INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: "UIInterfaceOrientationPortrait"
-        INFOPLIST_KEY_NSMicrophoneUsageDescription: "Northstar OR listens for spoken step confirmations during the procedure."
+        INFOPLIST_KEY_NSMicrophoneUsageDescription: "Northstar OR uses the microphone for the in-app rep call and spoken checklist commands. Audio is not saved."
         INFOPLIST_KEY_NSSpeechRecognitionUsageDescription: "Speech recognition runs on-device to turn spoken commands into checklist actions."
   NorthstarORTests:
     type: bundle.unit-test
     platform: iOS
     sources:
       - path: NorthstarORTests
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
     dependencies:
       - target: NorthstarOR
   NorthstarORUITests:

@@ -12,7 +12,7 @@ struct RemoteSupportView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: Northstar.Space.s4) {
                     NorthstarStatusLabel(model.linkState.label, tone: .info, systemImage: "ipad.landscape")
-                    Text("Messages stay with this case. A nearby iPad is required before this leaves the device.").font(Northstar.Fonts.supporting).foregroundStyle(Northstar.Palette.inkMuted)
+                    Text("Messages stay with this case. Connect a nearby iPad or rep call to send messages off this device.").font(Northstar.Fonts.supporting).foregroundStyle(Northstar.Palette.inkMuted)
                     if !model.questions.isEmpty {
                         Picker("Saved requests", selection: Binding(get: { current?.id ?? "" }, set: { selectedQuestionID = $0 })) {
                             ForEach(model.questions) { q in Text("\(q.snapshot.caseReference) · \(q.sentAt.formatted(date: .omitted, time: .shortened))").tag(q.id) }

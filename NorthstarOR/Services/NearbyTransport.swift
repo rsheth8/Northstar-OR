@@ -57,8 +57,8 @@ extension SupportDelivery {
     var label: String {
         switch self {
         case .onThisDevice: "On this device"
-        case .waitingForPeer: "Waiting for the other iPad"
-        case .receivedByPeer: "Received on the other iPad"
+        case .waitingForPeer: "Waiting for recipient receipt"
+        case .receivedByPeer: "Received by recipient"
         case .failed: "Not sent. This message is kept."
         }
     }

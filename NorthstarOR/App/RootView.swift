@@ -5,6 +5,7 @@ struct RootView: View {
     @State private var showingSettings = false
     @State private var retryError: String?
     @State private var showNearby = false
+    @State private var showCall = false
 
     var body: some View {
         @Bindable var model = model
@@ -34,9 +35,13 @@ struct RootView: View {
                             Text("Room").tag(DemoPost.room); Text("Rep").tag(DemoPost.rep)
                         }.pickerStyle(.segmented).frame(maxWidth: 240).accessibilityIdentifier("nearby-role")
                         Spacer()
+                        if model.demoPost == .room {
+                            Button(model.nearbyCall?.status == "In call" ? "Call controls" : "Call rep") { showCall = true }
+                                .frame(minHeight: Northstar.Target.minimum).accessibilityIdentifier("open-call")
+                        }
                         Button("Nearby iPad") { showNearby = true }.frame(minHeight: Northstar.Target.minimum)
                     }.padding(.horizontal, Northstar.Space.s6)
-                    Text("Fictional coordination record. Nearby links two iPads. This app does not decide whether a procedure proceeds.")
+                    Text("Fictional coordination record. Support links nearby demo devices. This app does not decide whether a procedure proceeds.")
                         .font(Northstar.Fonts.supporting).padding(.horizontal, Northstar.Space.s6)
                     if let saveError = model.saveError {
                         SaveFailureBanner(message: retryError ?? saveError) {
@@ -57,6 +62,7 @@ struct RootView: View {
                             .tag(AppModel.Destination.remoteSupport)
                     }
                 }
+                .sheet(isPresented: $showCall) { NearbyCallView() }
                 .sheet(isPresented: $showNearby) { NearbyLinkSheet() }
                 .sheet(isPresented: $showingSettings) {
                     if let workspace = model.workspace {
