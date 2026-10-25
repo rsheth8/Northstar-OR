@@ -1,0 +1,153 @@
+Attributes: Application, 0x115263340, pid: 18895, label: 'Northstar OR'
+Element subtree:
+ →Application, 0x115263340, pid: 18895, label: 'Northstar OR'
+    Window (Main), 0x115326d00, {{0.0, 0.0}, {1376.0, 1032.0}}
+      Other, 0x1153266c0, {{0.0, 0.0}, {1376.0, 1032.0}}
+        Other, 0x115326580, {{0.0, 0.0}, {1376.0, 1032.0}}
+          Other, 0x115326f80, {{0.0, 0.0}, {1376.0, 1032.0}}
+            Other, 0x115326bc0, {{-1376.0, -1032.0}, {4128.0, 3096.0}}, identifier: 'PopoverDismissRegion', label: 'dismiss popup'
+            Other, 0x115325a40, {{0.0, 0.0}, {1376.0, 1032.0}}
+              Other, 0x115325900, {{0.0, 0.0}, {1376.0, 1032.0}}
+                StaticText, 0x1153257c0, {{24.0, 54.5}, {157.0, 23.0}}, label: 'Northstar OR'
+                  Image, 0x115326080, {{24.0, 54.5}, {40.0, 23.0}}, label: 'BrandMark'
+                  StaticText, 0x115326300, {{76.0, 55.8}, {105.0, 20.5}}, label: 'Northstar OR'
+                StaticText, 0x115326a80, {{874.0, 58.0}, {166.0, 16.0}}, identifier: 'header-workspace-name', label: 'Sample fictional workspace'
+                Image, 0x115326440, {{1057.5, 60.0}, {15.0, 12.0}}, identifier: 'ipad.landscape', label: 'ipad.landscape'
+                StaticText, 0x115325cc0, {{1057.5, 58.0}, {111.0, 16.0}}, label: 'On this device'
+                Button, 0x115325f40, {{1184.5, 44.0}, {167.5, 44.0}}, identifier: 'header-workspace-settings', label: 'Workspace settings'
+                  Image, 0x115326940, {{1197.5, 58.5}, {14.0, 14.0}}, identifier: 'gearshape', label: 'gearshape'
+                  StaticText, 0x1153261c0, {{1184.5, 44.0}, {167.5, 44.0}}, label: 'Workspace settings'
+                SegmentedControl, 0x115326800, {{24.0, 106.5}, {240.0, 31.0}}, identifier: 'nearby-role'
+                  Button, 0x115326e40, {{24.0, 106.5}, {120.0, 32.0}}, label: 'Room', Selected
+                  Button, 0x115325b80, {{144.0, 106.5}, {120.0, 32.0}}, label: 'Rep'
+                Button, 0x115325e00, {{1094.0, 112.0}, {122.5, 20.5}}, identifier: 'open-call', label: 'Session and call'
+                Button, 0x116984000, {{1224.5, 112.0}, {127.5, 20.5}}, label: 'Connect devices'
+                StaticText, 0x116984140, {{314.5, 144.0}, {747.0, 16.0}}, label: 'Fictional coordination record. Support links nearby demo devices. This app does not decide whether a procedure proceeds.'
+                Other, 0x116984280, {{0.0, 160.0}, {1376.0, 872.0}}
+                  Other, 0x1169843c0, {{0.0, 160.0}, {1376.0, 872.0}}
+                    Other, 0x116984500, {{0.0, 170.0}, {1376.0, 44.0}}
+                      Button, 0x116984640, {{514.5, 174.0}, {96.0, 36.0}}, identifier: 'list.bullet.rectangle', label: 'Co-pilot'
+                        Button, 0x116984780, {{514.5, 174.0}, {96.0, 36.0}}, identifier: 'list.bullet.rectangle', label: 'Co-pilot'
+                      Button, 0x1169848c0, {{610.5, 174.0}, {91.5, 36.0}}, identifier: 'calendar', label: 'Planner'
+                        Button, 0x116984a00, {{610.5, 174.0}, {91.5, 36.0}}, identifier: 'calendar', label: 'Planner'
+                      Button, 0x116984b40, {{702.0, 174.0}, {159.5, 36.0}}, identifier: 'headphones', label: 'Remote Support', Selected
+                        Button, 0x116984c80, {{702.0, 174.0}, {159.5, 36.0}}, identifier: 'headphones', label: 'Remote Support', Selected
+                  Other, 0x116984dc0, {{0.0, 160.0}, {1376.0, 872.0}}
+                    Other, 0x116984f00, {{0.0, 160.0}, {1376.0, 872.0}}
+                      Other, 0x116985040, {{0.0, 160.0}, {1376.0, 872.0}}
+                        Other, 0x116985180, {{0.0, 160.0}, {1376.0, 872.0}}
+                          Other, 0x1169852c0, {{0.0, 160.0}, {1376.0, 872.0}}
+                            Other, 0x116985400, {{0.0, 160.0}, {1376.0, 872.0}}
+                              NavigationBar, 0x116985540, {{0.0, 170.0}, {1376.0, 54.0}}, identifier: 'Remote Support'
+                              Other, 0x116985680, {{0.0, 160.0}, {1376.0, 872.0}}
+                                Other, 0x1169857c0, {{0.0, 160.0}, {1376.0, 872.0}}
+                                  Other, 0x116985900, {{0.0, 160.0}, {1376.0, 872.0}}
+                                    Other, 0x116985a40, {{0.0, 160.0}, {1376.0, 872.0}}
+                                      ScrollView, 0x116985b80, {{0.0, 160.0}, {1376.0, 872.0}}
+                                        Other, 0x116985cc0, {{0.0, 160.0}, {1376.0, 872.0}}
+                                          Other, 0x116985e00, {{0.0, 160.0}, {1376.0, 118.8}}
+                                        Other, 0x116985f40, {{0.0, 160.0}, {1376.0, 872.0}}
+                                        Other, 0x116986080, {{0.0, 224.0}, {1376.0, 682.0}}
+                                          StaticText, 0x1169861c0, {{213.5, 248.0}, {115.0, 16.0}}, label: 'On this device'
+                                            Image, 0x116986300, {{213.5, 250.0}, {15.5, 12.0}}, identifier: 'ipad.landscape', label: 'ipad.landscape'
+                                            StaticText, 0x116986440, {{213.5, 248.0}, {115.0, 16.0}}, label: 'On this device'
+                                          StaticText, 0x116986580, {{212.0, 280.0}, {648.0, 16.0}}, label: 'Messages stay with this case. Connect Northstar on the room iPad and the rep’s Mac to exchange updates.'
+                                          StaticText, 0x1169866c0, {{212.0, 312.0}, {203.0, 26.5}}, label: 'Current room record'
+                                          StaticText, 0x116986800, {{212.0, 354.5}, {217.0, 20.5}}, label: 'Fictional pacemaker case A'
+                                          StaticText, 0x116986940, {{212.0, 391.0}, {207.5, 20.5}}, label: '8 confirmations unresolved'
+                                          StaticText, 0x116986a80, {{212.0, 427.5}, {340.5, 16.0}}, label: 'Choose Connect devices on both devices before calling.'
+                                          StaticText, 0x116986bc0, {{533.5, 479.0}, {309.0, 95.0}}, label: 'No question from the team yet'
+                                          StaticText, 0x116986d00, {{361.5, 577.0}, {653.0, 18.0}}, label: 'Request support from the current Co-pilot item, including while an acknowledgment is pending.'
+                                          StaticText, 0x116986e40, {{212.0, 663.5}, {125.0, 20.5}}, label: 'Case messages'
+                                          StaticText, 0x116986f80, {{212.0, 692.0}, {180.0, 16.0}}, label: 'No messages in this case yet.'
+                                          TextField, 0x1169870c0, {{224.0, 736.0}, {928.0, 22.0}}, identifier: 'session-note-draft', placeholderValue: 'Write a message for this case'
+                                            Other, 0x116987200, {{224.0, 744.0}, {928.0, 11.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                              Other, 0x116987340, {{227.0, 752.0}, {922.0, 3.0}}
+                                          Button, 0x116987480, {{207.0, 777.0}, {221.0, 82.0}}, identifier: 'session-note-send', label: 'Send message', Disabled
+                                            StaticText, 0x1169875c0, {{212.0, 782.0}, {211.0, 72.0}}, label: 'Send message', Disabled
+                                            Other, 0x116987700, {{207.0, 777.0}, {221.0, 82.0}}, Disabled
+                                          StaticText, 0x116987840, {{212.0, 866.0}, {275.0, 16.0}}, label: 'A message does not confirm a checklist item.'
+                                        Other, 0x116987980, {{1343.0, 224.0}, {30.0, 778.0}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                                          Other, 0x116987ac0, {{1370.0, 333.0}, {3.0, 666.0}}
+                                        Other, 0x116987c00, {{1343.0, 224.0}, {30.0, 778.0}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                                          Other, 0x116987d40, {{1370.0, 333.0}, {3.0, 666.0}}
+                              Other, 0x116987e80, {{0.0, 160.0}, {1376.0, 872.0}}
+                                Other, 0x114c14000, {{0.0, 160.0}, {1376.0, 872.0}}
+      Other, 0x114c14140, {{0.0, 0.0}, {1376.0, 1032.0}}
+        Other, 0x114c14280, {{-1376.0, -1032.0}, {4128.0, 3096.0}}, identifier: 'PopoverDismissRegion', label: 'dismiss popup'
+        Other, 0x114c143c0, {{398.0, 186.0}, {580.0, 650.0}}
+          Image, 0x114c14500, {{248.0, 36.0}, {880.0, 950.0}}
+          Other, 0x114c14640, {{398.0, 186.0}, {580.0, 650.0}}
+            Other, 0x114c14780, {{398.0, 186.0}, {580.0, 650.0}}
+              Other, 0x114c148c0, {{398.0, 186.0}, {580.0, 650.0}}
+                Other, 0x114c14a00, {{398.0, 186.0}, {580.0, 650.0}}
+                  Other, 0x114c14b40, {{398.0, 186.0}, {580.0, 650.0}}
+                    Other, 0x114c14c80, {{398.0, 186.0}, {580.0, 650.0}}
+                      Other, 0x114c14dc0, {{398.0, 186.0}, {580.0, 650.0}}
+                        NavigationBar, 0x114c14f00, {{398.0, 196.0}, {580.0, 54.0}}, identifier: 'Connect devices'
+                          StaticText, 0x114c15040, {{621.5, 207.5}, {132.5, 21.0}}, label: 'Connect devices'
+                          Other, 0x114c15180, {{898.0, 200.0}, {66.0, 36.0}}, label: 'Done'
+                            Other, 0x114c152c0, {{898.0, 200.0}, {66.0, 36.0}}
+                              Button, 0x114c15400, {{898.0, 200.0}, {66.0, 36.0}}, label: 'Done'
+                        Other, 0x114c15540, {{398.0, 186.0}, {580.0, 650.0}}
+                          Other, 0x114c15680, {{398.0, 186.0}, {580.0, 650.0}}
+                            Other, 0x114c157c0, {{398.0, 186.0}, {580.0, 650.0}}
+                              Other, 0x114c15900, {{398.0, 186.0}, {580.0, 650.0}}
+                                CollectionView, 0x114c15a40, {{398.0, 186.0}, {580.0, 650.0}}
+                                  Other, 0x114c15b80, {{378.0, -1050.0}, {620.0, 1606.5}}
+                                  Other, 0x114c15cc0, {{398.0, 186.0}, {580.0, 650.0}}
+                                  Other, 0x114c15e00, {{398.0, 186.0}, {580.0, 650.0}}
+                                  Cell, 0x114c15f40, {{418.0, 250.0}, {540.0, 40.5}}
+                                    Other, 0x114c16080, {{418.0, 250.0}, {540.0, 40.5}}
+                                    Other, 0x114c161c0, {{418.0, 250.0}, {540.0, 40.5}}
+                                      Other, 0x114c16300, {{418.0, 250.0}, {540.0, 40.5}}
+                                        Other, 0x114c16440, {{418.0, 250.0}, {540.0, 40.5}}
+                                          StaticText, 0x114c16580, {{418.0, 250.0}, {540.0, 40.5}}, label: 'Communication'
+                                  Cell, 0x114c166c0, {{418.0, 290.5}, {540.0, 52.0}}
+                                    Other, 0x114c16800, {{418.0, 290.5}, {540.0, 52.0}}
+                                      Other, 0x114c16940, {{418.0, 290.5}, {540.0, 52.0}}
+                                    Other, 0x114c16a80, {{418.0, 290.5}, {540.0, 52.0}}
+                                      Other, 0x114c16bc0, {{418.0, 290.5}, {540.0, 52.0}}
+                                        Other, 0x114c16d00, {{418.0, 290.5}, {540.0, 52.0}}
+                                          StaticText, 0x114c16e40, {{418.0, 290.5}, {540.0, 52.0}}, label: 'On this device'
+                                            Image, 0x114c16f80, {{440.0, 309.0}, {20.0, 15.5}}, identifier: 'ipad.landscape', label: 'ipad.landscape'
+                                            StaticText, 0x114c170c0, {{440.0, 308.5}, {128.0, 16.0}}, label: 'On this device'
+                                  Cell, 0x114c17200, {{418.0, 342.5}, {540.0, 94.5}}
+                                    Other, 0x114c17340, {{418.0, 342.5}, {540.0, 94.5}}
+                                      Other, 0x114c17480, {{418.0, 342.5}, {540.0, 94.5}}
+                                    Other, 0x114c175c0, {{418.0, 342.5}, {540.0, 94.5}}
+                                      Other, 0x114c17700, {{418.0, 342.5}, {540.0, 94.5}}
+                                        Other, 0x114c17840, {{418.0, 342.5}, {540.0, 94.5}}
+                                          StaticText, 0x114c17980, {{418.0, 342.5}, {540.0, 94.5}}, label: 'Use Northstar in Room mode on the iPad and Rep mode on the Mac or a second iPad. Keep both apps open on the same Wi-Fi. Peer names identify devices, not verified people.'
+                                  Other, 0x114c17ac0, {{478.0, 341.5}, {460.0, 1.0}}
+                                  Cell, 0x114c17c00, {{418.0, 437.0}, {540.0, 102.0}}
+                                    Other, 0x114c17d40, {{418.0, 437.0}, {540.0, 102.0}}
+                                      Other, 0x114c17e80, {{418.0, 437.0}, {540.0, 102.0}}
+                                    Other, 0x11697c000, {{418.0, 437.0}, {540.0, 102.0}}
+                                      Other, 0x11697c140, {{418.0, 437.0}, {540.0, 102.0}}
+                                        Other, 0x11697c280, {{418.0, 437.0}, {540.0, 102.0}}
+                                          Button, 0x11697c3c0, {{418.0, 437.0}, {540.0, 102.0}}, label: 'Find Northstar devices'
+                                            StaticText, 0x11697c500, {{438.0, 452.0}, {290.0, 72.0}}, label: 'Find Northstar devices'
+                                            Other, 0x11697c640, {{433.0, 447.0}, {300.0, 82.0}}
+                                  Other, 0x11697c780, {{438.0, 436.0}, {500.0, 1.0}}
+                                  Other, 0x11697c8c0, {{378.0, 556.5}, {620.0, 1401.5}}
+                                  Cell, 0x11697ca00, {{418.0, 574.0}, {540.0, 64.0}}
+                                    Other, 0x11697cb40, {{418.0, 574.0}, {540.0, 64.0}}
+                                      Other, 0x11697cc80, {{418.0, 574.0}, {540.0, 64.0}}
+                                    Other, 0x11697cdc0, {{418.0, 574.0}, {540.0, 64.0}}
+                                      Other, 0x11697cf00, {{418.0, 574.0}, {540.0, 64.0}}
+                                        Other, 0x11697d040, {{418.0, 574.0}, {540.0, 64.0}}
+                                          StaticText, 0x11697d180, {{418.0, 574.0}, {540.0, 64.0}}, label: 'This link is for nearby fictional demonstrations. It does not connect to a hospital or provide internet support.'
+                                  Other, 0x11697d2c0, {{945.0, 250.0}, {30.0, 554.0}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                                    Other, 0x11697d400, {{972.0, 794.0}, {3.0, 7.0}}
+                                  Other, 0x11697d540, {{945.0, 250.0}, {30.0, 554.0}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                                    Other, 0x11697d680, {{972.0, 794.0}, {3.0, 7.0}}
+                        Other, 0x11697d7c0, {{398.0, 186.0}, {580.0, 650.0}}
+                          Other, 0x11697d900, {{398.0, 186.0}, {580.0, 650.0}}
+Path to element:
+ →Application, 0x115263340, pid: 18895, label: 'Northstar OR'
+Query chain:
+ →Find: Target Application 'edu.umn.northstar.or'
+  Output: {
+    Application, 0x11697da40, pid: 18895, label: 'Northstar OR'
+  }

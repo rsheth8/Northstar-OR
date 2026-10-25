@@ -1,0 +1,145 @@
+Attributes: Application, 0x115325540, pid: 18384, label: 'Northstar OR'
+Element subtree:
+ →Application, 0x115325540, pid: 18384, label: 'Northstar OR'
+    Window (Main), 0x115324000, {{0.0, 0.0}, {1376.0, 1032.0}}
+      Other, 0x115324140, {{0.0, 0.0}, {1376.0, 1032.0}}
+        Other, 0x115324280, {{0.0, 0.0}, {1376.0, 1032.0}}
+          Other, 0x1153243c0, {{0.0, 0.0}, {1376.0, 1032.0}}
+            Other, 0x115324500, {{0.0, 0.0}, {1376.0, 1032.0}}
+              Other, 0x115324640, {{0.0, 0.0}, {1376.0, 1032.0}}
+                StaticText, 0x115324780, {{432.5, 44.0}, {363.2, 63.5}}, label: 'Northstar OR'
+                  Image, 0x1153248c0, {{432.5, 64.0}, {40.0, 23.5}}, label: 'BrandMark'
+                  StaticText, 0x115324a00, {{484.2, 44.0}, {311.5, 63.5}}, label: 'Northstar OR'
+                StaticText, 0x115324b40, {{432.2, 115.5}, {511.5, 53.0}}, identifier: 'header-workspace-name', label: 'Sample fictional workspace'
+                Image, 0x115324c80, {{438.0, 183.0}, {51.0, 40.0}}, identifier: 'ipad.landscape', label: 'ipad.landscape'
+                StaticText, 0x115324dc0, {{438.0, 176.5}, {330.2, 53.0}}, label: 'On this device'
+                Button, 0x115324f00, {{432.5, 237.5}, {455.0, 44.0}}, identifier: 'header-workspace-settings', label: 'Workspace settings'
+                  Image, 0x115325040, {{448.5, 236.5}, {46.0, 46.0}}, identifier: 'gearshape', label: 'gearshape'
+                  StaticText, 0x115325180, {{432.5, 237.5}, {455.0, 44.0}}, label: 'Workspace settings'
+                SegmentedControl, 0x1153252c0, {{24.0, 310.0}, {240.0, 31.0}}, identifier: 'nearby-role'
+                  Button, 0x115325400, {{24.0, 310.0}, {120.0, 32.0}}, label: 'Room', Selected
+                  Button, 0x1153270c0, {{144.0, 310.0}, {120.0, 32.0}}, label: 'Rep'
+                Button, 0x115327200, {{607.5, 293.5}, {360.5, 63.5}}, identifier: 'open-call', label: 'Session and call'
+                Button, 0x115327340, {{976.0, 293.5}, {376.0, 63.5}}, label: 'Connect devices'
+                StaticText, 0x115327480, {{35.2, 357.0}, {1305.5, 105.0}}, label: 'Fictional coordination record. Support links nearby demo devices. This app does not decide whether a procedure proceeds.'
+                Other, 0x1153275c0, {{0.0, 462.0}, {1376.0, 570.0}}
+                  Other, 0x115327700, {{0.0, 462.0}, {1376.0, 570.0}}
+                    Other, 0x115327840, {{0.0, 472.0}, {1376.0, 49.0}}
+                      Button, 0x115327980, {{489.0, 476.0}, {109.0, 41.0}}, identifier: 'list.bullet.rectangle', label: 'Co-pilot', Selected
+                        Button, 0x115327ac0, {{489.0, 476.0}, {109.0, 41.0}}, identifier: 'list.bullet.rectangle', label: 'Co-pilot', Selected
+                      Button, 0x115327c00, {{598.0, 476.0}, {103.5, 41.0}}, identifier: 'calendar', label: 'Planner'
+                        Button, 0x115327d40, {{598.0, 476.0}, {103.5, 41.0}}, identifier: 'calendar', label: 'Planner'
+                      Button, 0x115327e80, {{701.5, 476.0}, {185.5, 41.0}}, identifier: 'headphones', label: 'Remote Support'
+                        Button, 0x115263c00, {{701.5, 476.0}, {185.5, 41.0}}, identifier: 'headphones', label: 'Remote Support'
+                  Other, 0x115263d40, {{0.0, 462.0}, {1376.0, 570.0}}
+                    Other, 0x115263e80, {{0.0, 462.0}, {1376.0, 570.0}}
+                      Other, 0x115262080, {{0.0, 462.0}, {1376.0, 570.0}}
+                        Other, 0x115260780, {{0.0, 462.0}, {1376.0, 570.0}}
+                          Other, 0x1152608c0, {{0.0, 462.0}, {1376.0, 570.0}}
+                            Other, 0x115260a00, {{0.0, 462.0}, {1376.0, 570.0}}
+                              NavigationBar, 0x115260b40, {{0.0, 472.0}, {1376.0, 54.0}}, identifier: 'Co-pilot'
+                                Button, 0x115260c80, {{14.0, 476.0}, {38.0, 36.0}}, label: 'Review items'
+                                Button, 0x115260dc0, {{1251.0, 476.0}, {46.5, 36.0}}, label: 'Activity'
+                                Button, 0x115260f00, {{1313.5, 476.0}, {48.5, 36.0}}, label: 'Support context'
+                              Other, 0x115261040, {{0.0, 462.0}, {1376.0, 570.0}}
+                                Other, 0x115261180, {{0.0, 462.0}, {1376.0, 570.0}}
+                                  Other, 0x1152612c0, {{0.0, 462.0}, {1376.0, 570.0}}
+                                    Other, 0x115261400, {{0.0, 462.0}, {1376.0, 570.0}}
+                                      StaticText, 0x115261540, {{24.0, 538.0}, {154.0, 63.5}}, label: 'proc-1'
+                                      StaticText, 0x115261680, {{202.0, 543.2}, {250.5, 53.0}}, label: 'Grand Marais'
+                                      StaticText, 0x1152617c0, {{476.5, 543.2}, {507.0, 53.0}}, label: '8 confirmations unresolved'
+                                      ScrollView, 0x115261900, {{0.0, 613.5}, {1376.0, 418.5}}, identifier: 'copilot-current-scroll'
+                                        Other, 0x115261a40, {{0.0, -75.0}, {1376.0, 2488.0}}
+                                          StaticText, 0x115261b80, {{24.0, -51.0}, {219.5, 72.0}}, label: 'Co-pilot'
+                                          StaticText, 0x115261cc0, {{24.0, 45.0}, {382.0, 53.0}}, label: 'Recorded workflow'
+                                          StaticText, 0x115261e00, {{766.0, 45.0}, {310.0, 53.0}}, label: '0 of 8 confirmed'
+                                          ProgressIndicator, 0x115261f40, {{24.0, 110.0}, {1052.0, 4.0}}, label: 'Recorded confirmations', value: 0%
+                                            ProgressIndicator, 0x115330000, {{24.0, 100.0}, {1052.0, 24.0}}, value: 0%
+                                          ScrollView, 0x115330140, {{24.0, 126.0}, {1052.0, 84.0}}
+                                            Other, 0x115330280, {{24.0, 126.0}, {872.0, 84.0}}
+                                              Button, 0x1153303c0, {{24.0, 111.0}, {102.0, 117.5}}, label: 'Item 1, Team brief confirmation, Unrecorded', Selected
+                                                Image, 0x115330500, {{48.5, 111.0}, {53.0, 53.0}}, identifier: '1.circle', label: '1.circle'
+                                                StaticText, 0x115330640, {{29.0, 175.5}, {92.0, 53.0}}, label: 'Team brief'
+                                              Button, 0x115330780, {{134.0, 111.0}, {102.0, 117.5}}, label: 'Item 2, Fictional device details confirmation, Unrecorded'
+                                                Image, 0x1153308c0, {{158.5, 111.0}, {53.0, 53.0}}, identifier: '2.circle', label: '2.circle'
+                                                StaticText, 0x115330a00, {{144.0, 175.5}, {82.0, 53.0}}, label: 'Fictional device details'
+                                              Button, 0x115330b40, {{244.0, 111.0}, {102.0, 117.5}}, label: 'Item 3, Technical support tools confirmation, Unrecorded'
+                                                Image, 0x115330c80, {{268.5, 111.0}, {53.0, 53.0}}, identifier: '3.circle', label: '3.circle'
+                                                StaticText, 0x115330dc0, {{249.0, 175.5}, {92.0, 53.0}}, label: 'Technical support tools'
+                                              Button, 0x115330f00, {{354.0, 111.0}, {102.0, 117.5}}, label: 'Item 4, Team checkpoint report, Unrecorded'
+                                                Image, 0x115331040, {{378.5, 111.0}, {53.0, 53.0}}, identifier: '4.circle', label: '4.circle'
+                                                StaticText, 0x115331180, {{359.0, 175.5}, {92.0, 53.0}}, label: 'Team checkpoint'
+                                              Button, 0x1153312c0, {{464.0, 111.0}, {102.0, 117.5}}, label: 'Item 5, Technical information report, Unrecorded'
+                                                Image, 0x115331400, {{488.5, 111.0}, {53.0, 53.0}}, identifier: '5.circle', label: '5.circle'
+                                                StaticText, 0x115331540, {{469.0, 175.5}, {92.0, 53.0}}, label: 'Technical information'
+                                              Button, 0x115331680, {{574.0, 111.0}, {102.0, 117.5}}, label: 'Item 6, Support question review, Unrecorded'
+                                                Image, 0x1153317c0, {{598.5, 111.0}, {53.0, 53.0}}, identifier: '6.circle', label: '6.circle'
+                                                StaticText, 0x115331900, {{586.8, 175.5}, {76.5, 53.0}}, label: 'Support question review'
+                                              Button, 0x115331a40, {{684.0, 111.0}, {102.0, 117.5}}, label: 'Item 7, Technical report handoff, Unrecorded'
+                                                Image, 0x115331b80, {{708.5, 111.0}, {53.0, 53.0}}, identifier: '7.circle', label: '7.circle'
+                                                StaticText, 0x115331cc0, {{689.0, 175.5}, {92.0, 53.0}}, label: 'Technical handoff'
+                                              Button, 0x115331e00, {{794.0, 111.0}, {102.0, 117.5}}, label: 'Item 8, Coordination record review, Unrecorded'
+                                                Image, 0x115331f40, {{818.5, 111.0}, {53.0, 53.0}}, identifier: '8.circle', label: '8.circle'
+                                                StaticText, 0x115332080, {{804.5, 175.5}, {81.0, 53.0}}, label: 'Coordination record review'
+                                            Other, 0x1153321c0, {{24.0, 177.0}, {1052.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                              Other, 0x115332300, {{1066.0, 204.0}, {7.0, 3.0}}
+                                            Other, 0x115332440, {{24.0, 177.0}, {1052.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                              Other, 0x115332580, {{1066.0, 204.0}, {7.0, 3.0}}
+                                          StaticText, 0x1153326c0, {{24.0, 234.0}, {421.5, 53.0}}, label: 'CURRENT ITEM · 1 / 8'
+                                          StaticText, 0x115332800, {{24.0, 299.0}, {631.5, 72.0}}, label: 'Team brief confirmation'
+                                          StaticText, 0x115332940, {{24.0, 383.0}, {951.5, 187.5}}, label: 'Record the team's statement that its own briefing was completed. This app does not conduct or verify the briefing.'
+                                          StaticText, 0x115332a80, {{28.0, 582.5}, {291.0, 53.0}}, label: 'Unrecorded'
+                                            Image, 0x115332bc0, {{28.0, 586.5}, {45.0, 45.0}}, identifier: 'circle', label: 'circle'
+                                            StaticText, 0x115332d00, {{28.0, 582.5}, {291.0, 53.0}}, label: 'Unrecorded'
+                                          Button, 0x115332e40, {{19.0, 654.5}, {581.5, 101.0}}, identifier: 'record-confirmation', label: 'Record confirmation'
+                                            StaticText, 0x115332f80, {{24.0, 659.5}, {571.5, 91.0}}, label: 'Record confirmation'
+                                            Other, 0x1153330c0, {{19.0, 654.5}, {581.5, 101.0}}
+                                          Button, 0x115333200, {{598.5, 658.5}, {315.5, 93.0}}, identifier: 'defer-item', label: 'Defer item'
+                                            StaticText, 0x115333340, {{603.5, 663.5}, {305.5, 83.0}}, label: 'Defer item'
+                                            Other, 0x115333480, {{598.5, 658.5}, {315.5, 93.0}}
+                                          Button, 0x1153335c0, {{19.0, 769.5}, {473.5, 93.0}}, identifier: 'request-support', label: 'Request support'
+                                            StaticText, 0x115333700, {{24.0, 774.5}, {463.5, 83.0}}, label: 'Request support'
+                                            Other, 0x115333840, {{19.0, 769.5}, {473.5, 93.0}}
+                                          StaticText, 0x115333980, {{24.0, 906.5}, {413.0, 63.5}}, label: 'Recorded activity'
+                                          Button, 0x115333ac0, {{760.0, 906.5}, {316.0, 63.5}}, label: 'Review record'
+                                          StaticText, 0x115333c00, {{24.0, 982.0}, {385.0, 53.0}}, label: 'No activity recorded.'
+                                          StaticText, 0x115333d40, {{24.0, 1084.0}, {445.5, 63.5}}, label: 'Support, in context'
+                                          Image, 0x115333e80, {{1016.5, 1088.0}, {53.0, 55.5}}, identifier: 'headphones', label: 'Audiobook'
+                                          Button, 0x115334000, {{24.0, 1163.5}, {391.0, 77.5}}, label: 'Technical rep, Ana Lindqvist'
+                                            StaticText, 0x115334140, {{46.0, 1170.5}, {305.5, 63.5}}, label: 'Ana Lindqvist'
+                                          StaticText, 0x115334280, {{24.0, 1257.0}, {942.0, 53.0}}, label: 'Fictional contact · Role is stated, not authenticated.'
+                                          StaticText, 0x1153343c0, {{24.0, 1343.0}, {631.5, 63.5}}, label: 'What does the team need?'
+                                          TextView, 0x115334500, {{32.0, 1430.5}, {1036.0, 130.0}}, identifier: 'focus-support-draft', label: 'Your support question'
+                                            Other, 0x115334640, {{1035.0, 1430.5}, {30.0, 130.0}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                                              Other, 0x115334780, {{1062.0, 1483.5}, {3.0, 74.0}}
+                                          Button, 0x1153348c0, {{24.0, 1584.5}, {1052.0, 61.0}}, label: 'Review attached context'
+                                            StaticText, 0x115334a00, {{24.0, 1584.5}, {1052.0, 61.0}}, label: 'Review attached context'
+                                            Image, 0x115334b40, {{1051.5, 1596.5}, {22.0, 37.5}}, identifier: 'collapsed'
+                                          StaticText, 0x115334c80, {{24.0, 1661.5}, {656.5, 53.0}}, label: 'Snapshot captured when you send.'
+                                          Button, 0x115334dc0, {{19.0, 1725.5}, {489.5, 101.0}}, identifier: 'focus-support-send', label: 'Request support', Disabled
+                                            StaticText, 0x115334f00, {{24.0, 1730.5}, {479.5, 91.0}}, label: 'Request support', Disabled
+                                            Other, 0x115335040, {{19.0, 1725.5}, {489.5, 101.0}}, Disabled
+                                          StaticText, 0x115335180, {{24.0, 1837.5}, {751.5, 53.0}}, label: 'Available with or without a deferred item.'
+                                          StaticText, 0x1153352c0, {{24.0, 1923.5}, {374.5, 63.5}}, label: 'Case messages'
+                                          StaticText, 0x115335400, {{24.0, 1995.0}, {550.0, 53.0}}, label: 'No messages in this case yet.'
+                                          TextField, 0x115335540, {{36.0, 2076.0}, {1028.0, 64.0}}, identifier: 'session-note-draft', placeholderValue: 'Write a message for this case'
+                                            Other, 0x115335680, {{36.0, 2107.0}, {1028.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                              Other, 0x1153357c0, {{39.0, 2134.0}, {1022.0, 3.0}}
+                                          Button, 0x115335900, {{19.0, 2159.0}, {442.5, 101.0}}, identifier: 'session-note-send', label: 'Send message', Disabled
+                                            StaticText, 0x115335a40, {{24.0, 2164.0}, {432.5, 91.0}}, label: 'Send message', Disabled
+                                            Other, 0x115335b80, {{19.0, 2159.0}, {442.5, 101.0}}, Disabled
+                                          StaticText, 0x115335cc0, {{24.0, 2267.0}, {840.0, 53.0}}, label: 'A message does not confirm a checklist item.'
+                                          StaticText, 0x115335e00, {{24.0, 2336.0}, {761.5, 53.0}}, label: 'A reply does not confirm a checklist item.'
+                                        Other, 0x115335f40, {{1343.0, 625.5}, {30.0, 374.5}}, label: 'Vertical scroll bar, 7 pages', value: 33%
+                                          Other, 0x115336080, {{1370.0, 729.5}, {3.0, 61.5}}
+                                        Other, 0x1153361c0, {{1343.0, 625.5}, {30.0, 374.5}}, label: 'Vertical scroll bar, 7 pages', value: 33%
+                                          Other, 0x115336300, {{1370.0, 729.5}, {3.0, 61.5}}
+                              Other, 0x115336440, {{0.0, 462.0}, {1376.0, 570.0}}
+                                Other, 0x115336580, {{0.0, 462.0}, {1376.0, 570.0}}
+Path to element:
+ →Application, 0x115325540, pid: 18384, label: 'Northstar OR'
+Query chain:
+ →Find: Target Application 'edu.umn.northstar.or'
+  Output: {
+    Application, 0x1153366c0, pid: 18384, label: 'Northstar OR'
+  }

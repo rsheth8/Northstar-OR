@@ -1,0 +1,81 @@
+Attributes: Application, 0x11525bc00, pid: 18384, label: 'Northstar OR'
+Element subtree:
+ →Application, 0x11525bc00, pid: 18384, label: 'Northstar OR'
+    Window (Main), 0x11525bd40, {{0.0, 0.0}, {1376.0, 1032.0}}
+      Other, 0x11525be80, {{0.0, 0.0}, {1376.0, 1032.0}}
+        Other, 0x11525c000, {{0.0, 0.0}, {1376.0, 1032.0}}
+          Other, 0x11525c140, {{0.0, 0.0}, {1376.0, 1032.0}}
+            Other, 0x11525c280, {{0.0, 0.0}, {1376.0, 1032.0}}
+              Other, 0x11525c3c0, {{0.0, 0.0}, {1376.0, 1032.0}}
+                StaticText, 0x11525c500, {{432.5, 44.0}, {363.2, 63.5}}, label: 'Northstar OR'
+                  Image, 0x11525c640, {{432.5, 64.0}, {40.0, 23.5}}, label: 'BrandMark'
+                  StaticText, 0x11525c780, {{484.2, 44.0}, {311.5, 63.5}}, label: 'Northstar OR'
+                StaticText, 0x11525c8c0, {{432.2, 115.5}, {511.5, 53.0}}, identifier: 'header-workspace-name', label: 'Sample fictional workspace'
+                Image, 0x11525ca00, {{438.0, 183.0}, {51.0, 40.0}}, identifier: 'ipad.landscape', label: 'ipad.landscape'
+                StaticText, 0x11525cb40, {{438.0, 176.5}, {330.2, 53.0}}, label: 'On this device'
+                Button, 0x11525cc80, {{432.5, 237.5}, {455.0, 44.0}}, identifier: 'header-workspace-settings', label: 'Workspace settings'
+                  Image, 0x11525cdc0, {{448.5, 236.5}, {46.0, 46.0}}, identifier: 'gearshape', label: 'gearshape'
+                  StaticText, 0x11525cf00, {{432.5, 237.5}, {455.0, 44.0}}, label: 'Workspace settings'
+                SegmentedControl, 0x11525d040, {{24.0, 310.0}, {240.0, 31.0}}, identifier: 'nearby-role'
+                  Button, 0x11525d180, {{24.0, 310.0}, {120.0, 32.0}}, label: 'Room', Selected
+                  Button, 0x11525d2c0, {{144.0, 310.0}, {120.0, 32.0}}, label: 'Rep'
+                Button, 0x11525d400, {{607.5, 293.5}, {360.5, 63.5}}, identifier: 'open-call', label: 'Session and call'
+                Button, 0x11525d540, {{976.0, 293.5}, {376.0, 63.5}}, label: 'Connect devices'
+                StaticText, 0x11525d680, {{35.2, 357.0}, {1305.5, 105.0}}, label: 'Fictional coordination record. Support links nearby demo devices. This app does not decide whether a procedure proceeds.'
+                Other, 0x11525d7c0, {{0.0, 462.0}, {1376.0, 570.0}}
+                  Other, 0x11525d900, {{0.0, 462.0}, {1376.0, 570.0}}
+                    Other, 0x11525da40, {{0.0, 472.0}, {1376.0, 49.0}}
+                      Button, 0x11525db80, {{489.0, 476.0}, {109.0, 41.0}}, identifier: 'list.bullet.rectangle', label: 'Co-pilot'
+                        Button, 0x11525dcc0, {{489.0, 476.0}, {109.0, 41.0}}, identifier: 'list.bullet.rectangle', label: 'Co-pilot'
+                      Button, 0x11525de00, {{598.0, 476.0}, {103.5, 41.0}}, identifier: 'calendar', label: 'Planner'
+                        Button, 0x11525df40, {{598.0, 476.0}, {103.5, 41.0}}, identifier: 'calendar', label: 'Planner'
+                      Button, 0x11525e080, {{701.5, 476.0}, {185.5, 41.0}}, identifier: 'headphones', label: 'Remote Support', Selected
+                        Button, 0x11525e1c0, {{701.5, 476.0}, {185.5, 41.0}}, identifier: 'headphones', label: 'Remote Support', Selected
+                  Other, 0x11525e300, {{0.0, 462.0}, {1376.0, 570.0}}
+                    Other, 0x11525e440, {{0.0, 462.0}, {1376.0, 570.0}}
+                      Other, 0x11525e580, {{0.0, 462.0}, {1376.0, 570.0}}
+                        Other, 0x11525e6c0, {{0.0, 462.0}, {1376.0, 570.0}}
+                          Other, 0x11525e800, {{0.0, 462.0}, {1376.0, 570.0}}
+                            Other, 0x11525e940, {{0.0, 462.0}, {1376.0, 570.0}}
+                              NavigationBar, 0x11525ea80, {{0.0, 472.0}, {1376.0, 54.0}}, identifier: 'Remote Support'
+                              Other, 0x11525ebc0, {{0.0, 462.0}, {1376.0, 570.0}}
+                                Other, 0x11525ed00, {{0.0, 462.0}, {1376.0, 570.0}}
+                                  Other, 0x11525ee40, {{0.0, 462.0}, {1376.0, 570.0}}
+                                    Other, 0x11525ef80, {{0.0, 462.0}, {1376.0, 570.0}}
+                                      ScrollView, 0x11525f0c0, {{0.0, 462.0}, {1376.0, 570.0}}
+                                        Other, 0x11525f200, {{0.0, 462.0}, {1376.0, 570.0}}
+                                          Other, 0x11525f340, {{0.0, 462.0}, {1376.0, 123.8}}
+                                        Other, 0x11525f480, {{0.0, 462.0}, {1376.0, 570.0}}
+                                        Other, 0x11525f5c0, {{0.0, 526.0}, {1376.0, 1526.5}}
+                                          StaticText, 0x11525f700, {{217.5, 550.0}, {345.5, 53.0}}, label: 'On this device'
+                                            Image, 0x11525f840, {{217.5, 556.0}, {52.0, 41.0}}, identifier: 'ipad.landscape', label: 'ipad.landscape'
+                                            StaticText, 0x11525f980, {{217.5, 550.0}, {345.5, 53.0}}, label: 'On this device'
+                                          StaticText, 0x11525fac0, {{212.0, 619.0}, {918.0, 157.0}}, label: 'Messages stay with this case. Connect Northstar on the room iPad and the rep’s Mac to exchange updates.'
+                                          StaticText, 0x11525fc00, {{212.0, 792.0}, {504.0, 67.0}}, label: 'Current room record'
+                                          StaticText, 0x11525fd40, {{212.0, 875.0}, {645.5, 63.5}}, label: 'Fictional pacemaker case A'
+                                          StaticText, 0x11525fe80, {{212.0, 954.5}, {607.5, 63.5}}, label: '8 confirmations unresolved'
+                                          StaticText, 0x114c14000, {{212.0, 1034.0}, {784.0, 105.0}}, label: 'Choose Connect devices on both devices before calling.'
+                                          StaticText, 0x114c14140, {{301.8, 1178.5}, {772.5, 207.0}}, label: 'No question from the team yet'
+                                          StaticText, 0x114c14280, {{237.0, 1388.5}, {902.0, 174.5}}, label: 'Request support from the current Co-pilot item, including while an acknowledgment is pending.'
+                                          StaticText, 0x114c143c0, {{212.0, 1632.0}, {374.5, 63.5}}, label: 'Case messages'
+                                          StaticText, 0x114c14500, {{212.0, 1703.5}, {550.0, 53.0}}, label: 'No messages in this case yet.'
+                                          TextField, 0x114c14640, {{224.0, 1784.5}, {928.0, 64.0}}, identifier: 'session-note-draft', placeholderValue: 'Write a message for this case'
+                                            Other, 0x114c14780, {{224.0, 1815.5}, {928.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                              Other, 0x114c148c0, {{227.0, 1842.5}, {922.0, 3.0}}
+                                          Button, 0x114c14a00, {{207.0, 1867.5}, {442.5, 101.0}}, identifier: 'session-note-send', label: 'Send message', Disabled
+                                            StaticText, 0x114c14b40, {{212.0, 1872.5}, {432.5, 91.0}}, label: 'Send message', Disabled
+                                            Other, 0x114c14c80, {{207.0, 1867.5}, {442.5, 101.0}}, Disabled
+                                          StaticText, 0x114c14dc0, {{212.0, 1975.5}, {840.0, 53.0}}, label: 'A message does not confirm a checklist item.'
+                                        Other, 0x114c14f00, {{1343.0, 526.0}, {30.0, 474.0}}, label: 'Vertical scroll bar, 4 pages', value: 0%
+                                          Other, 0x114c15040, {{1370.0, 529.0}, {3.0, 165.5}}
+                                        Other, 0x114c15180, {{1343.0, 526.0}, {30.0, 474.0}}, label: 'Vertical scroll bar, 4 pages', value: 0%
+                                          Other, 0x114c152c0, {{1370.0, 529.0}, {3.0, 165.5}}
+                              Other, 0x114c15400, {{0.0, 462.0}, {1376.0, 570.0}}
+                                Other, 0x114c15540, {{0.0, 462.0}, {1376.0, 570.0}}
+Path to element:
+ →Application, 0x11525bc00, pid: 18384, label: 'Northstar OR'
+Query chain:
+ →Find: Target Application 'edu.umn.northstar.or'
+  Output: {
+    Application, 0x114c15680, pid: 18384, label: 'Northstar OR'
+  }
