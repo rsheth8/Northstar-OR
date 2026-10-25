@@ -213,9 +213,9 @@ final class CoPilotSessionTests: XCTestCase {
         XCTAssertTrue(try XCTUnwrap(model.activeSession).reducedSupport)
     }
     func testVoiceCommandParsing() {
-        XCTAssertEqual(VoiceCommand.parse("Step complete"), .complete)
-        XCTAssertEqual(VoiceCommand.parse("skip this one"), .skip)
-        XCTAssertEqual(VoiceCommand.parse("confirm"), .confirm)
+        XCTAssertEqual(VoiceCommand.parse("record confirmation"), .complete)
+        XCTAssertEqual(VoiceCommand.parse("defer item"), .skip)
+        XCTAssertEqual(VoiceCommand.parse("acknowledge deferral"), .confirm)
         XCTAssertNil(VoiceCommand.parse("hand me the clamp"))
     }
 }
