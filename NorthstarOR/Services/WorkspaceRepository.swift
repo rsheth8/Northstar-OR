@@ -22,6 +22,7 @@ struct DraftRecord: Hashable, Codable {
 struct StoredSession: Hashable, Codable {
     var state: SessionRecordingState
     var events: [SessionEvent]
+    var reducedSupport: Bool? = nil
 }
 
 /// Everything the app retains between launches. An empty snapshot is a fresh install.

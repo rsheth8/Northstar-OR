@@ -41,6 +41,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: edu.umn.northstar.or
         TARGETED_DEVICE_FAMILY: "2"
+        CODE_SIGN_ENTITLEMENTS[sdk=macosx*]: NorthstarOR/Supporting/MacCatalyst.entitlements
         SUPPORTS_MACCATALYST: YES
         SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD: NO
         DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER: NO

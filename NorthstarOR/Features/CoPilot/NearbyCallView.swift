@@ -61,7 +61,7 @@ struct CallStatusControls: View {
             .frame(height: 220).clipShape(RoundedRectangle(cornerRadius: Northstar.Radius.sm))
             .accessibilityLabel("Room camera preview")
             .accessibilityIdentifier("call-camera-preview")
-            Text(call.muted ? "Microphone muted for this call" : "Microphone on for this call")
+            Text(call.status != "In call" ? "Microphone not connected" : call.muted ? "Microphone muted for this call" : "Microphone on for this call")
                 .font(Northstar.Fonts.bodyStrong)
                 .accessibilityIdentifier("call-microphone-state")
             HStack(spacing: Northstar.Space.s3) {
@@ -71,6 +71,7 @@ struct CallStatusControls: View {
                 }
                 .buttonStyle(NorthstarSecondaryButtonStyle())
                 .accessibilityIdentifier("call-mute")
+                .disabled(call.status != "In call")
                 Button("End call", action: end).buttonStyle(NorthstarSecondaryButtonStyle())
             }
             if call.localVideoTrack != nil || call.cameraEnabled || call.canSwitchCamera {

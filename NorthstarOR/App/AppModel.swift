@@ -229,6 +229,7 @@ final class AppModel {
         try persist(snapshot(cases: nextCases))
         cases = nextCases
         sessions[procedure.id]?.refreshCaseDetails(procedure)
+        publishSharedSession()
         return procedure
     }
 
@@ -773,6 +774,8 @@ final class AppModel {
         switch event {
         case .reducedSupportChanged(let id, let on) where demoPost == .room && id == activeSession.procedure.id:
             activeSession.setReducedSupport(on)
+            try? persist(snapshot())
+            publishSupportContext()
         case .remoteMessage(let id, let from, let text) where id == activeSession.procedure.id:
             activeSession.receiveRemoteMessage(text, from: from)
         default:

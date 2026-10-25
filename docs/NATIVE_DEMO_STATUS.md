@@ -33,8 +33,8 @@ This checkout is the integrated candidate, not merged main. Use the native North
 
 ## Checks actually run this pass
 
-- All unit tests: **155 passed** before the final save-recovery regression and Planner entry bridge.
-- Final affected native integration checks: **12 passed**, including four new native session checks (late join/no question, retained messages, stable retry, save recovery, expired/canceled invitation guards).
+- Final complete unit suite: **157 passed** after the native, save-recovery and reduced-support persistence changes.
+- Final affected native integration checks: **12 passed**, including the first four new native session checks (late join/no question, retained messages, stable retry, save recovery, expired/canceled invitation guards).
 - Normal-launch iPad UI check: **1 passed**, loading samples through ordinary UI, opening/canceling New case, selecting a case and starting Co-pilot. Screenshot retained in the Xcode test result.
 - Browser/server regressions: **4 passed**, including pending message recovery/stable retry and invitation acceptance/expiry regressions.
 - Signed **Mac Catalyst build succeeded** and signed **physical iPad build succeeded** after the native changes. Both apps opened; iPad installed without clearing stored records.
@@ -44,3 +44,7 @@ This checkout is the integrated candidate, not merged main. Use the native North
 Logs are in ignored `build/native-unit.log`, `native-focused-final.log`, `native-entry-ui.log`, `native-mac-final.log`, and `native-device-final.log`. Unit/model tests use injected transports; they do not prove Wi-Fi delivery, microphone output, camera capture or usability. No synthetic microphone tones were used. VoiceOver, enlarged text, keyboard, contrast and Reduce Motion were not rechecked for this pass.
 
 Native Mac evidence: `docs/evidence/native-shared-session/mac-live-session.png` shows the real app in Rep mode with a received question and message receipt. It is a native Mac window, not a browser.
+
+The physical call check exposed a missing Mac hardened-runtime audio-input entitlement. `NorthstarOR/Supporting/MacCatalyst.entitlements` now supplies it only for the Mac SDK; the signed Mac bundle was inspected to confirm the entitlement. The old running process was fully terminated and the corrected app opened. Microphone access must still be allowed by the owner, and native audio/video proof remains pending. Stopped/failed calls now label the microphone disconnected rather than on.
+
+A focused regression reproduced loss of reduced-support context on relaunch and absence of a rep update. The label is now stored as an additive optional StoredSession field (old files default false), and Planner updates are saved/published. Final unit suite passed with that regression included.

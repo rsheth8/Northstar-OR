@@ -57,7 +57,7 @@ final class CoPilotSession {
               state.templateReference == procedure.templateReference else { throw SessionRestoreError.caseMismatch }
         guard Set(state.itemStatuses.keys) == Set(procedure.steps.map(\.id)),
               procedure.steps.count == state.itemStatuses.count else { throw SessionRestoreError.itemsDoNotMatchCase }
-        let session = CoPilotSession(procedure: procedure, now: state.startedAt, sessionID: identity.sessionID)
+        let session = CoPilotSession(procedure: procedure, reducedSupport: stored.reducedSupport ?? false, now: state.startedAt, sessionID: identity.sessionID)
         guard session.isRecordingSupported, session.identity == identity else { throw SessionRestoreError.unsupportedRecording }
         for event in stored.events {
             let replayed: SessionEvent
@@ -83,7 +83,7 @@ final class CoPilotSession {
 
     /// The persisted form of this run, or nil when recording is unsupported.
     var storedSession: StoredSession? {
-        recordingState.map { StoredSession(state: $0, events: events) }
+        recordingState.map { StoredSession(state: $0, events: events, reducedSupport: reducedSupport) }
     }
 
     var isRecordingSupported: Bool { !itemStatuses.isEmpty }

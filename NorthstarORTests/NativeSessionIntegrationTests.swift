@@ -49,6 +49,18 @@ final class NativeSessionIntegrationTests: XCTestCase {
         XCTAssertEqual(rep.sessionNotes[0].delivery, .receivedByPeer)
     }
 
+    func testRecordedSupportContextPublishesAndSurvivesRelaunch() throws {
+        let link = SessionPair()
+        let store = InMemoryWorkspaceStore()
+        let room = AppModel(sync: LocalSyncService(nearby: link), store: store)
+        try room.loadSampleWorkspace()
+        let session = try room.startOrResume(caseID: SampleData.Record.northShoreCase.rawValue)
+        link.connect()
+        room.sync.send(.reducedSupportChanged(procedureID: session.procedure.id, on: true))
+        XCTAssertEqual(link.lastSnapshot?.context.reducedSupport, true)
+        XCTAssertEqual(AppModel(store: store).activeSession?.reducedSupport, true)
+    }
+
     func testSaveRecoveryFinalizesRepSnapshotWithoutNewRoomEvent() throws {
         let (room, rep, roomLink, _, store) = try pair()
         store.failWrites = true
