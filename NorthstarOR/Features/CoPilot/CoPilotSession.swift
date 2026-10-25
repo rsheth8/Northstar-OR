@@ -11,7 +11,7 @@ enum SessionRestoreError: Error, Equatable {
 }
 
 enum RecordingCommandError: Error, Equatable {
-    case unsupportedRecording, wrongSession, staleVersion, unknownItem, targetNotSelected
+    case unsupportedRecording, wrongSession, staleVersion, unknownItem, targetNotSelected, recordingEnded, recordingNotEnded
     case acknowledgmentPending, acknowledgmentMismatch, intentConflict, correctionNotCurrent, alreadyRecorded
 }
 
@@ -29,6 +29,7 @@ final class CoPilotSession {
     private var itemStatuses: [String: RecordedItemStatus]
     private var selectedItemID: String?
     private var pendingAcknowledgment: RequiredAcknowledgment?
+    private(set) var endedAt: Date?
     private var acceptedCommands: [String: SessionCommand] = [:]
 
     init(procedure: Procedure, reducedSupport: Bool = false, now: Date = .now,
@@ -91,7 +92,7 @@ final class CoPilotSession {
         guard isRecordingSupported, let reference = procedure.templateReference else { return nil }
         return SessionRecordingState(identity: identity, templateReference: reference, startedAt: startedAt,
             version: events.count, itemStatuses: itemStatuses, selectedItemID: selectedItemID,
-            pendingAcknowledgment: pendingAcknowledgment)
+            pendingAcknowledgment: pendingAcknowledgment, endedAt: endedAt)
     }
     var currentStep: ProcedureStep? { procedure.steps.first { $0.id == selectedItemID } }
     var currentIndex: Int { procedure.steps.firstIndex { $0.id == selectedItemID } ?? procedure.steps.count }
@@ -109,15 +110,17 @@ final class CoPilotSession {
         })
     }
     func status(of step: ProcedureStep) -> StepStatus { statuses[step.id] ?? .upcoming }
+    var isEnded: Bool { endedAt != nil }
     var isFinished: Bool { isRecordingSupported && selectedItemID == nil }
     var allConfirmationsRecorded: Bool {
         isRecordingSupported && itemStatuses.values.allSatisfy { $0 == .teamConfirmed }
     }
     var recordingSummary: String {
         guard isRecordingSupported else { return "Recording unavailable — no supported coordination template" }
+        if isEnded { return "Recording ended · \(itemStatuses.values.filter { $0 != .teamConfirmed }.count) unresolved" }
         if allConfirmationsRecorded { return "All team confirmations recorded" }
         let unresolved = itemStatuses.values.filter { $0 != .teamConfirmed }.count
-        if isFinished { return "Recording ended — \(unresolved) unresolved item\(unresolved == 1 ? "" : "s")" }
+        if isFinished { return "No item selected — \(unresolved) unresolved item\(unresolved == 1 ? "" : "s")" }
         return "\(unresolved) confirmation\(unresolved == 1 ? "" : "s") unresolved"
     }
 
@@ -127,7 +130,8 @@ final class CoPilotSession {
     func makeCommand(_ action: SessionCommandAction, targetItemID: String? = nil,
                      actor: LocalParticipant? = nil, source: RecordingInputSource = .touch,
                      at time: Date = .now, intentID: String = UUID().uuidString) -> SessionCommand? {
-        guard isRecordingSupported, let target = targetItemID ?? selectedItemID else { return nil }
+        let lifecycle: Bool = action == .endRecording || action == .reopenRecording
+        guard isRecordingSupported, let target = targetItemID ?? selectedItemID ?? (lifecycle ? procedure.steps.first?.id : nil) else { return nil }
         return SessionCommand(id: intentID, identity: identity,
             actor: actor ?? LocalParticipant(id: "local-unconfigured", workspaceID: identity.workspaceID,
                                             displayName: "Local team (unconfigured)", statedRole: .orTeam),
@@ -146,6 +150,8 @@ final class CoPilotSession {
             // Accepted intent IDs and events are written together below.
             return events.first { $0.intentID == command.id }!
         }
+        if isEnded && command.action != .reopenRecording { throw RecordingCommandError.recordingEnded }
+        if !isEnded && command.action == .reopenRecording { throw RecordingCommandError.recordingNotEnded }
         guard command.expectedVersion == events.count else { throw RecordingCommandError.staleVersion }
         guard let item = procedure.steps.first(where: { $0.id == command.targetItemID }) else {
             throw RecordingCommandError.unknownItem
@@ -162,9 +168,18 @@ final class CoPilotSession {
         var nextStatuses = itemStatuses
         var nextSelection = selectedItemID
         var nextWarning = pendingAcknowledgment
+        var nextEndedAt = endedAt
         let payload: SessionEventPayload
         let entry: LogEntry?
         switch command.action {
+        case .endRecording:
+            nextEndedAt = command.issuedAt
+            payload = .recordingEnded
+            entry = LogEntry(.note, "Recording explicitly ended; unresolved items retained", at: command.issuedAt)
+        case .reopenRecording:
+            nextEndedAt = nil
+            payload = .recordingReopened
+            entry = LogEntry(.note, "Recording explicitly reopened", at: command.issuedAt)
         case .selectItem:
             nextSelection = item.id
             payload = .itemSelected
@@ -211,11 +226,12 @@ final class CoPilotSession {
         try event.validate()
         let nextState = SessionRecordingState(identity: identity, templateReference: procedure.templateReference!,
             startedAt: startedAt, version: event.acceptedVersion, itemStatuses: nextStatuses,
-            selectedItemID: nextSelection, pendingAcknowledgment: nextWarning)
+            selectedItemID: nextSelection, pendingAcknowledgment: nextWarning, endedAt: nextEndedAt)
         try nextState.validate()
         itemStatuses = nextStatuses
         selectedItemID = nextSelection
         pendingAcknowledgment = nextWarning
+        endedAt = nextEndedAt
         acceptedCommands[command.id] = command
         events.append(event)
         if let entry { log.append(entry) }
@@ -237,6 +253,8 @@ private extension SessionEvent {
     var replayCommand: SessionCommand {
         let action: SessionCommandAction
         switch payload {
+        case .recordingEnded: action = .endRecording
+        case .recordingReopened: action = .reopenRecording
         case .itemSelected: action = .selectItem
         case .confirmationRecorded: action = .recordConfirmation
         case .itemDeferred: action = .deferItem
@@ -251,7 +269,7 @@ private extension SessionEvent {
     var recordsItemStatus: Bool {
         switch payload {
         case .confirmationRecorded, .itemDeferred, .recordCorrected: true
-        case .itemSelected, .warningAcknowledged: false
+        case .itemSelected, .warningAcknowledged, .recordingEnded, .recordingReopened: false
         }
     }
 }
