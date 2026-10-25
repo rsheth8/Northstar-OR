@@ -21,7 +21,7 @@ struct NorthstarWorkspaceHeader: View {
             }
         }
         .padding(.horizontal, Northstar.Space.s6)
-        .padding(.vertical, Northstar.Space.s3)
+        .padding(.vertical, Northstar.Space.s1)
         .foregroundStyle(Northstar.Palette.Workspace.onHeader)
         .background(Northstar.Palette.Workspace.header, ignoresSafeAreaEdges: [])
     }
@@ -31,7 +31,7 @@ struct NorthstarWorkspaceHeader: View {
             Image("BrandMark")
                 .resizable().scaledToFit().frame(width: 40, height: 28)
                 .accessibilityHidden(true)
-            Text("Northstar OR").font(Northstar.Fonts.bodyStrong)
+            Text("Northstar OR").font(Northstar.Fonts.supporting)
         }
         .accessibilityElement(children: .combine)
     }
@@ -48,13 +48,13 @@ struct NorthstarWorkspaceHeader: View {
     @ViewBuilder private var contextLabels: some View {
         if let workspaceName {
             Text(workspaceName)
-                .lineLimit(1)
+                .fixedSize(horizontal: false, vertical: true)
                 .accessibilityIdentifier("header-workspace-name")
         }
         Label(communicationLabel, systemImage: "ipad.landscape")
         if let onOpenSettings {
             Button(action: onOpenSettings) {
-                Label("Workspace settings", systemImage: "gearshape")
+                Label("Settings", systemImage: "gearshape")
                     .padding(.horizontal, Northstar.Space.s3)
                     .frame(minHeight: Northstar.Target.minimum)
                     .contentShape(Rectangle())
