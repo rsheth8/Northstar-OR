@@ -91,6 +91,8 @@ The demo uses **Northstar on both devices**: iPad Room and Mac Catalyst Rep, pai
 
 Required by the hackathon rules. Keep this list up to date.
 
+- Python 3 standard-library tooling selects the CI iPad baseline and tests mixed-runtime selection; no app dependency.
+
 - Swift, SwiftUI, Observation, AVFoundation (text-to-speech), Speech (on-device recognition), MapKit
 - Apple SwiftUI AnyLayout keeps one set of recording and device controls across horizontal and vertical arrangements; scrollDismissesKeyboard keeps setup fields reachable while scrolling.
 - Apple Multipeer Connectivity for encrypted, explicitly paired native iPad/Mac session snapshots, support envelopes and WebRTC signaling; Apple Mac Catalyst runs the shared SwiftUI app on Mac. Physical-device proof remains separately recorded in docs/evidence/nearby-support/.

@@ -23,11 +23,13 @@ final class WorkspaceShellTests: XCTestCase {
         let town = app.textFields["Town"]
         town.tap()
         town.typeText("Exampleville")
+        finishEntry(town, expected: "Exampleville", in: app)
         let participant = app.textFields["setup-participant-name"]
         revealSetupControl(participant, in: app)
         participant.tap()
         participant.typeText("Sample Coordinator")
-        XCTAssertEqual(participant.value as? String, "Sample Coordinator")
+        finishEntry(participant, expected: "Sample Coordinator", in: app)
+
 
         let create = app.buttons["setup-create"]
         revealSetupControl(create, in: app)
@@ -92,6 +94,16 @@ final class WorkspaceShellTests: XCTestCase {
             start.press(forDuration: 0.05, thenDragTo: end)
         }
         XCTFail("Setup control must be visible above the keyboard before activation: \(control.identifier)")
+    }
+
+    @MainActor
+    private func finishEntry(_ field: XCUIElement, expected: String, in app: XCUIApplication) {
+        // Submit through the focused field, without relying on remote keyboard
+        // coordinates while the iPad is in landscape.
+        field.typeText("\n")
+        XCTAssertEqual(field.value as? String, expected)
+        let dismissed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: app.keyboards.firstMatch)
+        XCTAssertEqual(XCTWaiter.wait(for: [dismissed], timeout: 5), .completed, "Finish text entry before activating a lower setup field")
     }
 
     @MainActor
