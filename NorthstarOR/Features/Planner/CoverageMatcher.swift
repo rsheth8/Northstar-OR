@@ -75,7 +75,11 @@ struct CoverageMatcher {
         var reasons: [String] = []
         if let forecast {
             reasons.append(forecast.summary)
-            if closureMinutes == nil { reasons.append("Forecast records no road closure.") }
+            if closureMinutes == nil {
+                reasons.append(forecast.closureIsUnknown == true || (forecast.roadClosureInHours != nil && forecast.asOf == nil)
+                    ? "Road closure time is unknown; forecast baseline is not recorded."
+                    : "Forecast records no road closure.")
+            }
         } else {
             reasons.append("No forecast recorded; road closure unknown.")
         }
@@ -178,11 +182,10 @@ struct CoverageMatcher {
         Int((end.timeIntervalSince(start) / 60).rounded())
     }
 
-    /// Prefers the forecast's absolute closure time; legacy forecasts without `asOf` count from `now`.
+    /// Missing legacy baselines stay unknown; they never restart a relative clock.
     private static func closureMinutes(_ forecast: StormForecast?, now: Date) -> Int? {
         guard let forecast else { return nil }
         if let at = forecast.roadClosureAt { return minutes(from: now, to: at) }
-        guard let hours = forecast.roadClosureInHours, hours.isFinite else { return nil }
-        return Int((hours * 60).rounded())
+        return nil
     }
 }
