@@ -8,6 +8,7 @@ struct WorkspaceSettingsView: View {
     @State private var draft: WorkspaceSettingsDraft
     @State private var errorMessage: String?
     @State private var saved = false
+    @Environment(\.dismiss) private var dismiss
 
     init(workspace: WorkspaceConfiguration, onSave: @escaping (WorkspaceConfiguration) throws -> Void) {
         self.workspace = workspace
@@ -71,6 +72,14 @@ struct WorkspaceSettingsView: View {
             .scrollContentBackground(.hidden)
             .background(Northstar.Palette.bgBase)
             .navigationTitle("Workspace settings")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") { dismiss() }
+                        .frame(minHeight: Northstar.Target.minimum)
+                        .accessibilityIdentifier("settings-done")
+                }
+            }
             .onChange(of: draft) { _, _ in saved = false }
         }
         .tint(Northstar.Palette.ice)
