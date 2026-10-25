@@ -34,7 +34,7 @@ targets:
         NSLocalNetworkUsageDescription: "Connect nearby iPads or a rep laptop to exchange fictional support questions, audio and video."
         NSAppTransportSecurity:
           NSAllowsLocalNetworking: true
-        NSCameraUsageDescription: "Share the room camera with the nearby rep during a fictional call. Video is not saved."
+        NSCameraUsageDescription: "Share your camera with the connected Northstar participant during an accepted fictional call. Video is not saved."
         NSBonjourServices:
           - _nstar-or._tcp
     settings:

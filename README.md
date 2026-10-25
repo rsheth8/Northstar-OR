@@ -40,7 +40,7 @@ The current local candidate supports native Northstar on the room iPad and rep M
 | Planner | Rule-based logistical options/reasons and reduced-support context | Named-rep plan requests/acceptance/rescheduling are not implemented |
 | Co-pilot | Explicit confirmation/defer/acknowledgment/correction and retained recording history | Touch is the working input; voice commands remain unwired |
 | Native Remote Support | Same-Wi-Fi paired Mac/iPad case recap, live progress, contextual questions, acknowledgment/reply and case messages | Physical delivery proof is recorded separately; no internet or closed-app notifications |
-| Call | Native invitation/acceptance, two-way audio, room-only video, mute/end and room camera off/on/flip | Builds pass; native-to-native media requires physical verification |
+| Call | Native invitation/acceptance, two-way audio/video, workspace call dock and floating tile, mute/end and camera off/on/flip | Earlier native two-way audio + room video confirmed by owner. New rep camera and workspace call layout await physical recheck; see `docs/evidence/workspace-calls/README.md`. |
 | Voice alerts | Short spoken recording alerts; optional rep alerts outside calls | Not conversational AI or hands-free commands |
 | Camera interpretation / AI | Not implemented | Sharing video and displaying recorded recap do not interpret images or generate AI answers |
 | Session records | Versioned local workspace/case/session/draft/message persistence | No institutional export, authentication or clinical validation |
