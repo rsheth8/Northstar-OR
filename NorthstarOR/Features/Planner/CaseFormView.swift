@@ -10,6 +10,8 @@ struct CaseFormView: View {
 
     @Environment(\.dismiss) private var dismiss
     @State private var draft: CaseFormDraft
+    @State private var initialDraft: CaseFormDraft
+    @State private var confirmingDiscard = false
     @State private var showIssues = false
     @State private var saveFailure: String?
     @State private var failureCount = 0
@@ -20,8 +22,9 @@ struct CaseFormView: View {
         self.existingCases = existingCases
         self.editing = editing
         self.onSave = onSave
-        _draft = State(initialValue: editing.map { CaseFormDraft.editing($0, in: workspace) }
-                       ?? CaseFormDraft.new(in: workspace))
+        let initial = editing.map { CaseFormDraft.editing($0, in: workspace) } ?? CaseFormDraft.new(in: workspace)
+        _draft = State(initialValue: initial)
+        _initialDraft = State(initialValue: initial)
     }
 
     private var issue: CaseFormDraft.Issue? {
@@ -61,7 +64,7 @@ struct CaseFormView: View {
                                displayedComponents: [.date, .hourAndMinute])
                         .environment(\.timeZone, timeZone)
                         .accessibilityIdentifier("case-form-schedule")
-                    LabeledContent("Time zone", value: timeZone.localizedName(for: .standard, locale: .current)
+                    LabeledContent("Time zone", value: timeZone.localizedName(for: timeZone.isDaylightSavingTime(for: draft.input.scheduledAt) ? .daylightSaving : .standard, locale: .current)
                                    .map { "\($0) (\(timeZone.identifier))" } ?? timeZone.identifier)
                         .font(Northstar.Fonts.caption)
                     message(for: .schedule)
@@ -96,7 +99,7 @@ struct CaseFormView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+                    Button("Cancel") { if draft != initialDraft { confirmingDiscard = true } else { dismiss() } }
                         .northstarHitTarget()
                         .accessibilityIdentifier("case-form-cancel")
                 }
@@ -107,12 +110,18 @@ struct CaseFormView: View {
                 }
             }
         }
+        .interactiveDismissDisabled(draft != initialDraft)
+        .confirmationDialog("Discard case changes?", isPresented: $confirmingDiscard, titleVisibility: .visible) {
+            Button("Discard changes", role: .destructive) { dismiss() }
+            Button("Keep editing", role: .cancel) {}
+        }
         .tint(Northstar.Palette.ice)
     }
 
     private func field(_ label: String, prompt: String, text: Binding<String>,
                        for field: CaseFormDraft.Field) -> some View {
         VStack(alignment: .leading, spacing: Northstar.Space.s1) {
+            Text(label).font(Northstar.Fonts.supporting)
             TextField(label, text: text, prompt: Text(prompt))
                 .textInputAutocapitalization(.sentences)
                 .autocorrectionDisabled(field == .reference)

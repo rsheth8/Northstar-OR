@@ -5,7 +5,9 @@ struct SiteFields: View {
     @Binding var site: SiteDraft
 
     var body: some View {
+        Text("Site name").font(Northstar.Fonts.supporting)
         TextField("Site name", text: $site.name)
+        Text("Town").font(Northstar.Fonts.supporting)
         TextField("Town", text: $site.town)
         Picker("Time zone", selection: $site.timeZoneIdentifier) {
             ForEach(WorkspaceForms.timeZoneChoices(including: site.timeZoneIdentifier), id: \.self) { id in
@@ -34,6 +36,7 @@ struct WorkspaceSetupView: View {
 
     @State private var draft = WorkspaceSetupDraft()
     @State private var errorMessage: String?
+    @State private var confirmingSample = false
 
     var body: some View {
         NavigationStack {
@@ -45,6 +48,7 @@ struct WorkspaceSetupView: View {
                         .foregroundStyle(Northstar.Palette.inkMuted)
                 }
                 Section("Workspace") {
+                    Text("Workspace name").font(Northstar.Fonts.supporting)
                     TextField("Workspace name", text: $draft.workspaceName)
                         .accessibilityIdentifier("setup-workspace-name")
                 }
@@ -52,6 +56,7 @@ struct WorkspaceSetupView: View {
                     SiteFields(site: $draft.site)
                 }
                 Section("You") {
+                    Text("Your name").font(Northstar.Fonts.supporting)
                     TextField("Your name", text: $draft.participantName)
                         .accessibilityIdentifier("setup-participant-name")
                     Picker("Role", selection: $draft.role) {
@@ -62,10 +67,13 @@ struct WorkspaceSetupView: View {
                         .foregroundStyle(Northstar.Palette.inkMuted)
                 }
                 Section {
+                    WorkspaceErrorBanner(message: errorMessage)
                     Button("Create workspace", action: create)
                         .buttonStyle(NorthstarPrimaryButtonStyle(tone: .standard))
                         .accessibilityIdentifier("setup-create")
-                    Button("Load sample workspace", action: loadSample)
+                    Button("Load sample workspace") {
+                        if !draft.workspaceName.isEmpty || !draft.site.name.isEmpty || !draft.site.town.isEmpty || !draft.participantName.isEmpty { confirmingSample = true } else { loadSample() }
+                    }
                         .buttonStyle(NorthstarSecondaryButtonStyle())
                         .accessibilityIdentifier("setup-load-sample")
                 } footer: {
@@ -75,6 +83,10 @@ struct WorkspaceSetupView: View {
             .scrollContentBackground(.hidden)
             .background(Northstar.Palette.bgBase)
             .navigationTitle("Set up workspace")
+        }
+        .confirmationDialog("Replace setup entries with samples?", isPresented: $confirmingSample, titleVisibility: .visible) {
+            Button("Load sample workspace", role: .destructive, action: loadSample)
+            Button("Keep editing", role: .cancel) {}
         }
         .tint(Northstar.Palette.ice)
     }

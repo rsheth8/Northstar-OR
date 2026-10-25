@@ -83,6 +83,8 @@ struct ContactFormView: View {
     @State private var draft: ContactDraft
     @State private var errorMessage: String?
     @State private var saved = false
+    @State private var baseline: ContactDraft
+    @State private var confirmingDiscard = false
     @Environment(\.dismiss) private var dismiss
 
     init(workspace: WorkspaceConfiguration, draft: ContactDraft,
@@ -90,13 +92,16 @@ struct ContactFormView: View {
         self.workspace = workspace
         self.onSave = onSave
         _draft = State(initialValue: draft)
+        _baseline = State(initialValue: draft)
     }
 
     var body: some View {
         Form {
             WorkspaceErrorBanner(message: errorMessage)
             Section("Contact") {
+                Text("Name").font(Northstar.Fonts.supporting)
                 TextField("Name", text: $draft.name).accessibilityIdentifier("contact-name")
+                Text("Home base").font(Northstar.Fonts.supporting)
                 TextField("Home base", text: $draft.homeBase)
                 Picker("Role", selection: $draft.role) {
                     ForEach(WorkspaceForms.contactRoles, id: \.self) { Text(WorkspaceForms.label(for: $0)).tag($0) }
@@ -130,6 +135,7 @@ struct ContactFormView: View {
                 Text("Fictional figures used for coverage planning. Leave blank if unknown.")
             }
             Section {
+                WorkspaceErrorBanner(message: errorMessage)
                 Button("Save contact", action: save)
                     .buttonStyle(NorthstarPrimaryButtonStyle(tone: .standard))
                     .accessibilityIdentifier("contact-save")
@@ -143,6 +149,18 @@ struct ContactFormView: View {
         .navigationTitle(draft.name.isEmpty ? "New contact" : draft.name)
         .navigationBarTitleDisplayMode(.inline)
         .onChange(of: draft) { _, _ in saved = false }
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Cancel") { if draft != baseline { confirmingDiscard = true } else { dismiss() } }
+                    .northstarHitTarget()
+            }
+        }
+        .interactiveDismissDisabled(draft != baseline)
+        .confirmationDialog("Discard contact changes?", isPresented: $confirmingDiscard, titleVisibility: .visible) {
+            Button("Discard changes", role: .destructive) { dismiss() }
+            Button("Keep editing", role: .cancel) {}
+        }
     }
 
     private func driveBinding(_ siteID: String) -> Binding<String> {
