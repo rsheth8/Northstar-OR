@@ -2,6 +2,8 @@ import SwiftUI
 
 /// Brand identity stays separate from native tab and destination navigation.
 struct NorthstarWorkspaceHeader: View {
+    @Environment(\.dynamicTypeSize) private var typeSize
+    @Environment(\.horizontalSizeClass) private var sizeClass
     /// The configured workspace name; nil while no workspace exists yet.
     var communicationLabel: String = "On this device"
     var workspaceName: String?
@@ -9,16 +11,14 @@ struct NorthstarWorkspaceHeader: View {
     var onOpenSettings: (() -> Void)?
 
     var body: some View {
-        ViewThatFits(in: .horizontal) {
-            HStack(spacing: Northstar.Space.s6) {
-                identity
-                Spacer(minLength: Northstar.Space.s4)
-                context
-            }
-            VStack(alignment: .leading, spacing: Northstar.Space.s2) {
-                identity
-                context
-            }
+        let stacked = typeSize.isAccessibilitySize || sizeClass == .compact
+        let layout = stacked
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: Northstar.Space.s2))
+            : AnyLayout(HStackLayout(spacing: Northstar.Space.s6))
+        layout {
+            identity
+            if !stacked { Spacer(minLength: Northstar.Space.s4) }
+            context
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, Northstar.Space.s6)
@@ -38,10 +38,10 @@ struct NorthstarWorkspaceHeader: View {
     }
 
     private var context: some View {
-        ViewThatFits(in: .horizontal) {
-            HStack(spacing: Northstar.Space.s4) { contextLabels }
-            VStack(alignment: .leading, spacing: Northstar.Space.s2) { contextLabels }
-        }
+        let layout = sizeClass == .compact
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: Northstar.Space.s2))
+            : AnyLayout(HStackLayout(spacing: Northstar.Space.s4))
+        layout { contextLabels }
         .font(Northstar.Fonts.supporting)
         .foregroundStyle(Northstar.Palette.Workspace.onHeaderSecondary)
     }
@@ -53,6 +53,7 @@ struct NorthstarWorkspaceHeader: View {
                 .accessibilityIdentifier("header-workspace-name")
         }
         Label(communicationLabel, systemImage: "ipad.landscape")
+            .fixedSize(horizontal: false, vertical: true)
         if let onOpenSettings {
             Button(action: onOpenSettings) {
                 Label("Settings", systemImage: "gearshape")
