@@ -2,7 +2,9 @@ import XCTest
 
 final class AdaptiveShellFormsTests: XCTestCase {
     @MainActor func testRoleChangeRequiresConfirmationAndCancelKeepsRoom() {
+        continueAfterFailure = false
         let app = XCUIApplication()
+        XCUIDevice.shared.orientation = .portrait
         app.launchArguments = ["-NorthstarSampleWorkspace"]
         app.launch()
         XCTAssertTrue(app.buttons["nearby-role"].waitForExistence(timeout: 15))
@@ -12,6 +14,28 @@ final class AdaptiveShellFormsTests: XCTestCase {
         capture("shell-explicit-role-change-warning")
         app.buttons["Cancel"].tap()
         XCTAssertTrue(app.buttons["nearby-role"].label.contains("Room"))
+    }
+
+    @MainActor func testConfirmedRoleChangeWithEnlargedText() {
+        continueAfterFailure = false
+        XCUIDevice.shared.orientation = .landscapeLeft
+        let app = XCUIApplication()
+        app.launchArguments = ["-NorthstarSampleWorkspace", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
+        app.launch()
+        let role = app.buttons["nearby-role"]
+        XCTAssertTrue(role.waitForExistence(timeout: 15))
+        role.tap()
+        let rep = app.buttons["Rep device"]
+        XCTAssertTrue(rep.waitForExistence(timeout: 5))
+        rep.tap()
+        let confirm = app.buttons["Change role and disconnect"]
+        XCTAssertTrue(confirm.waitForExistence(timeout: 5))
+        capture("shell-role-confirmation-largest-landscape")
+        confirm.tap()
+        XCTAssertTrue(role.waitForExistence(timeout: 5))
+        XCTAssertTrue(role.label.contains("Rep"))
+        XCTAssertFalse(app.buttons["record-confirmation"].exists)
+        capture("shell-rep-role-largest-landscape")
     }
 
     @MainActor func testUnsavedSettingsRequireDiscard() {

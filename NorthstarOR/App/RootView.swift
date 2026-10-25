@@ -9,6 +9,7 @@ struct RootView: View {
     @State private var showNearby = false
     @State private var showCall = false
     @State private var pendingRole: DemoPost?
+    @State private var showingRoles = false
 
     var body: some View {
         @Bindable var model = model
@@ -74,7 +75,7 @@ struct RootView: View {
                     }
                     Button("Cancel", role: .cancel) { pendingRole = nil }
                 } message: {
-                    Text("Changing role disconnects the nearby support link. Saved case records remain on this device; reconnect using the new role.")
+                    Text("Nearby support will disconnect. Saved records stay on this device. Reconnect using the new role.")
                 }
                 .sheet(isPresented: $showCall) { NearbyCallView() }
                 .sheet(isPresented: $showNearby) { NearbyLinkSheet() }
@@ -94,16 +95,19 @@ struct RootView: View {
     }
 
     @ViewBuilder private var deviceControls: some View {
-        Menu {
-            Button("Room device") { requestRole(.room) }
-            Button("Rep device") { requestRole(.rep) }
-        } label: {
+        Button { showingRoles = true } label: {
             Label(model.demoPost == .room ? "This device: Room" : "This device: Rep", systemImage: "ipad.landscape")
                 .frame(minHeight: Northstar.Target.minimum)
                 .contentShape(Rectangle())
         }
-        .frame(minHeight: Northstar.Target.minimum)
+        .buttonStyle(.plain)
         .accessibilityIdentifier("nearby-role")
+        .accessibilityHint("Choose this device's role")
+        .confirmationDialog("This device's role", isPresented: $showingRoles, titleVisibility: .visible) {
+            Button("Room device") { requestRole(.room) }
+            Button("Rep device") { requestRole(.rep) }
+            Button("Cancel", role: .cancel) { }
+        }
         if model.demoPost == .room || model.remoteSession != nil {
             Button(model.nearbyCall?.status == "In call" ? "Call controls" : "Session and call") { showCall = true }
                 .frame(minHeight: Northstar.Target.minimum).accessibilityIdentifier("open-call")
