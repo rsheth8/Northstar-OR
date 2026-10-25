@@ -42,6 +42,7 @@ struct WorkspaceSnapshot: Hashable, Codable {
     var sessionNotes: [SessionNote] = []
     var remoteSession: SharedSessionSnapshot? = nil
     var coveragePlans: [CoveragePlan] = []
+    var planningEvidenceRecords: [PlanningEvidence] = []
 
     static let empty = WorkspaceSnapshot()
 
@@ -49,7 +50,7 @@ struct WorkspaceSnapshot: Hashable, Codable {
     func validate() throws {
         guard formatVersion == Self.supportedFormatVersion else { throw invalid("unsupported format version \(formatVersion)") }
         guard let workspace else {
-            guard forecasts.isEmpty, cases.isEmpty, sessions.isEmpty, drafts.isEmpty, supportQuestions.isEmpty, sessionNotes.isEmpty, coveragePlans.isEmpty, activeCaseID == nil else {
+            guard forecasts.isEmpty, cases.isEmpty, sessions.isEmpty, drafts.isEmpty, supportQuestions.isEmpty, sessionNotes.isEmpty, coveragePlans.isEmpty, planningEvidenceRecords.isEmpty, activeCaseID == nil else {
                 throw invalid("records exist without a workspace")
             }
             return
@@ -64,6 +65,14 @@ struct WorkspaceSnapshot: Hashable, Codable {
             do { try plan.validate() } catch { throw invalid("coverage plan: \(error.localizedDescription)") }
             guard planRevisions.insert("\(plan.workspaceID):\(plan.recordID)").inserted else { throw invalid("duplicate coverage plan revision") }
         }
+        var evidenceIDs = Set<String>()
+        var revisions = Set<String>()
+        for evidence in planningEvidenceRecords {
+            do { try evidence.validate() } catch { throw invalid("planning evidence: \(error.localizedDescription)") }
+            guard siteIDs.contains(evidence.siteID), evidenceIDs.insert(evidence.id).inserted,
+                  revisions.insert("\(evidence.siteID):\(evidence.revision)").inserted else { throw invalid("duplicate or unknown planning evidence") }
+        }
+
         var caseIDs = Set<String>()
         for item in cases {
             guard caseIDs.insert(item.id).inserted else { throw invalid("duplicate case \(item.id)") }
@@ -131,7 +140,7 @@ struct WorkspaceSnapshot: Hashable, Codable {
 
 extension WorkspaceSnapshot {
     private enum CodingKeys: String, CodingKey {
-        case formatVersion, workspace, forecasts, cases, sessions, drafts, activeCaseID, supportQuestions, sessionNotes, remoteSession, coveragePlans
+        case formatVersion, workspace, forecasts, cases, sessions, drafts, activeCaseID, supportQuestions, sessionNotes, remoteSession, coveragePlans, planningEvidenceRecords
     }
 
     /// Synthesized decoding ignores property defaults, so additive fields must be decoded
@@ -149,6 +158,7 @@ extension WorkspaceSnapshot {
         sessionNotes = try values.decodeIfPresent([SessionNote].self, forKey: .sessionNotes) ?? []
         remoteSession = try values.decodeIfPresent(SharedSessionSnapshot.self, forKey: .remoteSession)
         coveragePlans = try values.decodeIfPresent([CoveragePlan].self, forKey: .coveragePlans) ?? []
+        planningEvidenceRecords = try values.decodeIfPresent([PlanningEvidence].self, forKey: .planningEvidenceRecords) ?? []
     }
 }
 
