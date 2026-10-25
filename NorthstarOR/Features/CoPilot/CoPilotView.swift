@@ -36,8 +36,9 @@ struct CoPilotView: View {
                         ScrollView {
                             VStack(alignment: .leading, spacing: Northstar.Space.s6) {
                                 focusHeading(session)
-                                workflowStrip(session)
                                 currentItem(session)
+                                workflowStrip(session)
+                                VoiceControlsView(session: session, correctionOpen: correction != nil) { showActivity = true }
                                 Divider()
                                 recordedActivity(session)
                                 if !wide {
@@ -82,8 +83,8 @@ struct CoPilotView: View {
             }
             .sheet(isPresented: $showActivity) {
                 NavigationStack {
-                    activity(session)
-                        .navigationTitle("Recorded activity")
+                    SessionReviewView(session: session)
+                        .navigationTitle("Session record")
                         .navigationBarTitleDisplayMode(.inline)
                         .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { showActivity = false } } }
                 }
@@ -130,9 +131,10 @@ struct CoPilotView: View {
                                 Image(systemName: status == .unrecorded ? "\(index + 1).circle" : symbol(status))
                                     .foregroundStyle(tone(status).foreground)
                                 Text(step.title.replacingOccurrences(of: " confirmation", with: "").replacingOccurrences(of: " report", with: ""))
-                                    .font(Northstar.Fonts.supporting).lineLimit(2)
+                                    .font(Northstar.Fonts.supporting).fixedSize(horizontal: false, vertical: true)
                             }
-                            .frame(width: 94, height: 76)
+                            .frame(width: typeSize.isAccessibilitySize ? 200 : 110)
+                            .frame(minHeight: 76)
                             .padding(Northstar.Space.s1)
                             .foregroundStyle(selected ? Northstar.Palette.ice : Northstar.Palette.inkMuted)
                             .background(selected ? Northstar.Palette.iceSoft : Northstar.Palette.bgBase)
@@ -336,7 +338,8 @@ struct CoPilotView: View {
             .buttonStyle(NorthstarPrimaryButtonStyle(tone: .standard))
             .accessibilityIdentifier("record-confirmation")
         Button("Defer item") {
-            if apply(deferItem, to: session), step.isRequired {
+            if apply(deferItem, to: session), step.isRequired,
+               !VoiceAudioPolicy.callOwnsAudio(invitationAccepted: model.callInvitation?.state == .accepted, status: model.nearbyCall?.status) {
                 announcer.say("\(step.title) was deferred. Acknowledgment required.")
             }
         }
