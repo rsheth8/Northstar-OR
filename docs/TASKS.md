@@ -44,6 +44,8 @@ Camera, AI, maps, and additional procedure types follow the working core journey
 
 ## Next implementation tasks (one task per branch/PR)
 
+- [x] (Codex repo steward) Correct technical-rep role filtering in CoverageMatcher; regress specialist, missing-role, and mixed-directory cases (`CoverageMatcher.swift`, `CoverageMatcherTests.swift`; merged in [PR #44](https://github.com/rsheth8/Northstar-OR/pull/44)).
+
 - [x] (Amartya / Codex; merged PR #33) **Light-workspace design foundation:** reconcile the owner-approved light workspace / midnight header direction and add opt-in semantic palette tokens. Reserves `AGENTS.md`, `CLAUDE.md`, `docs/DESIGN.md`, `docs/LIGHT_WORKSPACE_HANDOFF.md`, `NorthstarOR/DesignSystem/NorthstarWorkspacePalette.swift`, `docs/evidence/light-workspace/`, and this claim only. Existing screen migration remains F02/F09/F11/F12 after merged dependencies; no feature, model, storage, or shell edits.
 
 Claim the individual F-number row for each implementation slice. The lane checklists below are acceptance reminders, not additional parallel claims for the same work. Optional slices stay pending until their core gate passes.

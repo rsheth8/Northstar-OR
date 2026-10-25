@@ -11,10 +11,10 @@ final class CoverageMatcherTests: XCTestCase {
     }
 
     func rep(_ id: String, _ name: String, drive: Int? = 60, skills: Set<String> = ["pacemaker"],
-             available: Bool = true, remote: Bool = true) -> DeviceRep {
+             available: Bool = true, remote: Bool = true, role: ParticipantRole? = .technicalRep) -> DeviceRep {
         DeviceRep(id: id, name: name, homeBase: "Fictional", skills: skills,
                   driveMinutes: drive.map { ["grand-marais": $0] } ?? [:],
-                  isAvailable: available, canSupportRemotely: remote)
+                  isAvailable: available, canSupportRemotely: remote, statedRole: role)
     }
 
     func closure(inMinutes m: Double) -> StormForecast {
@@ -101,6 +101,35 @@ final class CoverageMatcherTests: XCTestCase {
         XCTAssertTrue(rec.reasons.contains { $0.contains("not recorded") })
         XCTAssertFalse(rec.reasons.contains { $0.localizedCaseInsensitiveContains("road") && $0.contains("Avery") },
                        "A missing drive time must not be blamed on roads")
+    }
+
+    func testClinicalSpecialistDoesNotCountAsTechnicalCoverage() {
+        let rec = CoverageMatcher().recommend(for: procedure(inHours: 8),
+            reps: [rep("clinical", "Casey", role: .clinicalSpecialist)], forecast: nil, now: now)
+        XCTAssertEqual(inPersonIDs(rec), [])
+        XCTAssertEqual(remoteIDs(rec), [])
+        XCTAssertTrue(rec.reducedSupport)
+        XCTAssertEqual(rec.risk, .high)
+        XCTAssertTrue(isReschedule(rec.options.first))
+    }
+
+    func testMissingRoleDoesNotInferTechnicalCoverage() {
+        let rec = CoverageMatcher().recommend(for: procedure(inHours: 8),
+            reps: [rep("legacy", "Leslie", role: nil)], forecast: nil, now: now)
+        XCTAssertEqual(inPersonIDs(rec), [])
+        XCTAssertEqual(remoteIDs(rec), [])
+        XCTAssertTrue(rec.reducedSupport)
+        XCTAssertTrue(isReschedule(rec.options.first))
+    }
+
+    func testMixedDirectoryOnlyOffersStatedTechnicalReps() {
+        let reps = [rep("clinical", "Casey", drive: 1, role: .clinicalSpecialist),
+                    rep("legacy", "Leslie", drive: 1, role: nil),
+                    rep("technical", "Taylor", drive: 60)]
+        let rec = CoverageMatcher().recommend(for: procedure(inHours: 8), reps: reps, forecast: nil, now: now)
+        XCTAssertEqual(inPersonIDs(rec), ["technical"])
+        XCTAssertEqual(remoteIDs(rec), ["technical"])
+        XCTAssertFalse(rec.reducedSupport)
     }
 
     // MARK: - Forecast

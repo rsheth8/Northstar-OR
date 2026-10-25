@@ -324,16 +324,20 @@ final class AppModel {
         forecasts = snapshot.forecasts
         drafts = snapshot.drafts
         // The latest run per case is live; anything else is retained unchanged.
-        for stored in snapshot.sessions.sorted(by: Self.sessionOrder) {
+        var visitedCases = Set<String>()
+        for stored in snapshot.sessions.sorted(by: Self.sessionOrder).reversed() {
             let caseID = stored.state.identity.caseID
+            guard visitedCases.insert(caseID).inserted else {
+                retainedSessions.append(stored)
+                continue
+            }
             // Note: restore requires the case's items to match the session's history.
             guard let procedure = cases.first(where: { $0.id == caseID }),
                   let session = try? CoPilotSession.restore(procedure: procedure, from: stored) else {
                 retainedSessions.append(stored)
-                if sessions[caseID] == nil { unreadableSessionCaseIDs.insert(caseID) }
+                unreadableSessionCaseIDs.insert(caseID)
                 continue
             }
-            if let older = sessions[caseID]?.storedSession { retainedSessions.append(older) }
             sessions[caseID] = session
             unreadableSessionCaseIDs.remove(caseID)
         }

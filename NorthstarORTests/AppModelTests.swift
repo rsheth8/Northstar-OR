@@ -274,6 +274,34 @@ final class AppModelTests: XCTestCase {
         XCTAssertEqual(stored.sessions.count, 2)
     }
 
+    func testUnreadableNewestRunDoesNotReactivateAnOlderCleanRun() throws {
+        let store = InMemoryWorkspaceStore()
+        let original = try configured(store)
+        let older = try original.startOrResume(caseID: "case-a")
+        let procedure = try XCTUnwrap(original.cases.first { $0.id == "case-a" })
+        let newer = CoPilotSession(procedure: procedure, now: time.addingTimeInterval(60))
+        let command = try XCTUnwrap(newer.makeCommand(.deferItem, actor: configuration().localParticipant,
+                                                     at: time.addingTimeInterval(60)))
+        _ = try newer.apply(command)
+        var damaged = try XCTUnwrap(newer.storedSession)
+        damaged.events = [] // Structurally valid state, but the latest history cannot replay.
+        let olderStored = try XCTUnwrap(older.storedSession)
+        let snapshot = WorkspaceSnapshot(workspace: configuration(), cases: original.cases,
+                                         sessions: [olderStored, damaged], activeCaseID: "case-a")
+        try WorkspaceRepository(store: store).save(snapshot)
+        let relaunched = model(store)
+        XCTAssertNil(relaunched.activeSession)
+        XCTAssertNil(relaunched.session(for: "case-a"))
+        XCTAssertTrue(relaunched.unreadableSessionCaseIDs.contains("case-a"))
+        XCTAssertThrowsError(try relaunched.startOrResume(caseID: "case-a")) {
+            XCTAssertEqual($0 as? AppModelError, .sessionUnreadable("case-a"))
+        }
+        try relaunched.startOrResume(caseID: "case-b")
+        guard case .loaded(let saved) = WorkspaceRepository(store: store).load() else { return XCTFail("expected loaded") }
+        XCTAssertTrue(saved.sessions.contains(olderStored))
+        XCTAssertTrue(saved.sessions.contains(damaged))
+    }
+
     func testRestoreRejectsTamperedHistory() throws {
         let model = try configured(InMemoryWorkspaceStore())
         let session = try model.startOrResume(caseID: "case-a")
