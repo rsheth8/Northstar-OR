@@ -52,8 +52,9 @@ struct CoveragePlan: Codable, Hashable, Identifiable {
         }
         if let response {
             guard response.planID == id, response.revision == revision, response.mode == mode,
-                  response.actor.statedRole == .technicalRep, !response.actor.id.isEmpty,
-                  !response.actor.displayName.isEmpty, response.at.timeIntervalSince1970.isFinite else { throw CoveragePlanError.invalid }
+                  response.actor.statedRole == .technicalRep,
+                  [response.actor.id, response.actor.workspaceID, response.actor.displayName].allSatisfy({ !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }),
+                  response.at.timeIntervalSince1970.isFinite else { throw CoveragePlanError.invalid }
         }
     }
     func applying(_ response: Response) throws -> CoveragePlan {

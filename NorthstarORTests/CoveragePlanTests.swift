@@ -50,6 +50,11 @@ final class CoveragePlanTests: XCTestCase {
             actor: .init(id: "peer", workspaceID: "peer-workspace", displayName: "Fictional peer", statedRole: .technicalRep), accepted: true, at: now)
         link.onEnvelope?(plan.responseEnvelope(wrong))
         XCTAssertNil(room.coveragePlan(for: item.id)?.response)
+        var malformed = wrong
+        malformed.mode = .remote
+        malformed.actor = .init(id: " ", workspaceID: "", displayName: " ", statedRole: .technicalRep)
+        link.onEnvelope?(plan.responseEnvelope(malformed))
+        XCTAssertNil(room.coveragePlan(for: item.id)?.response)
         store.failWrites = true
         XCTAssertThrowsError(try room.requestCoverage(caseID: item.id, mode: .reschedule, recipientID: nil, expectedRevision: plan.revision))
         XCTAssertEqual(room.coveragePlan(for: item.id)?.recordID, plan.recordID)
