@@ -18,6 +18,7 @@ final class WorkspaceAppearanceTests: XCTestCase {
         continueAfterFailure = false
         XCUIDevice.shared.orientation = .landscapeLeft
         let app = XCUIApplication()
+        app.launchArguments += ["-NorthstarSampleWorkspace"]
         if enlarged {
             app.launchArguments += ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
         }

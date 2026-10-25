@@ -205,10 +205,12 @@ final class CoPilotSessionTests: XCTestCase {
         XCTAssertEqual(delayedStale.command(at: tappedAt).targetItemID, "timeout")
     }
 
-    func testPlannerFlagReachesCoPilotThroughSync() {
+    @MainActor func testPlannerFlagReachesCoPilotThroughSync() throws {
         let model = AppModel(sync: LocalSyncService())
-        model.sync.send(.reducedSupportChanged(procedureID: model.activeSession.procedure.id, on: true))
-        XCTAssertTrue(model.activeSession.reducedSupport)
+        try model.loadSampleWorkspace()
+        let session = try model.startOrResume(caseID: "proc-1")
+        model.sync.send(.reducedSupportChanged(procedureID: session.procedure.id, on: true))
+        XCTAssertTrue(try XCTUnwrap(model.activeSession).reducedSupport)
     }
     func testVoiceCommandParsing() {
         XCTAssertEqual(VoiceCommand.parse("Step complete"), .complete)

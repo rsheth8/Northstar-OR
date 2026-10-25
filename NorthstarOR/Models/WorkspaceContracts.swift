@@ -61,6 +61,47 @@ enum WorkspaceContractError: Error, Equatable {
     case immutableCaseIdentity
 }
 
+/// Short, plain messages for forms that show `localizedDescription`.
+extension WorkspaceContractError: LocalizedError {
+    var errorDescription: String? {
+        switch self {
+        case .required(let field): "\(Self.fieldName(field)) is required."
+        case .unsupportedConfigurationVersion: "This workspace was saved by a newer version of the app."
+        case .duplicateID: "Two entries share the same identifier. Remove the duplicate."
+        case .foreignWorkspace: "This entry belongs to a different workspace."
+        case .invalidTimeZone: "Choose a time zone for each site."
+        case .invalidRooms: "Room names must be filled in and different from each other."
+        case .invalidCoordinates: "Site coordinates are out of range."
+        case .invalidContactRole: "Contacts must be a technical rep or clinical specialist."
+        case .invalidTravel: "Drive times must be zero or more, for sites in this workspace."
+        case .unknownSite: "Choose a site from this workspace."
+        case .duplicateCaseTitle: "Another case already has this title."
+        case .duplicateCaseReference: "Another case already has this reference."
+        case .invalidDuration: "Duration must be between 1 minute and 24 hours."
+        case .invalidSchedule: "Choose a valid date and time."
+        case .unsupportedTemplate: "Choose a device family with a supported coordination template."
+        case .immutableCaseIdentity: "A saved case's identity and template can't be changed."
+        }
+    }
+
+    private static func fieldName(_ field: String) -> String {
+        switch field {
+        case "workspace.name": "Workspace name"
+        case "workspace.sites": "At least one site"
+        case "participant.displayName": "Your name"
+        case "site.name": "Site name"
+        case "site.location": "Site town"
+        case "contact.name": "Contact name"
+        case "contact.capabilities": "Each device family"
+        case "case.reference": "Case reference"
+        case "case.title": "Case title"
+        case "case.siteID": "Site"
+        case "case.deviceFamily": "Device family"
+        default: "This field"
+        }
+    }
+}
+
 /// One configured fictional workspace. A blank installation has no configuration yet.
 /// This is the configuration contract, not a repository or authenticated account.
 struct WorkspaceConfiguration: Identifiable, Hashable, Codable {

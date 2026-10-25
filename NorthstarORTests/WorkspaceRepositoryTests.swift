@@ -1,6 +1,7 @@
 import XCTest
 @testable import NorthstarOR
 
+@MainActor
 final class WorkspaceRepositoryTests: XCTestCase {
     private let time = Date(timeIntervalSince1970: 1_800_000_000)
     private var catalog: [CoordinationTemplate] { [FictionalCoordinationTemplate.template] }
@@ -172,6 +173,81 @@ final class WorkspaceRepositoryTests: XCTestCase {
         let names = try FileManager.default.contentsOfDirectory(atPath: directory.path)
         XCTAssertFalse(names.contains("workspace.json"))
         XCTAssertTrue(names.contains { $0.hasPrefix("workspace.unreadable-") })
+    }
+
+    // MARK: - Additive decoding and recovery details
+
+    func testV1SnapshotMissingOptionalKeysDecodesWithDefaults() throws {
+        let store = InMemoryWorkspaceStore()
+        try WorkspaceRepository(store: store, clock: { self.time }).save(try populatedSnapshot())
+        var object = try XCTUnwrap(JSONSerialization.jsonObject(with: XCTUnwrap(store.data)) as? [String: Any])
+        object["drafts"] = nil
+        object["forecasts"] = nil
+        object["activeCaseID"] = nil
+        store.data = try JSONSerialization.data(withJSONObject: object)
+        guard case .loaded(let restored) = WorkspaceRepository(store: store).load() else { return XCTFail("expected loaded") }
+        XCTAssertEqual(restored.drafts, [])
+        XCTAssertEqual(restored.forecasts, [:])
+        XCTAssertNil(restored.activeCaseID)
+        XCTAssertEqual(restored.cases.map(\.id), ["case-a", "case-b"])
+    }
+
+    func testMinimalV1SnapshotWithOnlyVersionAndWorkspaceDecodes() throws {
+        let workspace = try JSONEncoder().encode(configuration())
+        let json = "{\"formatVersion\":1,\"workspace\":\(String(decoding: workspace, as: UTF8.self))}"
+        guard case .loaded(let restored) = WorkspaceRepository(store: InMemoryWorkspaceStore(data: Data(json.utf8))).load() else {
+            return XCTFail("expected loaded")
+        }
+        XCTAssertEqual(restored.workspace, configuration())
+        XCTAssertEqual(restored.cases, [])
+        XCTAssertEqual(restored.sessions, [])
+    }
+
+    func testUnknownExtraKeyIsIgnored() throws {
+        let store = InMemoryWorkspaceStore()
+        let snapshot = try populatedSnapshot()
+        try WorkspaceRepository(store: store, clock: { self.time }).save(snapshot)
+        var object = try XCTUnwrap(JSONSerialization.jsonObject(with: XCTUnwrap(store.data)) as? [String: Any])
+        object["futureAdditiveField"] = ["anything": 1]
+        store.data = try JSONSerialization.data(withJSONObject: object)
+        guard case .loaded(let restored) = WorkspaceRepository(store: store).load() else { return XCTFail("expected loaded") }
+        XCTAssertEqual(restored, snapshot)
+    }
+
+    func testTransientReadFailureIsRetryableAndNotSetAside() throws {
+        let store = InMemoryWorkspaceStore()
+        try WorkspaceRepository(store: store, clock: { self.time }).save(try populatedSnapshot())
+        let previous = store.data
+        store.failReads = true
+        let repository = WorkspaceRepository(store: store, clock: { self.time })
+        guard case .readFailed = repository.load() else { return XCTFail("expected readFailed") }
+        XCTAssertFalse(repository.isSavingBlocked)
+        XCTAssertThrowsError(try repository.setAsideUnreadableData()) { XCTAssertEqual($0 as? RepositoryError, .nothingToSetAside) }
+        XCTAssertThrowsError(try repository.save(try populatedSnapshot())) { XCTAssertEqual($0 as? RepositoryError, .storageUnavailable) }
+        XCTAssertEqual(store.data, previous)
+        store.failReads = false
+        guard case .loaded = repository.load() else { return XCTFail("expected loaded after retry") }
+        XCTAssertNoThrow(try repository.save(try populatedSnapshot()))
+    }
+
+    func testSetAsideLabelsAreUniqueAtTheSameInstant() throws {
+        let store = InMemoryWorkspaceStore(data: Data("{ not json".utf8))
+        let first = WorkspaceRepository(store: store, clock: { self.time })
+        _ = first.load()
+        try first.setAsideUnreadableData()
+        store.data = Data("{ also not json".utf8)
+        let second = WorkspaceRepository(store: store, clock: { self.time })
+        _ = second.load()
+        try second.setAsideUnreadableData()
+        XCTAssertEqual(store.setAside.count, 2)
+    }
+
+    func testActiveCaseMustHaveAStoredSession() throws {
+        var snapshot = try populatedSnapshot()
+        snapshot.activeCaseID = "case-b"
+        XCTAssertThrowsError(try snapshot.validate())
+        snapshot.activeCaseID = "case-a"
+        XCTAssertNoThrow(try snapshot.validate())
     }
 
     // MARK: - Fixtures (fictional only)

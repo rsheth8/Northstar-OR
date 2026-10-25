@@ -5,6 +5,7 @@ final class SupportPresentationTests: XCTestCase {
         continueAfterFailure = false
         XCUIDevice.shared.orientation = .landscapeLeft
         let app = XCUIApplication()
+        app.launchArguments += ["-NorthstarSampleWorkspace"]
         app.launch()
         XCTAssertTrue(app.buttons["Remote Support"].firstMatch.waitForExistence(timeout: 15))
         app.buttons["Remote Support"].firstMatch.tap()
@@ -30,6 +31,7 @@ final class SupportPresentationTests: XCTestCase {
         continueAfterFailure = false
         XCUIDevice.shared.orientation = .landscapeLeft
         let app = XCUIApplication()
+        app.launchArguments += ["-NorthstarSampleWorkspace"]
         app.launchArguments += ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
         app.launch()
         XCTAssertTrue(app.buttons["Remote Support"].firstMatch.waitForExistence(timeout: 15))

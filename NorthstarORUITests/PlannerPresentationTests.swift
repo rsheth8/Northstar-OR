@@ -38,6 +38,7 @@ final class PlannerPresentationTests: XCTestCase {
         continueAfterFailure = false
         XCUIDevice.shared.orientation = .landscapeLeft
         let app = XCUIApplication()
+        app.launchArguments += ["-NorthstarSampleWorkspace"]
         if enlarged { app.launchArguments += ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"] }
         app.launch()
         XCTAssertTrue(app.buttons["Planner"].firstMatch.waitForExistence(timeout: 15))
