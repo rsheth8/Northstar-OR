@@ -2,6 +2,11 @@ import SwiftUI
 
 /// Brand identity stays separate from native tab and destination navigation.
 struct NorthstarWorkspaceHeader: View {
+    /// The configured workspace name; nil while no workspace exists yet.
+    var workspaceName: String?
+    /// Present only when a workspace can be edited.
+    var onOpenSettings: (() -> Void)?
+
     var body: some View {
         ViewThatFits(in: .horizontal) {
             HStack(spacing: Northstar.Space.s6) {
@@ -40,7 +45,22 @@ struct NorthstarWorkspaceHeader: View {
     }
 
     @ViewBuilder private var contextLabels: some View {
-        Text("Fictional sample workspace")
+        if let workspaceName {
+            Text(workspaceName)
+                .lineLimit(1)
+                .accessibilityIdentifier("header-workspace-name")
+        }
         Label("On this device", systemImage: "ipad.landscape")
+        if let onOpenSettings {
+            Button(action: onOpenSettings) {
+                Label("Workspace settings", systemImage: "gearshape")
+                    .padding(.horizontal, Northstar.Space.s3)
+                    .frame(minHeight: Northstar.Target.minimum)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(Northstar.Palette.Workspace.onHeader)
+            .accessibilityIdentifier("header-workspace-settings")
+        }
     }
 }
