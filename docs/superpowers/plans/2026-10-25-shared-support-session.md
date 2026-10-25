@@ -22,13 +22,13 @@ Late join without a question; reconnect after room changes; stale case responses
 - [x] Run Node relay/control regressions and affected native build; review diff; commit bounded result.
 
 ### Task 2: Durable multi-message thread (Cursor if remaining)
-- [ ] Add session-scoped message records/drafts/receipts with backward-compatible WorkspaceSnapshot decoding and validation, without replacing contextual questions. Both sides retain before receipt, retry with stable IDs. Project the same thread in CoPilotSupportPanel, RemoteSupportView and laptop.
-- [ ] Focused test: disconnect/reconnect doesn't duplicate messages, old-case reply stays on old case, persistence failure produces no receipt. Build and commit.
+- [x] Add session-scoped message records/drafts/receipts with backward-compatible WorkspaceSnapshot decoding and validation, without replacing contextual questions. Both sides retain before receipt, retry with stable IDs. Project the same thread in CoPilotSupportPanel, RemoteSupportView and laptop.
+- [x] Focused test: disconnect/reconnect doesn't duplicate messages, old-case reply stays on old case, persistence failure produces no receipt. Build and commit.
 
 ### Task 3: Invitations and camera controls (Cursor if remaining)
-- [ ] Add request/accept/decline/cancel/expiry over session connection, unique call ID scoped to origin; resolve simultaneous requests. Only accepted calls request permissions/start media; end media preserves session.
-- [ ] Add camera off/on and front/back switch to NearbyCallController/engine and call sheet, reflect actual capture completion and remote camera state, preserve mute. Handle missing device/permissions/simulator.
-- [ ] Focused lifecycle/control checks and real-device Wi-Fi test; no audible synthetic tests.
+- [x] Add request/accept/decline/cancel/expiry over session connection, unique call ID scoped to origin; resolve simultaneous requests. Only accepted calls request permissions/start media; end media preserves session.
+- [x] Add camera off/on and front/back switch to NearbyCallController/engine and call sheet, reflect actual capture completion and remote camera state, preserve mute. Handle missing device/permissions/simulator.
+- [ ] Focused lifecycle/control checks and real-device Wi-Fi test; no audible synthetic tests. Automated checks passed. Physical Wi-Fi walkthrough was not run.
 
 ### Task 4: Device evidence and handoff
 - [ ] Document exact branch/worktree/commits, finished vs missing behavior and commands actually run in `docs/CURSOR_SHARED_SESSION_HANDOFF.md`. Physically verify late join, message receipts, continued messaging after media ends, camera and both microphone directions. Do not claim device checks not performed.
@@ -38,3 +38,4 @@ Late join without a question; reconnect after room changes; stale case responses
 - Ruling: task 1 ships existing contextual request/ack/reply before generic chat or invitation redesign, to provide a useful bounded slice without destabilizing the working call.
 
 - Task 1 completed locally: 4 focused Node checks pass, 7 existing support tests pass, final real-device build passes. Reconnect rollback finding fixed with a red/green regression. New shared-session physical walkthrough remains pending. Tasks 2/3/physical evidence handed to Cursor per usage constraint.
+- Cursor continued tasks 2 and 3 in this worktree. Session notes, invitations, camera controls and laptop alerts are implemented. Focused Node tests and SupportExchange plus NearbySupportIntegration tests passed. No physical walkthrough was run, so task 3's device check and task 4 stay open.

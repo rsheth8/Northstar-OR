@@ -21,27 +21,23 @@ User wants efficient completion with limited Codex usage. Continue in the integr
 5. Laptop `session.js` provides explicit Join/Leave session, current case/checklist, full recorded activity, saved-question replay and existing ack/reply before a call. It stores the snapshot before receipts, filters stale revisions within a connection, accepts the authoritative first snapshot after reconnect (including rollback after unsaved room changes), and disables old-case responses. `call.js` uses the session channel when current and retains the legacy WebRTC data channel fallback.
 6. RemoteSupportView shows the current room record and the same persisted support questions. It is not yet a complete redesigned rep station.
 
-## Still required, in priority order
+## Cursor continuation
 
-### A. Physical foundation walkthrough first
+Implemented in this worktree after `02d4b1c`. Page label is Shared session 5. Refresh the laptop page after restarting the server.
 
-Start the server from THIS checkout, join/share WITHOUT a call, record a fictional confirmation/deferral, verify late join and live updates, acknowledge/reply and verify room receipt. End a media call and verify further support exchange still works. Disconnect/rejoin and verify no duplicate question or wrong-case data. No claim that this new flow has been physically verified yet.
+- Session notes are a separate retained record from contextual questions. Stable IDs, drafts, receipts, and the same thread in Co-pilot, Remote Support, and the laptop. A failed save does not transmit. Replaying a note does not duplicate it. A note stays on its own case.
+- Either side can request a call. Accept, decline, cancel, and a 30-second expiry are on the session channel. Media starts only after acceptance. Ending a call leaves the session up. Leave ends both. An ended recording cannot start a call. If both request at once, the lower invitation ID remains.
+- Room camera off/on and front/back use the existing capturer. Mute is left alone. The laptop shows camera off when the room turns it off. Simulator and missing-camera states stay audio-only.
+- The joined laptop has Enable alerts, a persistent deferral/question banner, and one spoken line outside a call. A closed page is not notified. Voice commands stay unwired.
 
-### B. Durable multi-message chat
+## Still required
 
-Current exchange is multiple contextual questions, each with one acknowledgment and one reply. It is NOT arbitrary multi-message chat. Add session-scoped message IDs, actor/time/text, drafts and exact receipts with backward-compatible storage decoding/validation. Keep current contextual question snapshots and receipts; don't bolt on a second private record in a view. Project the same chronological thread in CoPilotSupportPanel, RemoteSupportView and laptop. Preserve text before sending and receiving before receipt; retry/deduplicate across reconnect.
+Physical walkthrough on Rahil's iPad and the laptop, on the same Wi-Fi. This has not been done for the foundation slice or for messages, invitations, camera, or alerts. Do not claim those device checks.
 
-### C. Call invitation lifecycle
-
-Currently still manual Join call on laptop + Start call on room. Add session-scoped unique invitation ID, request/accept/decline/cancel/timeout, simultaneous-request resolution and no stale acceptance. Request media permissions/start tracks only after acceptance. End call preserves shared session; Leave ends both. Ended recordings must not start calls. Session joining alone never requests media.
-
-### D. Essential camera controls
-
-Mute/unmute and local room preview already exist and the owner reported the prior media call working. Still missing: camera off/on and front/back switching. Extend NearbyCallController + NearbyCallEngine in `Services/NearbyCallSession.swift` and call sheet. Retain source/capturer/track (capturer delegate is weak); switch capture device rather than creating a second independent camera session. Stop capture when off; show remote off/unavailable state over session channel. Respect simulator/denied permission/missing devices and actual asynchronous capture result. Preserve microphone mute across switching. Two-way video is not requested: room camera goes to laptop, audio is two-way. Native audio route display/speaker option may be added if supported.
-
-### E. Alert/UI finish
-
-Optional explicit Enable alerts on joined laptop, persistent new-question/deferred-item banner, deduplicated short speech outside calls. No closed-page/push notification claims. Polish the shared record in Remote and the laptop station, preserving Focus. VoiceCommandService is NOT wired into UI; it changes AVAudioSession and is unsafe to turn on beside WebRTC without deliberate integration. Full hands-free recognition is deferred, not delivered.
+1. Restart `node RepPage/server.mjs` from this checkout. Refresh `http://localhost:8080/?session=5`.
+2. iPad: Call rep, Share current case. Laptop: Join session. Confirm progress appears with no microphone prompt.
+3. Send a message each way. Confirm one copy after refresh. Defer a line and confirm the laptop banner. Acknowledge and reply. End a call and send another message.
+4. Request a call from one side and accept on the other. Confirm audio both ways, mute, camera off/on, and flip. Decline and cancel once. Leave the session and confirm the call ends.
 
 ## Environment and current run instructions
 

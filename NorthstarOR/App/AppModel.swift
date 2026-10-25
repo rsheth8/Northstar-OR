@@ -76,6 +76,7 @@ final class AppModel {
         didSet { if oldValue != demoPost { stopNearbyLink() } }
     }
     private(set) var questions: [SupportQuestion] = []
+    private(set) var sessionNotes: [SessionNote] = []
     private(set) var linkState: NearbyLinkState = .idle
     private(set) var nearbyPeers: [NearbyPeer] = []
     private(set) var nearbyInvitation: NearbyPeer?
@@ -343,6 +344,15 @@ final class AppModel {
         return DraftKey(workspaceID: workspace.id, caseID: session.procedure.id,
             sessionID: session.identity.sessionID, kind: "supportQuestion")
     }
+    func noteDraftKey() throws -> DraftKey {
+        guard let workspace else { throw AppModelError.noWorkspace }
+        if demoPost == .room, let session = activeSession {
+            return DraftKey(workspaceID: workspace.id, caseID: session.procedure.id,
+                            sessionID: session.identity.sessionID, kind: "sessionNote")
+        }
+        guard let question = latestQuestion(for: nil) else { throw AppModelError.noActiveSession }
+        return DraftKey(workspaceID: workspace.id, caseID: nil, sessionID: nil, kind: "sessionNote:" + question.sessionID)
+    }
 
     @discardableResult
     func sendSupportQuestion(text: String, recipient: DeviceRep) throws -> SupportQuestion {
@@ -356,6 +366,32 @@ final class AppModel {
         publishSharedSession()
         try transmitSupport(.question(question))
         return questions.last { $0.id == question.id }!
+    }
+
+    @discardableResult
+    func sendSessionNote(text: String) throws -> SessionNote {
+        guard let workspace else { throw AppModelError.noWorkspace }
+        let origin: SupportOrigin
+        let actor = workspace.localParticipant
+        if demoPost == .room {
+            guard let session = activeSession else { throw AppModelError.noActiveSession }
+            origin = SupportOrigin(workspaceID: session.identity.workspaceID, caseID: session.identity.caseID, sessionID: session.identity.sessionID)
+        } else if let question = latestQuestion(for: nil) {
+            origin = question.origin
+        } else {
+            throw AppModelError.noActiveSession
+        }
+        let note = try SessionNote.make(id: UUID().uuidString, workspaceID: origin.workspaceID, caseID: origin.caseID,
+                                        sessionID: origin.sessionID, text: text, actor: actor, sentAt: clock())
+        sessionNotes.append(note)
+        try persist(snapshot())
+        publishSharedSession()
+        try transmitSupport(.note(note))
+        return sessionNotes.last { $0.id == note.id }!
+    }
+
+    func supportThread(sessionID: String) -> [SupportThreadEntry] {
+        SupportExchange.thread(questions: questions, notes: sessionNotes, sessionID: sessionID)
     }
 
     private func respondingActor(for question: SupportQuestion) throws -> LocalParticipant {
@@ -386,6 +422,11 @@ final class AppModel {
         if let envelope = questions[index].replyEnvelope { try transmitSupport(envelope) }
     }
     func retrySupportMessage(_ messageID: String) throws {
+        if let note = sessionNotes.first(where: { $0.messageID == messageID }) {
+            guard demoPost == .room || latestQuestion(for: nil)?.origin == note.origin else { throw AppModelError.foreignWorkspace }
+            try transmitSupport(.note(note))
+            return
+        }
         for question in questions {
             let candidates = [SupportEnvelope.question(question), question.acknowledgementEnvelope, question.replyEnvelope].compactMap { $0 }
             if let envelope = candidates.first(where: { $0.id == messageID }) {
@@ -399,20 +440,24 @@ final class AppModel {
         throw SupportExchangeError.unknownMessage
     }
     private func transmitSupport(_ envelope: SupportEnvelope) throws {
+        let current = SupportInbox(questions: questions, liveContext: supportContext, messages: sessionNotes)
         if linkState == .idle {
-            questions = try SupportExchange.markDelivery(messageID: envelope.id, delivery: .onThisDevice,
-                in: SupportInbox(questions: questions)).questions
+            let inbox = try SupportExchange.markDelivery(messageID: envelope.id, delivery: .onThisDevice, in: current)
+            questions = inbox.questions
+            sessionNotes = inbox.messages
             try persist(snapshot()); return
         }
-        var inbox = SupportInbox(questions: questions, liveContext: supportContext)
-        inbox = try SupportExchange.markDelivery(messageID: envelope.id, delivery: .waitingForPeer, in: inbox)
+        var inbox = try SupportExchange.markDelivery(messageID: envelope.id, delivery: .waitingForPeer, in: current)
         questions = inbox.questions
+        sessionNotes = inbox.messages
         try persist(snapshot())
         do {
             try sync.sendSupport(envelope)
         } catch {
-            questions = try SupportExchange.markDelivery(messageID: envelope.id, delivery: .failed,
-                in: SupportInbox(questions: questions)).questions
+            inbox = try SupportExchange.markDelivery(messageID: envelope.id, delivery: .failed,
+                in: SupportInbox(questions: questions, messages: sessionNotes))
+            questions = inbox.questions
+            sessionNotes = inbox.messages
             try? persist(snapshot())
             throw error
         }
@@ -422,10 +467,16 @@ final class AppModel {
         // Room accepts responses to its retained questions; Rep accepts self-contained briefs.
         if demoPost == .room, envelope.kind == .question || envelope.kind == .contextUpdate { return }
         if demoPost == .rep, envelope.kind == .questionAcknowledgement || envelope.kind == .reply { return }
-        let applied = SupportExchange.apply(envelope, to: SupportInbox(questions: questions, liveContext: supportContext), current: nil)
+        let activeOrigin = activeSession.map {
+            SupportOrigin(workspaceID: $0.identity.workspaceID, caseID: $0.identity.caseID, sessionID: $0.identity.sessionID)
+        }
+        let noteGate = demoPost == .room && envelope.kind == .note ? activeOrigin : nil
+        let applied = SupportExchange.apply(envelope, to: SupportInbox(questions: questions, liveContext: supportContext, messages: sessionNotes),
+                                            current: noteGate)
         guard applied.accepted else { return }
         questions = applied.inbox.questions
         supportContext = applied.inbox.liveContext
+        sessionNotes = applied.inbox.messages
         do { try persist(snapshot()) } catch { return }
         if envelope.kind != .receipt { publishSharedSession() }
         if applied.receiptForID != nil, envelope.kind != .contextUpdate, case .connected = linkState {
@@ -459,12 +510,116 @@ final class AppModel {
         sync.installNearby(transport); nearbyCall = transport as? NearbyCallController; bindNearby()
     }
     var isSharingSession: Bool { sync.nearby is SharedSessionTransport }
+    private(set) var callInvitation: CallInvitation?
+    private var sharedServer = ""
+    private var invitationTimer: Task<Void, Never>?
     func startSharedSession(server: String) {
         guard demoPost == .room, activeSession != nil else { return }
+        sharedServer = server
         let transport = SharedSessionTransport(server: server)
         transport.onRefresh = { [weak self] in self?.publishSharedSession() }
+        transport.onInvitation = { [weak self] in self?.receiveInvitation($0) }
         installNearbyTransport(transport)
         transport.start()
+    }
+    func requestCall() {
+        guard demoPost == .room, let session = activeSession else { return }
+        guard !session.isFinished else { nearbyError = "This recording has ended. A call cannot start."; return }
+        guard isSharingSession else { nearbyError = "Share the current case before requesting a call."; return }
+        guard callInvitation?.state != .requested, callInvitation?.state != .accepted else { return }
+        let identity = session.identity
+        let invitation = CallInvitation(id: UUID().uuidString,
+            origin: SupportOrigin(workspaceID: identity.workspaceID, caseID: identity.caseID, sessionID: identity.sessionID),
+            from: .room, state: .requested, sentAt: clock())
+        callInvitation = invitation
+        nearbyError = nil
+        sendInvitation(invitation)
+        armInvitationTimer(invitation)
+    }
+    func acceptInvitation() { respondToInvitation(accept: true) }
+    func declineInvitation() { respondToInvitation(accept: false) }
+    func cancelInvitation() {
+        guard var invitation = callInvitation, invitation.state == .requested, invitation.from == .room else { return }
+        invitation.state = .canceled
+        callInvitation = invitation
+        invitationTimer?.cancel()
+        sendInvitation(invitation)
+    }
+    private func respondToInvitation(accept: Bool) {
+        guard var invitation = callInvitation, invitation.state == .requested, invitation.from == .rep else { return }
+        guard accept else {
+            invitation.state = .declined
+            callInvitation = invitation
+            sendInvitation(invitation)
+            return
+        }
+        guard activeSession?.isFinished != true else {
+            invitation.state = .declined
+            callInvitation = invitation
+            nearbyError = "This recording has ended. A call cannot start."
+            sendInvitation(invitation)
+            return
+        }
+        invitation.state = .accepted
+        callInvitation = invitation
+        invitationTimer?.cancel()
+        sendInvitation(invitation)
+        startRepCall(server: sharedServer)
+    }
+    private func receiveInvitation(_ incoming: CallInvitation) {
+        guard demoPost == .room, let session = activeSession else { return }
+        let identity = session.identity
+        let origin = SupportOrigin(workspaceID: identity.workspaceID, caseID: identity.caseID, sessionID: identity.sessionID)
+        guard incoming.origin == origin else { return }
+        if let current = callInvitation, current.state == .requested, incoming.state == .requested, current.id != incoming.id {
+            if incoming.id < current.id {
+                var canceled = current
+                canceled.state = .canceled
+                sendInvitation(canceled)
+                callInvitation = incoming
+            } else {
+                var declined = incoming
+                declined.state = .declined
+                sendInvitation(declined)
+            }
+            return
+        }
+        switch incoming.state {
+        case .requested:
+            guard !session.isFinished, callInvitation?.state != .accepted else {
+                var declined = incoming
+                declined.state = .declined
+                sendInvitation(declined)
+                return
+            }
+            callInvitation = incoming
+            armInvitationTimer(incoming)
+        case .accepted:
+            guard callInvitation?.id == incoming.id, callInvitation?.state == .requested else { return }
+            callInvitation?.state = .accepted
+            invitationTimer?.cancel()
+            startRepCall(server: sharedServer)
+        case .declined, .canceled, .expired:
+            guard callInvitation?.id == incoming.id else { return }
+            callInvitation?.state = incoming.state
+            invitationTimer?.cancel()
+        }
+    }
+    private func sendInvitation(_ invitation: CallInvitation) {
+        guard let transport = sync.nearby as? SharedSessionTransport else { return }
+        do { try transport.sendInvitation(invitation) } catch { nearbyError = "The call request was not sent. Share the case and try again." }
+    }
+    private func armInvitationTimer(_ invitation: CallInvitation) {
+        invitationTimer?.cancel()
+        let id = invitation.id
+        invitationTimer = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(30))
+            guard let self, self.callInvitation?.id == id, self.callInvitation?.state == .requested else { return }
+            var expired = invitation
+            expired.state = .expired
+            self.callInvitation = expired
+            self.sendInvitation(expired)
+        }
     }
     private func publishSharedSession() {
         guard demoPost == .room, let transport = sync.nearby as? SharedSessionTransport,
@@ -473,10 +628,14 @@ final class AppModel {
         let origin = SupportOrigin(workspaceID: identity.workspaceID, caseID: identity.caseID, sessionID: identity.sessionID)
         let snapshot = SharedSessionSnapshot(origin: origin, context: context,
             recordingSummary: session.recordingSummary, saved: saveError == nil,
-            questions: saveError == nil ? questions.filter { $0.origin == origin } : [])
+            questions: saveError == nil ? questions.filter { $0.origin == origin } : [],
+            messages: saveError == nil ? sessionNotes.filter { $0.origin == origin } : [])
         do { try transport.publish(snapshot) } catch { nearbyError = error.localizedDescription }
     }
-    func endRepCall() { nearbyCall?.stop() }
+    func endRepCall() {
+        nearbyCall?.stop()
+        if callInvitation?.state == .accepted { callInvitation = nil }
+    }
     func startRepCall(server: String) {
         guard demoPost == .room else { return }
         let call = NearbyCallController(signalingURL: server)
@@ -488,7 +647,11 @@ final class AppModel {
         call.start()
     }
     func startNearbyLink() { installNearbyTransport(MultipeerNearbyTransport(role: demoPost)); sync.nearby.start() }
-    func stopNearbyLink() { nearbyCall?.stop(); sync.nearby.stop(); linkState = .idle; refreshNearbyDiscovery() }
+    func stopNearbyLink() {
+        invitationTimer?.cancel()
+        callInvitation = nil
+        nearbyCall?.stop(); sync.nearby.stop(); linkState = .idle; refreshNearbyDiscovery()
+    }
     func inviteNearby(_ id: String) throws { try sync.nearby.invite(id) }
     func answerNearbyInvitation(accept: Bool) { sync.nearby.respondToInvitation(accept: accept) }
 
@@ -526,6 +689,7 @@ final class AppModel {
         retainedSessions = []
         drafts = []
         questions = []
+        sessionNotes = []
         supportContext = [:]
         unreadableSessionCaseIDs = []
         saveError = nil
@@ -538,6 +702,7 @@ final class AppModel {
         forecasts = snapshot.forecasts
         drafts = snapshot.drafts
         questions = snapshot.supportQuestions
+        sessionNotes = snapshot.sessionNotes
         // The latest run per case is live; anything else is retained unchanged.
         var visitedCases = Set<String>()
         for stored in snapshot.sessions.sorted(by: Self.sessionOrder).reversed() {
@@ -572,7 +737,8 @@ final class AppModel {
                                  cases: cases ?? self.cases,
                                  sessions: (retainedSessions + live).sorted(by: Self.sessionOrder),
                                  drafts: drafts.sorted { ($0.updatedAt, $0.key.kind) < ($1.updatedAt, $1.key.kind) },
-                                 activeCaseID: activeCaseID ?? self.activeCaseID, supportQuestions: questions)
+                                 activeCaseID: activeCaseID ?? self.activeCaseID, supportQuestions: questions,
+                                 sessionNotes: sessionNotes)
     }
 
     /// Saves before the caller commits its change. On failure sets a persistent `saveError`.

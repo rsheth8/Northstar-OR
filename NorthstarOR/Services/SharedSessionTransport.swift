@@ -7,12 +7,39 @@ struct SharedSessionSnapshot: Codable {
     let recordingSummary: String
     let saved: Bool
     let questions: [SupportQuestion]
+    var messages: [SessionNote] = []
+
+    private enum CodingKeys: String, CodingKey { case origin, context, recordingSummary, saved, questions, messages }
+    init(origin: SupportOrigin, context: SupportContextSnapshot, recordingSummary: String, saved: Bool, questions: [SupportQuestion], messages: [SessionNote] = []) {
+        self.origin = origin; self.context = context; self.recordingSummary = recordingSummary
+        self.saved = saved; self.questions = questions; self.messages = messages
+    }
+    init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        origin = try values.decode(SupportOrigin.self, forKey: .origin)
+        context = try values.decode(SupportContextSnapshot.self, forKey: .context)
+        recordingSummary = try values.decode(String.self, forKey: .recordingSummary)
+        saved = try values.decode(Bool.self, forKey: .saved)
+        questions = try values.decodeIfPresent([SupportQuestion].self, forKey: .questions) ?? []
+        messages = try values.decodeIfPresent([SessionNote].self, forKey: .messages) ?? []
+    }
+}
+
+struct CallInvitation: Codable, Equatable, Identifiable {
+    enum State: String, Codable { case requested, accepted, declined, canceled, expired }
+    enum Side: String, Codable { case room, rep }
+    let id: String
+    let origin: SupportOrigin
+    let from: Side
+    var state: State
+    let sentAt: Date
 }
 
 private struct SharedSessionFrame: Codable {
     let type: String
     var snapshot: SharedSessionSnapshot? = nil
     var envelope: SupportEnvelope? = nil
+    var invitation: CallInvitation? = nil
 }
 
 /// Same-Wi-Fi data channel, independent of the WebRTC microphone/camera lifetime.
@@ -24,6 +51,7 @@ final class SharedSessionTransport: NearbyTransport {
     var onLinkState: ((NearbyLinkState) -> Void)?
     var onDiscoveryChange: (() -> Void)?
     var onRefresh: (() -> Void)?
+    var onInvitation: ((CallInvitation) -> Void)?
     private let server: String
     private var session: URLSession?
     private var socket: URLSessionWebSocketTask?
@@ -66,6 +94,8 @@ final class SharedSessionTransport: NearbyTransport {
                     case "snapshot-request": self.onRefresh?()
                     case "support-envelope":
                         if let envelope = frame.envelope { self.onEnvelope?(envelope) }
+                    case "call-invitation":
+                        if let invitation = frame.invitation { self.onInvitation?(invitation) }
                     case "peer-left": self.setLink(.disconnected)
                     case "busy": self.fail("Another room is sharing. Stop that session first."); return
                     default: break
@@ -87,6 +117,10 @@ final class SharedSessionTransport: NearbyTransport {
     func send(_ envelope: SupportEnvelope) throws {
         guard case .connected = linkState else { throw NearbyTransportError.notConnected }
         try sendFrame(.init(type: "support-envelope", envelope: envelope))
+    }
+    func sendInvitation(_ invitation: CallInvitation) throws {
+        guard case .connected = linkState else { throw NearbyTransportError.notConnected }
+        try sendFrame(.init(type: "call-invitation", invitation: invitation))
     }
     func publish(_ snapshot: SharedSessionSnapshot) throws {
         guard case .connected = linkState else { return }

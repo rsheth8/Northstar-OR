@@ -23,7 +23,7 @@
 <body>
   <main>
     <h1>Northstar remote support</h1>
-    <p class="note">Shared session 4 · same-Wi-Fi case feed and optional call</p>
+    <p class="note">Shared session 5 · messages, call requests, and room camera controls</p>
     <section>
       <h2>Room session</h2>
       <p id="session-status" role="status">Not joined</p>
@@ -33,9 +33,23 @@
       <p id="session-summary"></p>
       <ul id="session-lines"></ul>
       <details><summary>Full recorded activity</summary><ol id="session-events"></ol></details>
+      <p id="session-alert" class="status" hidden></p>
+      <button id="session-alerts" class="secondary" type="button">Enable alerts</button>
+      <h3>Case messages</h3>
+      <ol id="session-thread"></ol>
+      <label>Message
+        <textarea id="session-note"></textarea>
+      </label>
+      <button id="session-note-send" type="button">Send message</button>
+      <p id="session-note-status" class="note" role="status"></p>
     </section>
     <h2>Optional call</h2>
-    <p class="note">Join the session above for case updates and support questions. Join call separately when the room is calling.</p>
+    <p id="invitation-status" class="status">No call requested</p>
+    <button id="invitation-request" type="button">Request call</button>
+    <button id="invitation-accept" type="button" hidden>Accept call</button>
+    <button id="invitation-decline" class="secondary" type="button" hidden>Decline call</button>
+    <button id="invitation-cancel" class="secondary" type="button" hidden>Cancel request</button>
+    <p class="note">Joining the session does not use the microphone or camera. A call starts only after someone accepts a request.</p>
     <p id="status" class="status" role="status">Join to allow your microphone</p>
     <button id="join" type="button">Join call</button>
     <button id="end" class="secondary" type="button" disabled>End call</button>
@@ -62,7 +76,7 @@
     <p id="delivery" role="status"></p>
     <button id="send" type="button" disabled>Send reply</button>
   </main>
-  <script type="module" src="/call.js?v=session-4"></script>
-  <script type="module" src="/session.js?v=session-4"></script>
+  <script type="module" src="/call.js?v=session-5"></script>
+  <script type="module" src="/session.js?v=session-5"></script>
 </body>
 </html>

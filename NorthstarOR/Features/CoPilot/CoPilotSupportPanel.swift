@@ -89,6 +89,8 @@ struct CoPilotSupportPanel: View {
             }
             if let error { NorthstarBanner(tone: .failure, title: "Question kept", message: error) }
             Divider()
+            SupportThreadView(entries: model.supportThread(sessionID: session.identity.sessionID))
+            if model.demoPost == .room { SessionNoteComposer() }
             Text("A reply does not confirm a checklist item.").font(Northstar.Fonts.supporting).foregroundStyle(Northstar.Palette.inkMuted)
         }
         .foregroundStyle(Northstar.Palette.ink)

@@ -31,10 +31,14 @@ struct NearbyCallView: View {
                         Button("Stop sharing and end call", action: model.stopNearbyLink)
                             .buttonStyle(NorthstarSecondaryButtonStyle())
                     }
-                    Button(model.nearbyCall == nil || model.linkState == .idle ? "Start call" : "Restart call") {
-                        model.startRepCall(server: server.trimmingCharacters(in: .whitespacesAndNewlines))
+                    if model.isSharingSession {
+                        invitationControls
+                    } else {
+                        Button(model.nearbyCall == nil || model.linkState == .idle ? "Start call" : "Restart call") {
+                            model.startRepCall(server: server.trimmingCharacters(in: .whitespacesAndNewlines))
+                        }
+                        .buttonStyle(NorthstarPrimaryButtonStyle(tone: .standard)).accessibilityIdentifier("start-call")
                     }
-                    .buttonStyle(NorthstarPrimaryButtonStyle(tone: .standard)).accessibilityIdentifier("start-call")
                     Divider()
                     if let session = model.activeSession {
                         CoPilotSupportPanel(session: session)
@@ -87,6 +91,54 @@ private struct CallStatusControls: View {
                 .accessibilityIdentifier("call-mute")
                 Button("End call", action: end).buttonStyle(NorthstarSecondaryButtonStyle())
             }
+            HStack(spacing: Northstar.Space.s3) {
+                Button(call.cameraEnabled ? "Turn camera off" : "Turn camera on") { call.setCameraEnabled(!call.cameraEnabled) }
+                    .buttonStyle(NorthstarSecondaryButtonStyle())
+                    .disabled(call.status != "In call" || call.cameraStatus.contains("unavailable") || call.cameraStatus.contains("access is off"))
+                    .accessibilityIdentifier("call-camera-enabled")
+                Button("Flip camera") { call.switchCamera() }
+                    .buttonStyle(NorthstarSecondaryButtonStyle())
+                    .disabled(!call.canSwitchCamera || !call.cameraEnabled)
+                    .accessibilityIdentifier("call-camera-flip")
+            }
+        }
+    }
+}
+
+private extension NearbyCallView {
+    @ViewBuilder var invitationControls: some View {
+        let invitation = model.callInvitation
+        let ended = model.activeSession?.isFinished == true
+        Text(invitationLabel).font(Northstar.Fonts.bodyStrong)
+        if invitation?.state == .requested, invitation?.from == .rep {
+            Button("Accept call") { model.acceptInvitation() }
+                .buttonStyle(NorthstarPrimaryButtonStyle(tone: .standard))
+                .disabled(ended)
+            Button("Decline call") { model.declineInvitation() }
+                .buttonStyle(NorthstarSecondaryButtonStyle())
+        } else if invitation?.state == .requested {
+            Button("Cancel call request") { model.cancelInvitation() }
+                .buttonStyle(NorthstarSecondaryButtonStyle())
+        } else {
+            Button("Request call") { model.requestCall() }
+                .buttonStyle(NorthstarPrimaryButtonStyle(tone: .standard))
+                .disabled(ended)
+                .accessibilityIdentifier("request-call")
+        }
+        if ended {
+            Text("This recording has ended. A call cannot start.")
+                .font(Northstar.Fonts.supporting).foregroundStyle(Northstar.Palette.inkMuted)
+        }
+    }
+    var invitationLabel: String {
+        switch model.callInvitation?.state {
+        case .requested where model.callInvitation?.from == .rep: "Incoming call from the rep"
+        case .requested: "Calling the rep"
+        case .accepted: "Call accepted"
+        case .declined: "Call declined"
+        case .canceled: "Call canceled"
+        case .expired: "Call request expired"
+        case nil: "No call requested"
         }
     }
 }

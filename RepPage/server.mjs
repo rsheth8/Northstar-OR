@@ -98,9 +98,14 @@ function receive(client, text) {
   let message
   try { message = JSON.parse(text) } catch { return }
   if (client.sessionChannel) {
-    if (!['session-snapshot', 'support-envelope', 'snapshot-request'].includes(message.type)) return
+    if (!['session-snapshot', 'support-envelope', 'snapshot-request', 'call-invitation'].includes(message.type)) return
     if (message.type === 'session-snapshot' && client.role !== 'room') return
     const other = peers.get(client.pairKey(client.role === 'room' ? 'rep' : 'room'))
+    if (other) write(other.socket, text)
+    return
+  }
+  if (message.type === 'camera') {
+    const other = peers.get(client.role === 'room' ? 'rep' : 'room')
     if (other) write(other.socket, text)
     return
   }

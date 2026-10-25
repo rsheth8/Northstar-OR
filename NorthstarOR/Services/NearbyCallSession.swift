@@ -9,6 +9,9 @@ final class NearbyCallController: ObservableObject, NearbyTransport {
     @Published private(set) var status = "Call ended"
     @Published private(set) var muted = false
     @Published private(set) var cameraStatus = "Camera off"
+    @Published private(set) var cameraEnabled = false
+    @Published private(set) var cameraFacing = "back"
+    @Published private(set) var canSwitchCamera = false
     @Published private(set) var localVideoTrack: RTCVideoTrack?
     private(set) var linkState: NearbyLinkState = .idle
     var onEnvelope: ((SupportEnvelope) -> Void)?
@@ -58,6 +61,12 @@ final class NearbyCallController: ObservableObject, NearbyTransport {
                 guard let self, self.generation == run else { return }
                 self.localVideoTrack = track
             }
+            engine.onCameraControl = { [weak self] enabled, facing, canSwitch in
+                guard let self, self.generation == run else { return }
+                self.cameraEnabled = enabled
+                self.cameraFacing = facing
+                self.canSwitchCamera = canSwitch
+            }
             engine.start(url: url, camera: camera)
             engine.setMuted(muted)
         }
@@ -67,9 +76,12 @@ final class NearbyCallController: ObservableObject, NearbyTransport {
         generation = UUID()
         engine?.stop(); engine = nil; localVideoTrack = nil
         status = "Call ended"; muted = false; cameraStatus = "Camera off"
+        cameraEnabled = false; cameraFacing = "back"; canSwitchCamera = false
         setLink(.idle)
     }
     func setMuted(_ value: Bool) { muted = value; engine?.setMuted(value) }
+    func setCameraEnabled(_ value: Bool) { engine?.setCameraEnabled(value) }
+    func switchCamera() { engine?.switchCamera() }
     func send(_ envelope: SupportEnvelope) throws {
         guard case .connected = linkState, let engine else { throw NearbyTransportError.notConnected }
         try engine.send(envelope)
@@ -86,6 +98,7 @@ private final class NearbyCallEngine: NSObject, URLSessionWebSocketDelegate, RTC
     var onEnvelope: ((SupportEnvelope) -> Void)?
     var onCameraState: ((String) -> Void)?
     var onLocalVideoTrack: ((RTCVideoTrack?) -> Void)?
+    var onCameraControl: ((Bool, String, Bool) -> Void)?
     private static let factory: RTCPeerConnectionFactory = {
         RTCInitializeSSL()
         return RTCPeerConnectionFactory()
@@ -99,6 +112,8 @@ private final class NearbyCallEngine: NSObject, URLSessionWebSocketDelegate, RTC
     private var videoTrack: RTCVideoTrack?
     // RTCVideoCapturer.delegate is weak; retain the actual delegate wrapper.
     private var videoSource: RTCVideoSource?
+    private var cameraFacing: AVCaptureDevice.Position = .back
+    private var cameraEnabled = false
     private var remoteDescriptionSet = false
     private var pendingCandidates: [RTCIceCandidate] = []
     private var connected = false
@@ -136,7 +151,8 @@ private final class NearbyCallEngine: NSObject, URLSessionWebSocketDelegate, RTC
             videoTrack = video
             peer.add(video, streamIds: ["northstar"])
             onLocalVideoTrack?(video)
-            startCamera(capture)
+            cameraEnabled = true
+            startCamera(capture, position: .back)
         }
         let channelConfig = RTCDataChannelConfiguration()
         channelConfig.isOrdered = true
@@ -173,6 +189,31 @@ private final class NearbyCallEngine: NSObject, URLSessionWebSocketDelegate, RTC
         audio.unlockForConfiguration()
     }
     func setMuted(_ value: Bool) { audioTrack?.isEnabled = !value }
+    func setCameraEnabled(_ enabled: Bool) {
+        guard let camera = capturer, let track = videoTrack else {
+            reportCamera(enabled: false, status: "Camera unavailable · audio only")
+            return
+        }
+        cameraEnabled = enabled
+        track.isEnabled = enabled
+        if enabled {
+            startCamera(camera, position: cameraFacing)
+        } else {
+            camera.stopCapture()
+            onLocalVideoTrack?(nil)
+            reportCamera(enabled: false, status: "Camera off · microphone can stay on")
+        }
+    }
+    func switchCamera() {
+        let next: AVCaptureDevice.Position = cameraFacing == .back ? .front : .back
+        guard cameraEnabled, let camera = capturer, let track = videoTrack, track.isEnabled,
+              RTCCameraVideoCapturer.captureDevices().contains(where: { $0.position == next }) else {
+            reportCamera(enabled: cameraEnabled, status: cameraEnabled ? "Only one camera is available" : "Camera off · microphone can stay on")
+            return
+        }
+        cameraFacing = next
+        startCamera(camera, position: next)
+    }
     func send(_ envelope: SupportEnvelope) throws {
         guard let channel = dataChannel, channel.readyState == .open else { throw NearbyTransportError.notConnected }
         let data = try JSONEncoder().encode(envelope)
@@ -184,22 +225,41 @@ private final class NearbyCallEngine: NSObject, URLSessionWebSocketDelegate, RTC
     private func updateConnected() {
         if connected, dataChannel?.readyState == .open { timeout?.cancel(); onStatus?("In call") }
     }
-    private func startCamera(_ camera: RTCCameraVideoCapturer) {
-        guard let device = RTCCameraVideoCapturer.captureDevices().first(where: { $0.position == .back })
-                ?? RTCCameraVideoCapturer.captureDevices().first,
+    private func startCamera(_ camera: RTCCameraVideoCapturer, position: AVCaptureDevice.Position) {
+        let devices = RTCCameraVideoCapturer.captureDevices()
+        guard let device = devices.first(where: { $0.position == position }) ?? devices.first,
               let format = RTCCameraVideoCapturer.supportedFormats(for: device).min(by: {
                   let a = CMVideoFormatDescriptionGetDimensions($0.formatDescription)
                   let b = CMVideoFormatDescriptionGetDimensions($1.formatDescription)
                   return abs(Int(a.width) - 640) + abs(Int(a.height) - 480) < abs(Int(b.width) - 640) + abs(Int(b.height) - 480)
-              }) else { onCameraState?("Camera unavailable · audio only"); return }
+              }) else {
+            reportCamera(enabled: false, status: "Camera unavailable · audio only")
+            return
+        }
+        cameraFacing = device.position
         let fps = max(1, min(24, Int(format.videoSupportedFrameRateRanges.map(\.maxFrameRate).max() ?? 24)))
         camera.startCapture(with: device, format: format, fps: fps) { [weak self] error in
             DispatchQueue.main.async {
                 guard let self, self.capturer === camera else { return }
-                self.onCameraState?(error == nil ? "Room camera on · video is not saved" : "Camera unavailable · audio only")
-                if error != nil { self.onLocalVideoTrack?(nil) }
+                if error != nil {
+                    self.cameraEnabled = false
+                    self.videoTrack?.isEnabled = false
+                    self.onLocalVideoTrack?(nil)
+                    self.reportCamera(enabled: false, status: "Camera unavailable · audio only")
+                } else {
+                    let front = device.position == .front
+                    self.onLocalVideoTrack?(self.videoTrack)
+                    self.reportCamera(enabled: true, status: front ? "Front camera on · video is not saved" : "Room camera on · video is not saved")
+                }
             }
         }
+    }
+    private func reportCamera(enabled: Bool, status: String) {
+        onCameraState?(status)
+        let facing = cameraFacing == .front ? "front" : "back"
+        let canSwitch = Set(RTCCameraVideoCapturer.captureDevices().map(\.position)).count > 1
+        onCameraControl?(enabled, facing, canSwitch)
+        signal(["type": "camera", "enabled": enabled, "facing": facing])
     }
     private func makeOffer(_ peer: RTCPeerConnection) {
         peer.offer(for: RTCMediaConstraints(mandatoryConstraints: ["OfferToReceiveAudio": "true", "OfferToReceiveVideo": "false"], optionalConstraints: nil)) { [weak self] sdp, error in

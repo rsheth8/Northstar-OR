@@ -70,9 +70,11 @@ final class NearbySupportIntegrationTests: XCTestCase {
         let data = try JSONEncoder().encode(WorkspaceSnapshot(workspace: model.workspace))
         var json = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
         json.removeValue(forKey: "supportQuestions")
+        json.removeValue(forKey: "sessionNotes")
         let restored = AppModel(store: InMemoryWorkspaceStore(data: try JSONSerialization.data(withJSONObject: json)))
         XCTAssertEqual(restored.loadState, .ready)
         XCTAssertTrue(restored.questions.isEmpty)
+        XCTAssertTrue(restored.sessionNotes.isEmpty)
     }
 
     func testSaveFailureKeepsQuestionAndDraftWithoutTransmittingUntilRetry() throws {
@@ -138,6 +140,29 @@ final class NearbySupportIntegrationTests: XCTestCase {
         XCTAssertNil(room.latestQuestion(for: second.identity.sessionID))
         XCTAssertTrue(room.activeSession === second)
         XCTAssertEqual(first.recordingState?.itemStatuses[pending.itemID], .deferred)
+    }
+
+    func testSessionNotesStayOnTheirCaseAndFailedSaveSendsNoReceipt() throws {
+        let a = PairTransport(), b = PairTransport(); a.other = b; b.other = a
+        let store = InMemoryWorkspaceStore()
+        let room = AppModel(sync: LocalSyncService(nearby: a), store: store)
+        let rep = AppModel(sync: LocalSyncService(nearby: b), post: .rep)
+        try room.loadSampleWorkspace(); try rep.loadSampleWorkspace()
+        let first = try room.startOrResume(caseID: SampleData.Record.northShoreCase.rawValue)
+        let note = try room.sendSessionNote(text: "Fictional update for this case")
+        XCTAssertEqual(rep.sessionNotes.map(\.id), [note.id])
+        XCTAssertEqual(room.sessionNotes[0].delivery, .receivedByPeer)
+        XCTAssertEqual(rep.supportThread(sessionID: first.identity.sessionID).map(\.text), ["Fictional update for this case"])
+        try a.send(.note(note))
+        XCTAssertEqual(rep.sessionNotes.count, 1)
+        let other = try XCTUnwrap(room.cases.first { $0.id != first.procedure.id && FictionalCoordinationTemplate.template.supports($0) })
+        let second = try room.startOrResume(caseID: other.id)
+        XCTAssertTrue(room.supportThread(sessionID: second.identity.sessionID).filter { $0.text == note.text }.isEmpty)
+        XCTAssertEqual(room.supportThread(sessionID: first.identity.sessionID).map(\.text), [note.text])
+        store.failWrites = true
+        XCTAssertThrowsError(try room.sendSessionNote(text: "Unsaved update"))
+        XCTAssertEqual(rep.sessionNotes.count, 1)
+        XCTAssertNotNil(room.saveError)
     }
 }
 

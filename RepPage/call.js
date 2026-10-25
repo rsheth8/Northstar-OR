@@ -1,6 +1,6 @@
 const $ = id => document.getElementById(id)
 const status = $('status'), video = $('remote'), roomAudio = $('room-audio'), select = $('questions')
-let pc, ws, channel, stream, audioTimer, run = 0
+let pc, ws, channel, stream, audioTimer, run = 0, roomCameraOff = false
 let records
 try { records = JSON.parse(sessionStorage.getItem('northstar-call') || '{}') } catch { records = {} }
 const now = () => Date.now() / 1000 - 978307200 // Swift Date's reference epoch.
@@ -81,8 +81,10 @@ $('send').onclick = () => {
   catch (error) { status.textContent = error.message }
 }
 function end(message = 'Call ended. Saved questions remain on this laptop tab.') {
+  const wasLive = pc != null
   run++
   clearInterval(audioTimer); audioTimer = null
+  roomCameraOff = false
   $('audio-status').textContent = 'Room audio: not connected'
   $('video-status').textContent = 'Room camera: not connected'
   const old = pc; pc = null; channel = null; old?.close()
@@ -92,6 +94,7 @@ function end(message = 'Call ended. Saved questions remain on this laptop tab.')
   $('mute').disabled = true; $('mute').textContent = 'Mute microphone'; $('mute').setAttribute('aria-pressed', 'false');
   $('mic-status').textContent = 'Laptop microphone: off'; $('end').disabled = true; $('join').disabled = false; $('play').hidden = true
   status.textContent = message; render()
+  if (wasLive && typeof Event === 'function' && window.dispatchEvent) window.dispatchEvent(new Event('northstar-call-ended'))
 }
 $('end').onclick = () => end()
 $('mute').onclick = () => {
@@ -104,7 +107,7 @@ $('mute').onclick = () => {
   $('mic-status').textContent = 'Laptop microphone: ' + (muted ? 'muted for this call' : 'on for this call')
 }
 $('play').onclick = () => roomAudio.play().then(() => { $('play').hidden = true }).catch(() => { status.textContent = 'Room audio could not play. Check the laptop output.' })
-$('join').onclick = async () => {
+async function join() {
   end(); const generation = run
   if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
     status.textContent = 'Open http://localhost:8080 on the server laptop to allow the microphone.'; return
@@ -123,8 +126,11 @@ $('join').onclick = async () => {
       try {
         const stats = await peer.getStats()
         if (pc !== peer) return
-        const picture = [...stats.values()].find(report => report.type === 'inbound-rtp' && (report.kind === 'video' || report.mediaType === 'video'))
-        $('video-status').textContent = 'Room camera: ' + (!picture?.packetsReceived ? 'Waiting for iPad video' : picture.framesDecoded > 0 ? 'Video frames decoded on laptop' : 'Video packets arriving; waiting for a decoded frame')
+        if (roomCameraOff) $('video-status').textContent = 'Room camera: off'
+        else {
+          const picture = [...stats.values()].find(report => report.type === 'inbound-rtp' && (report.kind === 'video' || report.mediaType === 'video'))
+          $('video-status').textContent = 'Room camera: ' + (!picture?.packetsReceived ? 'Waiting for iPad video' : picture.framesDecoded > 0 ? 'Video frames decoded on laptop' : 'Video packets arriving; waiting for a decoded frame')
+        }
         const inbound = [...stats.values()].find(report => report.type === 'inbound-rtp' && (report.kind === 'audio' || report.mediaType === 'audio'))
         const track = peer.getReceivers().find(receiver => receiver.track?.kind === 'audio')?.track
         let detail
@@ -184,6 +190,9 @@ $('join').onclick = async () => {
         } else if (message.type === 'candidate') {
           const candidate = { candidate: message.candidate, sdpMid: message.sdpMid, sdpMLineIndex: message.sdpMLineIndex }
           if (ready) await peer.addIceCandidate(candidate); else pending.push(candidate)
+        } else if (message.type === 'camera') {
+          roomCameraOff = message.enabled === false
+          $('video-status').textContent = roomCameraOff ? 'Room camera: off' : `Room camera: ${message.facing === 'front' ? 'front' : 'back'} camera on`
         } else if (message.type === 'peer-left') end('Room ended the call. Join again for the next call.')
         else if (message.type === 'busy') end('Another rep page is connected. End that call first.')
       }).catch(error => { if (pc === peer) end(`Could not connect: ${error.message}`) })
@@ -201,6 +210,13 @@ window.northstarRestoreResponse = q => {
   if (q.acknowledgement) { record.ack = { id: q.acknowledgement.id, kind: 'questionAcknowledgement', origin: record.envelope.origin, questionID: q.id, sentAt: q.acknowledgement.at, acknowledgement: q.acknowledgement }; record.ackReceived = true }
   if (q.reply) { record.reply = { id: q.reply.id, kind: 'reply', origin: record.envelope.origin, questionID: q.id, sentAt: q.reply.at, reply: q.reply }; record.replyReceived = true }
   save(); render()
+}
+$('join').onclick = () => join()
+window.northstarStartMedia = () => join()
+window.northstarCallActive = () => pc?.connectionState === 'connected'
+window.northstarRoomCamera = (enabled, facing) => {
+  roomCameraOff = enabled === false
+  $('video-status').textContent = roomCameraOff ? 'Room camera: off' : `Room camera: ${facing === 'front' ? 'front' : 'back'} camera on`
 }
 window.northstarReceiveSupport = receive
 window.addEventListener('northstar-session', render)

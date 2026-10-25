@@ -180,4 +180,34 @@ final class SupportExchangeTests: XCTestCase {
         XCTAssertEqual(advanced.inbox.questions[0].replyText, "Retained fictional reply")
     }
 
+    func testSessionNoteReplayDoesNotDuplicateAndAnotherCaseIsRejected() throws {
+        let note = try SessionNote.make(id: "n", workspaceID: "origin", caseID: "case", sessionID: "run",
+                                        text: " Fictional update ", actor: actor, sentAt: time)
+        XCTAssertThrowsError(try SessionNote.make(id: "n", workspaceID: "origin", caseID: "case", sessionID: "run",
+                                                  text: " ", actor: actor, sentAt: time))
+        let first = SupportExchange.apply(.note(note), to: SupportInbox(), current: note.origin)
+        XCTAssertTrue(first.accepted)
+        XCTAssertEqual(first.receiptForID, note.messageID)
+        XCTAssertEqual(first.inbox.messages.count, 1)
+        XCTAssertEqual(first.inbox.messages[0].text, "Fictional update")
+        let replay = SupportExchange.apply(.note(note), to: first.inbox, current: note.origin)
+        XCTAssertTrue(replay.accepted)
+        XCTAssertEqual(replay.inbox.messages.count, 1)
+        let other = SupportOrigin(workspaceID: "origin", caseID: "case", sessionID: "other")
+        let migrated = SupportExchange.apply(.note(note), to: SupportInbox(), current: other)
+        XCTAssertFalse(migrated.accepted)
+        XCTAssertTrue(migrated.inbox.messages.isEmpty)
+        var waiting = try SupportExchange.markDelivery(messageID: note.messageID, delivery: .waitingForPeer, in: first.inbox)
+        let receipt = SupportExchange.apply(.receipt(for: .note(note)), to: waiting, current: other)
+        XCTAssertTrue(receipt.accepted)
+        XCTAssertNil(receipt.receiptForID)
+        XCTAssertEqual(receipt.inbox.messages[0].delivery, .receivedByPeer)
+        XCTAssertEqual(receipt.inbox.messages.count, 1)
+        let conflict = try SessionNote.make(id: "n", workspaceID: "origin", caseID: "case", sessionID: "run",
+                                            text: "Different text", actor: actor, sentAt: time)
+        XCTAssertFalse(SupportExchange.apply(.note(conflict), to: receipt.inbox, current: nil).accepted)
+        let thread = SupportExchange.thread(questions: [try question()], notes: receipt.inbox.messages, sessionID: "run")
+        XCTAssertEqual(thread.map(\.id), [try question().messageID, note.messageID])
+    }
+
 }

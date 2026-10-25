@@ -27,6 +27,11 @@ struct RemoteSupportView: View {
                     }
                     if let current { SupportBriefView(question: current).id(current.id) }
                     else { ContentUnavailableView("No question from the team yet", systemImage: "headphones", description: Text(model.demoPost == .rep ? "Look for the room iPad to receive its self-contained request brief." : "Request support from the current Co-pilot item, including while an acknowledgment is pending.")) }
+                    if let sessionID = current?.sessionID ?? (model.demoPost == .room ? model.activeSession?.identity.sessionID : nil) {
+                        Divider()
+                        SupportThreadView(entries: model.supportThread(sessionID: sessionID))
+                        SessionNoteComposer()
+                    }
                 }.padding(Northstar.Space.s6).frame(maxWidth: 1000, alignment: .leading).frame(maxWidth: .infinity)
             }.background(Northstar.Palette.bgRaised)
             .navigationTitle("Remote Support").navigationBarTitleDisplayMode(.inline)

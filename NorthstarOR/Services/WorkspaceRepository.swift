@@ -37,6 +37,8 @@ struct WorkspaceSnapshot: Hashable, Codable {
     /// The case whose session was active when last saved. Must have a stored session.
     var activeCaseID: String? = nil
     var supportQuestions: [SupportQuestion] = []
+    /// Plain session messages. Questions stay in `supportQuestions`.
+    var sessionNotes: [SessionNote] = []
 
     static let empty = WorkspaceSnapshot()
 
@@ -44,7 +46,7 @@ struct WorkspaceSnapshot: Hashable, Codable {
     func validate() throws {
         guard formatVersion == Self.supportedFormatVersion else { throw invalid("unsupported format version \(formatVersion)") }
         guard let workspace else {
-            guard forecasts.isEmpty, cases.isEmpty, sessions.isEmpty, drafts.isEmpty, supportQuestions.isEmpty, activeCaseID == nil else {
+            guard forecasts.isEmpty, cases.isEmpty, sessions.isEmpty, drafts.isEmpty, supportQuestions.isEmpty, sessionNotes.isEmpty, activeCaseID == nil else {
                 throw invalid("records exist without a workspace")
             }
             return
@@ -95,6 +97,13 @@ struct WorkspaceSnapshot: Hashable, Codable {
                 guard SupportExchange.apply(reply, to: inbox, current: nil).accepted else { throw invalid("invalid reply") }
             }
         }
+        var noteIDs = Set<String>()
+        for note in sessionNotes {
+            guard noteIDs.insert(note.id).inserted,
+                  SupportExchange.apply(.note(note), to: SupportInbox(), current: nil).accepted else {
+                throw invalid("invalid session note")
+            }
+        }
         var draftKeys = Set<DraftKey>()
         for draft in drafts {
             let key = draft.key
@@ -114,7 +123,7 @@ struct WorkspaceSnapshot: Hashable, Codable {
 
 extension WorkspaceSnapshot {
     private enum CodingKeys: String, CodingKey {
-        case formatVersion, workspace, forecasts, cases, sessions, drafts, activeCaseID, supportQuestions
+        case formatVersion, workspace, forecasts, cases, sessions, drafts, activeCaseID, supportQuestions, sessionNotes
     }
 
     /// Synthesized decoding ignores property defaults, so additive fields must be decoded
@@ -129,6 +138,7 @@ extension WorkspaceSnapshot {
         drafts = try values.decodeIfPresent([DraftRecord].self, forKey: .drafts) ?? []
         activeCaseID = try values.decodeIfPresent(String.self, forKey: .activeCaseID)
         supportQuestions = try values.decodeIfPresent([SupportQuestion].self, forKey: .supportQuestions) ?? []
+        sessionNotes = try values.decodeIfPresent([SessionNote].self, forKey: .sessionNotes) ?? []
     }
 }
 
