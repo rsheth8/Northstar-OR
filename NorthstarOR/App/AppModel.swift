@@ -12,6 +12,7 @@ enum AppModelError: Error, Equatable, LocalizedError {
     case acknowledgmentPending
     case noActiveSession
     case invalidDraft
+    case siteInUse(String)
     case saveFailed(String)
 
     var errorDescription: String? {
@@ -25,6 +26,7 @@ enum AppModelError: Error, Equatable, LocalizedError {
         case .acknowledgmentPending: "The active recording has a deferral awaiting acknowledgment. Acknowledge or correct it before switching cases."
         case .noActiveSession: "No active case. Start or resume a case in Planner."
         case .invalidDraft: "This draft does not belong to a saved case or session."
+        case .siteInUse: "A saved case uses this site. Move or remove that case first."
         case .saveFailed(let message): message
         }
     }
@@ -168,7 +170,7 @@ final class AppModel {
         let siteIDs = Set(config.sites.map(\.id))
         // Cases must still reference existing sites; forecasts for removed sites are dropped.
         if let orphan = cases.first(where: { !siteIDs.contains($0.hospitalID) }) {
-            throw WorkspaceContractError.unknownSite(orphan.hospitalID)
+            throw AppModelError.siteInUse(orphan.hospitalID)
         }
         let nextForecasts = forecasts.filter { siteIDs.contains($0.key) }
         try persist(snapshot(workspace: config, forecasts: nextForecasts))
@@ -377,13 +379,11 @@ final class AppModel {
     private static func message(for error: Error) -> String {
         switch error as? RepositoryError {
         case .blockedByUnreadableData:
-            "Not saved. Saved data on this device could not be read, so it will not be overwritten."
+            "Couldn't save on this device. Saved data could not be read, so it won't be overwritten."
         case .storageUnavailable:
-            "Not saved. Storage on this device is unavailable right now. Your changes are kept on screen; try again."
-        case .invalidSnapshot:
-            "Not saved. The change did not pass validation. Your changes are kept on screen."
+            "Couldn't save on this device right now. Your changes are still here; try again."
         default:
-            "Not saved. Your changes are kept on screen; try again."
+            "Couldn't save on this device. Your changes are still here."
         }
     }
 

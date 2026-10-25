@@ -16,7 +16,7 @@ struct CoPilotView: View {
         } else {
             NavigationStack {
                 ContentUnavailableView("No active case", systemImage: "list.bullet.rectangle",
-                    description: Text("No active case — start or resume a case in Planner."))
+                    description: Text("Start or resume a case in Planner."))
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .background(Northstar.Palette.bgRaised)
                     .navigationTitle("Co-pilot")

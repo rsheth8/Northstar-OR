@@ -152,7 +152,7 @@ final class AppModelTests: XCTestCase {
     func testRecordingPersistsAndRestoresIdenticallyAfterRelaunch() throws {
         let store = InMemoryWorkspaceStore()
         let model = try configured(store)
-        XCTAssertThrowsError(try record(model, .recordConfirmation)) // no active session
+        XCTAssertNil(model.activeSession)
         let session = try model.startOrResume(caseID: "case-a")
         XCTAssertTrue(model.session(for: "case-a") === session)
         try record(model, .recordConfirmation)
@@ -308,6 +308,29 @@ final class AppModelTests: XCTestCase {
         XCTAssertEqual(store.writeCount, writes + 1)
         XCTAssertEqual(self.model(store).draft(for: key), "Fictional note")
         XCTAssertThrowsError(try model.setDraft("x", for: DraftKey(workspaceID: "workspace-a", caseID: "missing", sessionID: nil, kind: "caseNote")))
+    }
+
+    func testRemovingASiteUsedByACaseIsRefused() throws {
+        let model = try configured(InMemoryWorkspaceStore())
+        var config = configuration()
+        config.sites = [Hospital(id: "site-b", name: "Other fictional facility", town: "Other town",
+                                 workspaceID: "workspace-a", timeZoneIdentifier: "America/Chicago")]
+        XCTAssertThrowsError(try model.updateWorkspace(config)) {
+            XCTAssertEqual($0 as? AppModelError, .siteInUse("site-a"))
+            XCTAssertEqual($0.localizedDescription, "A saved case uses this site. Move or remove that case first.")
+        }
+        XCTAssertEqual(model.workspace?.sites.map(\.id), ["site-a"])
+    }
+
+    func testErrorsReadAsPlainMessages() throws {
+        let store = InMemoryWorkspaceStore()
+        let model = try configured(store)
+        store.failWrites = true
+        XCTAssertThrowsError(try model.saveCase(caseInput("case-c"))) {
+            XCTAssertEqual($0.localizedDescription, "Couldn't save on this device. Your changes are still here.")
+        }
+        XCTAssertEqual(model.saveError, "Couldn't save on this device. Your changes are still here.")
+        XCTAssertEqual(WorkspaceContractError.required("case.title").localizedDescription, "Case title is required.")
     }
 
     func testSelectedDestinationIsSettable() throws {
