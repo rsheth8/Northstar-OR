@@ -121,8 +121,8 @@ final class WorkspaceFormsTests: XCTestCase {
             var draft = setup()
             draft.site.latitudeText = latitude
             draft.site.longitudeText = longitude
-            XCTAssertThrowsError(try draft.build()) { error in
-                XCTAssertEqual(error as? WorkspaceContractError, .invalidCoordinates(draft.site.id))
+            XCTAssertThrowsError(try draft.build(newID: { "test-" + $0 })) { error in
+                XCTAssertEqual(error as? WorkspaceContractError, .invalidCoordinates("test-site"))
             }
         }
     }
