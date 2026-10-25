@@ -41,6 +41,7 @@ struct WorkspaceSnapshot: Hashable, Codable {
     /// Plain session messages. Questions stay in `supportQuestions`.
     var sessionNotes: [SessionNote] = []
     var remoteSession: SharedSessionSnapshot? = nil
+    var planningEvidenceRecords: [PlanningEvidence] = []
 
     static let empty = WorkspaceSnapshot()
 
@@ -48,7 +49,7 @@ struct WorkspaceSnapshot: Hashable, Codable {
     func validate() throws {
         guard formatVersion == Self.supportedFormatVersion else { throw invalid("unsupported format version \(formatVersion)") }
         guard let workspace else {
-            guard forecasts.isEmpty, cases.isEmpty, sessions.isEmpty, drafts.isEmpty, supportQuestions.isEmpty, sessionNotes.isEmpty, activeCaseID == nil else {
+            guard forecasts.isEmpty, cases.isEmpty, sessions.isEmpty, drafts.isEmpty, supportQuestions.isEmpty, sessionNotes.isEmpty, planningEvidenceRecords.isEmpty, activeCaseID == nil else {
                 throw invalid("records exist without a workspace")
             }
             return
@@ -57,6 +58,14 @@ struct WorkspaceSnapshot: Hashable, Codable {
 
         let siteIDs = Set(workspace.sites.map(\.id))
         for siteID in forecasts.keys where !siteIDs.contains(siteID) { throw invalid("forecast for unknown site \(siteID)") }
+
+        var evidenceIDs = Set<String>()
+        var revisions = Set<String>()
+        for evidence in planningEvidenceRecords {
+            do { try evidence.validate() } catch { throw invalid("planning evidence: \(error.localizedDescription)") }
+            guard siteIDs.contains(evidence.siteID), evidenceIDs.insert(evidence.id).inserted,
+                  revisions.insert("\(evidence.siteID):\(evidence.revision)").inserted else { throw invalid("duplicate or unknown planning evidence") }
+        }
 
         var caseIDs = Set<String>()
         for item in cases {
@@ -125,7 +134,7 @@ struct WorkspaceSnapshot: Hashable, Codable {
 
 extension WorkspaceSnapshot {
     private enum CodingKeys: String, CodingKey {
-        case formatVersion, workspace, forecasts, cases, sessions, drafts, activeCaseID, supportQuestions, sessionNotes, remoteSession
+        case formatVersion, workspace, forecasts, cases, sessions, drafts, activeCaseID, supportQuestions, sessionNotes, remoteSession, planningEvidenceRecords
     }
 
     /// Synthesized decoding ignores property defaults, so additive fields must be decoded
@@ -142,6 +151,7 @@ extension WorkspaceSnapshot {
         supportQuestions = try values.decodeIfPresent([SupportQuestion].self, forKey: .supportQuestions) ?? []
         sessionNotes = try values.decodeIfPresent([SessionNote].self, forKey: .sessionNotes) ?? []
         remoteSession = try values.decodeIfPresent(SharedSessionSnapshot.self, forKey: .remoteSession)
+        planningEvidenceRecords = try values.decodeIfPresent([PlanningEvidence].self, forKey: .planningEvidenceRecords) ?? []
     }
 }
 

@@ -50,6 +50,7 @@ final class AppModel {
     private(set) var cases: [Procedure] = []
     /// Simulated forecasts keyed by site ID.
     private(set) var forecasts: [String: StormForecast] = [:]
+    private(set) var planningEvidenceRecords: [PlanningEvidence] = []
     private(set) var activeCaseID: String?
     /// nil until a case is explicitly started or resumed.
     private(set) var activeSession: CoPilotSession?
@@ -207,9 +208,12 @@ final class AppModel {
             throw AppModelError.siteInUse(orphan.hospitalID)
         }
         let nextForecasts = forecasts.filter { siteIDs.contains($0.key) }
-        try persist(snapshot(workspace: config, forecasts: nextForecasts))
+        var updated = snapshot(workspace: config, forecasts: nextForecasts)
+        updated.planningEvidenceRecords = planningEvidenceRecords.filter { siteIDs.contains($0.siteID) }
+        try persist(updated)
         self.workspace = config
         forecasts = nextForecasts
+        planningEvidenceRecords = updated.planningEvidenceRecords
     }
 
     // MARK: - Cases
@@ -762,7 +766,31 @@ final class AppModel {
     // MARK: - Planning helpers
 
     func recommendation(for procedure: Procedure) -> CoverageMatcher.Recommendation {
-        CoverageMatcher().recommend(for: procedure, reps: reps, forecast: forecasts[procedure.hospitalID])
+        CoverageMatcher().recommend(for: procedure, reps: reps, forecast: planningEvidence(for: procedure.hospitalID)?.forecast, now: clock())
+    }
+
+    func planningEvidence(for siteID: String) -> PlanningEvidence? {
+        planningEvidenceRecords.filter { $0.siteID == siteID }.max { $0.revision < $1.revision }
+            ?? forecasts[siteID].map { PlanningEvidence.legacy(siteID: siteID, forecast: $0) }
+    }
+
+    @discardableResult
+    func savePlanningEvidence(_ proposed: PlanningEvidence, expectedRevision: Int?) throws -> PlanningEvidence {
+        guard workspace != nil else { throw AppModelError.noWorkspace }
+        guard hospitals.contains(where: { $0.id == proposed.siteID }) else { throw WorkspaceContractError.unknownSite(proposed.siteID) }
+        let previous = planningEvidence(for: proposed.siteID)
+        guard previous?.revision == expectedRevision else { throw PlanningEvidence.ValidationError.invalid("Planning evidence changed. Reopen the editor before saving.") }
+        var evidence = proposed
+        evidence.id = UUID().uuidString
+        evidence.revision = (previous?.revision ?? 0) + 1
+        evidence.recordedAt = clock()
+        try evidence.validate()
+        let records = planningEvidenceRecords + [evidence]
+        var next = snapshot()
+        next.planningEvidenceRecords = records
+        try persist(next)
+        planningEvidenceRecords = records
+        return evidence
     }
 
     func hospital(_ id: String) -> Hospital? { hospitals.first { $0.id == id } }
@@ -789,6 +817,7 @@ final class AppModel {
         workspace = nil
         cases = []
         forecasts = [:]
+        planningEvidenceRecords = []
         activeCaseID = nil
         activeSession = nil
         sessions = [:]
@@ -807,6 +836,7 @@ final class AppModel {
         workspace = snapshot.workspace
         cases = Self.sorted(snapshot.cases)
         forecasts = snapshot.forecasts
+        planningEvidenceRecords = snapshot.planningEvidenceRecords
         drafts = snapshot.drafts
         questions = snapshot.supportQuestions
         sessionNotes = snapshot.sessionNotes
@@ -846,7 +876,7 @@ final class AppModel {
                                  sessions: (retainedSessions + live).sorted(by: Self.sessionOrder),
                                  drafts: drafts.sorted { ($0.updatedAt, $0.key.kind) < ($1.updatedAt, $1.key.kind) },
                                  activeCaseID: activeCaseID ?? self.activeCaseID, supportQuestions: questions,
-                                 sessionNotes: sessionNotes, remoteSession: remoteSession)
+                                 sessionNotes: sessionNotes, remoteSession: remoteSession, planningEvidenceRecords: planningEvidenceRecords)
     }
 
     /// Saves before the caller commits its change. On failure sets a persistent `saveError`.
