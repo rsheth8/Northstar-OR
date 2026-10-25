@@ -32,9 +32,11 @@ struct RootView: View {
                         workspaceName: model.workspace?.name,
                         onOpenSettings: model.workspace == nil ? nil : { showingSettings = true })
                     ViewThatFits(in: .horizontal) {
-                        HStack { deviceControls }
+                        HStack { deviceControls }.fixedSize(horizontal: true, vertical: false)
                         VStack(alignment: .leading, spacing: 0) { deviceControls }
                     }
+                    .font(Northstar.Fonts.supporting)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, Northstar.Space.s4)
                     if let saveError = model.saveError {
                         SaveFailureBanner(message: retryError ?? saveError) {
