@@ -157,7 +157,7 @@ struct ContactFormView: View {
             }
         }
         .interactiveDismissDisabled(draft != baseline)
-        .confirmationDialog("Discard contact changes?", isPresented: $confirmingDiscard, titleVisibility: .visible) {
+        .alert("Discard contact changes?", isPresented: $confirmingDiscard) {
             Button("Discard changes", role: .destructive) { dismiss() }
             Button("Keep editing", role: .cancel) {}
         }

@@ -94,7 +94,7 @@ struct WorkspaceSettingsView: View {
             .onChange(of: draft) { _, _ in saved = false }
         }
         .interactiveDismissDisabled(draft != baseline)
-        .confirmationDialog("Discard unsaved settings?", isPresented: $confirmingDiscard, titleVisibility: .visible) {
+        .alert("Discard unsaved settings?", isPresented: $confirmingDiscard) {
             Button("Discard changes", role: .destructive) { dismiss() }
             Button("Keep editing", role: .cancel) {}
         }

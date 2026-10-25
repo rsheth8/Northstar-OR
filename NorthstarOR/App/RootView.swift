@@ -66,7 +66,7 @@ struct RootView: View {
                 .onChange(of: model.demoPost) { _, role in
                     model.selectedDestination = role == .rep ? .remoteSupport : .coPilot
                 }
-                .confirmationDialog("Change this device’s role?", isPresented: Binding(get: { pendingRole != nil }, set: { if !$0 { pendingRole = nil } }), titleVisibility: .visible) {
+                .alert("Change this device’s role?", isPresented: Binding(get: { pendingRole != nil }, set: { if !$0 { pendingRole = nil } })) {
                     Button("Change role and disconnect", role: .destructive) {
                         if let role = pendingRole { model.demoPost = role }
                         pendingRole = nil

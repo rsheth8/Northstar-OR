@@ -84,7 +84,7 @@ struct WorkspaceSetupView: View {
             .background(Northstar.Palette.bgBase)
             .navigationTitle("Set up workspace")
         }
-        .confirmationDialog("Replace setup entries with samples?", isPresented: $confirmingSample, titleVisibility: .visible) {
+        .alert("Replace setup entries with samples?", isPresented: $confirmingSample) {
             Button("Load sample workspace", role: .destructive, action: loadSample)
             Button("Keep editing", role: .cancel) {}
         }

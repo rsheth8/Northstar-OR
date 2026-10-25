@@ -111,7 +111,7 @@ struct CaseFormView: View {
             }
         }
         .interactiveDismissDisabled(draft != initialDraft)
-        .confirmationDialog("Discard case changes?", isPresented: $confirmingDiscard, titleVisibility: .visible) {
+        .alert("Discard case changes?", isPresented: $confirmingDiscard) {
             Button("Discard changes", role: .destructive) { dismiss() }
             Button("Keep editing", role: .cancel) {}
         }
