@@ -17,6 +17,12 @@ final class WorkspaceCallEntryTests: XCTestCase {
         let deferItem = app.buttons["defer-item"].firstMatch
         XCTAssertTrue(deferItem.waitForExistence(timeout: 15))
         deferItem.tap()
+        let acknowledgment = app.buttons["acknowledge-deferral"].firstMatch
+        XCTAssertTrue(acknowledgment.waitForExistence(timeout: 5), "Defer must record a deferral and pin its acknowledgment")
+        XCTAssertFalse(app.buttons["record-confirmation"].exists, "Deferral must not activate confirmation")
+        let deferred = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        deferred.name = enlarged ? "recording-deferral-largest-text" : "recording-deferral-default"
+        deferred.lifetime = .keepAlways; add(deferred)
         let request = app.buttons["request-support"].firstMatch
         for _ in 0..<5 where !request.isHittable { app.scrollViews["copilot-current-scroll"].swipeUp() }
         XCTAssertTrue(request.isHittable)

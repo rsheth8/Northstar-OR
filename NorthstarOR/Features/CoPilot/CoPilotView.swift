@@ -3,6 +3,7 @@ import SwiftUI
 struct CoPilotView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.dynamicTypeSize) private var typeSize
+    @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var showRequest = false
     @State private var announcer = VoiceAnnouncer()
@@ -283,10 +284,10 @@ struct CoPilotView: View {
                 } else if status == .unrecorded {
                     let confirm = command(session, .recordConfirmation).map(RecordingCommandActivation.init)
                     let deferItem = command(session, .deferItem).map(RecordingCommandActivation.init)
-                    ViewThatFits(in: .horizontal) {
-                        HStack(spacing: Northstar.Target.spacing) { recordingActions(session, step: step, confirm: confirm, deferItem: deferItem) }
-                        VStack(alignment: .leading, spacing: Northstar.Target.spacing) { recordingActions(session, step: step, confirm: confirm, deferItem: deferItem) }
-                    }
+                    let layout = typeSize.isAccessibilitySize || sizeClass == .compact
+                        ? AnyLayout(VStackLayout(alignment: .leading, spacing: Northstar.Target.spacing))
+                        : AnyLayout(HStackLayout(spacing: Northstar.Target.spacing))
+                    layout { recordingActions(session, step: step, confirm: confirm, deferItem: deferItem) }
                 } else {
                     Text("Select another item to continue. Use Correct record to change this recorded statement.")
                         .font(Northstar.Fonts.body).foregroundStyle(Northstar.Palette.inkMuted)
