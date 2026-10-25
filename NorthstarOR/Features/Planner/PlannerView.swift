@@ -9,6 +9,13 @@ struct PlannerView: View {
     @State private var showingNewCase = false
     @State private var editingCase: Procedure?
     @State private var actionError: String?
+    @State private var scope = PlannerScope()
+    @State private var destination: PlannerDestination = .cases
+    @State private var report: CaseReport?
+    private enum PlannerDestination: String, CaseIterable, Identifiable {
+        case cases = "Cases", coverage = "Coverage", weather = "Weather", reports = "Reports"
+        var id: String { rawValue }
+    }
 
     private var recommendations: [CoverageMatcher.Recommendation] {
         model.cases.sorted { ($0.scheduledAt, $0.id) < ($1.scheduledAt, $1.id) }
@@ -22,13 +29,23 @@ struct PlannerView: View {
                 rec.procedure.name, model.hospital(rec.procedure.hospitalID)?.name ?? "",
                 model.hospital(rec.procedure.hospitalID)?.town ?? ""]
                 .contains { $0.localizedCaseInsensitiveContains(query) }
-            return matches && (!attentionOnly || rec.risk != .low)
+            let zone = model.hospital(rec.procedure.hospitalID)?.timeZoneIdentifier.flatMap(TimeZone.init(identifier:)) ?? TimeZone(secondsFromGMT: 0)!
+            return matches && (!attentionOnly || rec.risk != .low) && scope.includes(rec.procedure, timeZone: zone, hasSession: model.session(for: rec.procedure.id) != nil, isActive: model.activeCaseID == rec.procedure.id)
         }
     }
 
     var body: some View {
         NavigationSplitView {
             List(selection: $selectedID) {
+                Section {
+                    Picker("Recording", selection: $scope.recording) {
+                        ForEach(PlannerScope.Recording.allCases) { Text($0.rawValue).tag($0) }
+                    }
+                    Toggle("Filter by site-local day", isOn: Binding(get: { scope.day != nil }, set: { scope.day = $0 ? Date.now : nil }))
+                    if scope.day != nil {
+                        DatePicker("Scheduled day", selection: Binding(get: { scope.day ?? .now }, set: { scope.day = $0 }), displayedComponents: .date)
+                    }
+                }
                 ForEach(visible, id: \.procedure.id) { rec in
                     caseRow(rec)
                         .tag(rec.procedure.id)
@@ -53,7 +70,7 @@ struct PlannerView: View {
                 ToolbarItem(placement: .topBarTrailing) {
                     Menu {
                         Toggle("Coverage needs attention", isOn: $attentionOnly)
-                        Button("Show all cases") { attentionOnly = false; search = "" }
+                        Button("Show all cases") { attentionOnly = false; search = ""; scope = PlannerScope() }
                     } label: {
                         Label(attentionOnly ? "Needs attention" : "All cases", systemImage: "line.3.horizontal.decrease.circle")
                     }
@@ -67,22 +84,42 @@ struct PlannerView: View {
                     } description: {
                         Text(model.cases.isEmpty ? "No fictional cases are available in this workspace." : "Try another search or show all cases.")
                     } actions: {
+                        if model.cases.isEmpty && model.demoPost == .room {
+                            Button("Create fictional case") { showingNewCase = true }
+                                .buttonStyle(NorthstarPrimaryButtonStyle(tone: .standard))
+                        }
                         if !model.cases.isEmpty {
-                            Button("Show all cases") { search = ""; attentionOnly = false }
+                            Button("Show all cases") { search = ""; attentionOnly = false; scope = PlannerScope() }
                                 .buttonStyle(NorthstarSecondaryButtonStyle())
                         }
                     }
                 }
             }
         } detail: {
-            if let rec = recommendations.first(where: { $0.procedure.id == selectedID }) {
-                detail(rec)
-            } else {
+            VStack(spacing: 0) {
+                Picker("Planner destination", selection: $destination) {
+                    ForEach(PlannerDestination.allCases) { Text($0.rawValue).tag($0) }
+                }.pickerStyle(.segmented).padding(Northstar.Space.s4)
+                if destination == .coverage {
+                    ScrollView {
+                        CoverageMapView(procedures: visible.map(\.procedure), sites: model.hospitals, selectedID: $selectedID)
+                            .padding(Northstar.Space.s6)
+                    }
+                } else if let rec = recommendations.first(where: { $0.procedure.id == selectedID }) {
+                    switch destination {
+                    case .cases: detail(rec)
+                    case .weather: weather(rec.procedure)
+                    case .reports: reportEntry(rec.procedure)
+                    case .coverage: EmptyView()
+                    }
+                } else {
                 ContentUnavailableView("Select a case", systemImage: "calendar",
                     description: Text("Browse coverage and logistical options. Selecting a case does not change the active recording."))
                     .background(Northstar.Palette.bgRaised)
+                }
             }
         }
+        .sheet(item: $report) { CaseReportView(report: $0) }
         .sheet(isPresented: $showingNewCase) {
             if let workspace = model.workspace {
                 CaseFormView(workspace: workspace, existingCases: model.cases) { input in
@@ -118,6 +155,9 @@ struct PlannerView: View {
                 Text(model.hospital(procedure.hospitalID)?.town ?? "Site not recorded")
                     .font(Northstar.Fonts.body).foregroundStyle(Northstar.Palette.inkMuted)
                 NorthstarStatusLabel("\(rec.risk.rawValue.capitalized) coverage risk", tone: riskTone(rec.risk))
+                Label(recordingLabel(procedure), systemImage: model.activeCaseID == procedure.id ? "record.circle" : "doc.text")
+                    .font(Northstar.Fonts.supporting)
+                Text(schedule(procedure, date: true)).font(Northstar.Fonts.supporting).foregroundStyle(Northstar.Palette.inkMuted)
             }
             .padding(.vertical, Northstar.Space.s2)
         }
@@ -155,6 +195,9 @@ struct PlannerView: View {
                     .buttonStyle(NorthstarPrimaryButtonStyle(tone: .standard))
                     .disabled(!FictionalCoordinationTemplate.template.supports(procedure))
                     .accessibilityIdentifier("planner-start-recording")
+                    if !FictionalCoordinationTemplate.template.supports(procedure) {
+                        NorthstarBanner(tone: .attention, title: "Recording unavailable", message: "This case does not have a supported coordination template. Its planning record remains available.")
+                    }
                     Button("Edit case") { editingCase = procedure }
                         .buttonStyle(NorthstarSecondaryButtonStyle())
                     if let actionError { NorthstarBanner(tone: .failure, title: "Recording not opened", message: actionError) }
@@ -201,6 +244,42 @@ struct PlannerView: View {
         .background(Northstar.Palette.bgRaised)
         .navigationTitle("Case details")
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+
+    private func recordingLabel(_ procedure: Procedure) -> String {
+        model.activeCaseID == procedure.id ? "Active recording" : model.session(for: procedure.id) != nil ? "Retained recording" : "Not started"
+    }
+
+    private func reportEntry(_ procedure: Procedure) -> some View {
+        VStack(alignment: .leading, spacing: Northstar.Space.s4) {
+            Text("Case record report").font(Northstar.Fonts.title)
+            Text("Review a frozen summary of this case’s recorded items, corrections and support exchanges. Unrecorded information stays visible.")
+            Button("Create report for review", systemImage: "doc.text") {
+                let session = model.session(for: procedure.id)
+                report = CaseReport(procedure: procedure, site: model.hospital(procedure.hospitalID), state: session?.recordingState, events: session?.events ?? [], questions: model.questions, forecast: model.forecasts[procedure.hospitalID], capturedAt: .now)
+            }.buttonStyle(NorthstarPrimaryButtonStyle(tone: .standard))
+            Spacer()
+        }.padding(Northstar.Space.s6)
+    }
+
+    private func weather(_ procedure: Procedure) -> some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: Northstar.Space.s4) {
+                Text("Simulated weather").font(Northstar.Fonts.title)
+                Text(model.hospital(procedure.hospitalID)?.name ?? "Site not recorded").font(Northstar.Fonts.bodyStrong)
+                if let forecast = model.forecasts[procedure.hospitalID] {
+                    Text(forecast.summary).font(Northstar.Fonts.body)
+                    LabeledContent("Snowfall summary", value: "\(forecast.snowfallInches.formatted()) in")
+                    LabeledContent("Forecast as of", value: forecast.asOf.map { $0.formatted() } ?? "Unknown")
+                    LabeledContent("Explicit road closure", value: forecast.roadClosureAt.map { $0.formatted() } ?? "Unknown absolute time")
+                } else {
+                    ContentUnavailableView("No forecast recorded", systemImage: "cloud", description: Text("Missing weather is unknown. Coverage reasons remain available in Cases."))
+                }
+                Text("Hourly observations and departure time are not recorded. No graph or route is inferred from a summary.")
+                    .font(Northstar.Fonts.supporting).foregroundStyle(Northstar.Palette.inkMuted)
+            }.padding(Northstar.Space.s6)
+        }
     }
 
     private func optionRow(_ option: CoverageMatcher.Option) -> some View {
