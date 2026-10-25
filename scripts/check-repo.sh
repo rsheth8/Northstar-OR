@@ -26,3 +26,5 @@ if errors:
     sys.exit('\n'.join(errors))
 print('Repository checks passed (generated files, local credentials/config, conflict markers).')
 PY
+
+python3 -m unittest discover -s scripts -p 'test_*.py'
