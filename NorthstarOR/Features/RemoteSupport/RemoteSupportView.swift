@@ -31,9 +31,6 @@ struct RemoteSupportView: View {
                         Toggle("Spoken support alerts", isOn: Binding(get: { model.supportAlertsEnabled }, set: { model.supportAlertsEnabled = $0 }))
                         if let alert = model.supportAlert { NorthstarBanner(tone: .attention, title: "Room update", message: alert) }
                     }
-                    if model.demoPost == .rep, let shared = model.remoteSession {
-                        NativeSessionBrief(snapshot: shared, current: model.remoteSessionCurrent)
-                    }
                     if !visibleQuestions.isEmpty {
                         Picker("Saved requests", selection: Binding(get: { current?.id ?? "" }, set: { selectedQuestionID = $0 })) {
                             ForEach(visibleQuestions) { q in Text("\(q.snapshot.caseReference) · \(q.sentAt.formatted(date: .omitted, time: .shortened))").tag(q.id) }
@@ -41,10 +38,15 @@ struct RemoteSupportView: View {
                     }
                     if let current { SupportBriefView(question: current).id(current.id) }
                     else { ContentUnavailableView("No question from the team yet", systemImage: "headphones", description: Text(model.demoPost == .rep ? "The connected room must start or resume a recording in Planner. Its live recap appears here; a question is optional." : "Request support from the current Co-pilot item, including while an acknowledgment is pending.")) }
+                    if model.demoPost == .rep, let shared = model.remoteSession {
+                        DisclosureGroup("Full room record") {
+                            NativeSessionBrief(snapshot: shared, current: model.remoteSessionCurrent)
+                        }
+                    }
                     if let sessionID = (model.demoPost == .rep ? model.remoteSession?.origin.sessionID : nil) ?? current?.sessionID ?? (model.demoPost == .room ? model.activeSession?.identity.sessionID : nil) {
                         Divider()
                         SupportThreadView(entries: model.supportThread(sessionID: sessionID))
-                        SessionNoteComposer()
+                        DisclosureGroup("Send a general case message") { SessionNoteComposer() }
                     }
                 }.padding(Northstar.Space.s6).frame(maxWidth: 1000, alignment: .leading).frame(maxWidth: .infinity)
             }.background(Northstar.Palette.bgRaised)

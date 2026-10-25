@@ -31,38 +31,39 @@ struct SupportBriefView: View {
             }
             Text("\(question.snapshot.lines.filter { $0.status != .teamConfirmed }.count) unresolved items in the request").font(Northstar.Fonts.bodyStrong)
             replySection
-            Divider()
-            Group {
-                LabeledContent("Case", value: question.snapshot.caseReference)
-                LabeledContent("Title", value: known(question.snapshot.caseName))
-                LabeledContent("Site", value: known(question.snapshot.siteName))
-                LabeledContent("Device family", value: known(question.snapshot.deviceFamily))
-                LabeledContent("Template", value: "\(question.snapshot.templateID) · v\(question.snapshot.templateVersion)")
-                LabeledContent("Snapshot", value: question.snapshot.capturedAt.formatted())
-            }.font(Northstar.Fonts.body)
-            lines("Unresolved in the request", question.snapshot.lines.filter { $0.status != .teamConfirmed }, empty: "No unresolved items in the request.")
-            lines("Recorded in the request", question.snapshot.lines.filter { $0.status == .teamConfirmed }, empty: "No team confirmations in the request.")
-            lines("Lines the in-room rep usually covers", question.snapshot.lines.filter(\.normallyCoveredByRep), empty: "None recorded.")
-            VStack(alignment: .leading, spacing: Northstar.Space.s2) {
-                Text("Why support is remote").font(Northstar.Fonts.bodyStrong)
-                Text(question.snapshot.logisticalReason ?? "Not recorded")
-                if question.snapshot.reducedSupport { Text("Reduced-support context recorded") }
-            }
-            VStack(alignment: .leading, spacing: Northstar.Space.s2) {
-                Text("Changed since request").font(Northstar.Fonts.bodyStrong)
-                if let live = model.liveContext(for: question) {
-                    Text("\(SupportExchange.changedLineCount(snapshot: question.snapshot, live: live)) checklist lines changed since the request.")
-                    if live.acknowledgmentIDs != question.snapshot.acknowledgmentIDs { Text("Deferral acknowledgment context changed. Deferred items remain unresolved.") }
-                    Text("Last context update: \(live.capturedAt.formatted(date: .omitted, time: .shortened))")
-                } else { Text("Later context is unavailable. The original request remains shown above.") }
-            }
-            if !question.snapshot.recentEvents.isEmpty {
-                DisclosureGroup("Recent recorded events at request") {
-                    ForEach(Array(question.snapshot.recentEvents.enumerated()), id: \.offset) { _, text in Text(text).font(Northstar.Fonts.supporting) }
+            if let error { NorthstarBanner(tone: .failure, title: "Action not sent", message: error) }
+            DisclosureGroup("Original request context") {
+                Divider()
+                Group {
+                    LabeledContent("Case", value: question.snapshot.caseReference)
+                    LabeledContent("Title", value: known(question.snapshot.caseName))
+                    LabeledContent("Site", value: known(question.snapshot.siteName))
+                    LabeledContent("Device family", value: known(question.snapshot.deviceFamily))
+                    LabeledContent("Template", value: "\(question.snapshot.templateID) · v\(question.snapshot.templateVersion)")
+                    LabeledContent("Snapshot", value: question.snapshot.capturedAt.formatted())
+                }.font(Northstar.Fonts.body)
+                lines("Unresolved in the request", question.snapshot.lines.filter { $0.status != .teamConfirmed }, empty: "No unresolved items in the request.")
+                lines("Recorded in the request", question.snapshot.lines.filter { $0.status == .teamConfirmed }, empty: "No team confirmations in the request.")
+                lines("Lines the in-room rep usually covers", question.snapshot.lines.filter(\.normallyCoveredByRep), empty: "None recorded.")
+                VStack(alignment: .leading, spacing: Northstar.Space.s2) {
+                    Text("Why support is remote").font(Northstar.Fonts.bodyStrong)
+                    Text(question.snapshot.logisticalReason ?? "Not recorded")
+                    if question.snapshot.reducedSupport { Text("Reduced-support context recorded") }
+                }
+                VStack(alignment: .leading, spacing: Northstar.Space.s2) {
+                    Text("Changed since request").font(Northstar.Fonts.bodyStrong)
+                    if let live = model.liveContext(for: question) {
+                        Text("\(SupportExchange.changedLineCount(snapshot: question.snapshot, live: live)) checklist lines changed since the request.")
+                        if live.acknowledgmentIDs != question.snapshot.acknowledgmentIDs { Text("Deferral acknowledgment context changed. Deferred items remain unresolved.") }
+                        Text("Last context update: \(live.capturedAt.formatted(date: .omitted, time: .shortened))")
+                    } else { Text("Later context is unavailable. The original request remains shown above.") }
+                }
+                if !question.snapshot.recentEvents.isEmpty {
+                    DisclosureGroup("Recent recorded events at request") {
+                        ForEach(Array(question.snapshot.recentEvents.enumerated()), id: \.offset) { _, text in Text(text).font(Northstar.Fonts.supporting) }
+                    }
                 }
             }
-            Divider()
-            if let error { NorthstarBanner(tone: .failure, title: "Action not sent", message: error) }
             Text("A reply does not confirm a checklist item. A local role is not verified identity.").font(Northstar.Fonts.supporting).foregroundStyle(Northstar.Palette.inkMuted)
         }.foregroundStyle(Northstar.Palette.ink)
     }

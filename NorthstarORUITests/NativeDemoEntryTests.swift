@@ -7,8 +7,13 @@ final class NativeDemoEntryTests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = ["-NorthstarResetStore"]
         app.launch()
-        XCTAssertTrue(app.buttons["setup-load-sample"].waitForExistence(timeout: 15))
-        app.buttons["setup-load-sample"].tap()
+        let form = app.descendants(matching: .any).matching(identifier: "workspace-setup-form").firstMatch
+        XCTAssertTrue(form.waitForExistence(timeout: 15))
+        let sample = app.buttons["setup-load-sample"]
+        for _ in 0..<12 where !sample.exists || !sample.isHittable { form.swipeUp() }
+        XCTAssertTrue(sample.exists)
+        XCTAssertTrue(sample.isHittable)
+        sample.tap()
         let create = app.buttons["planner-new-case"]
         XCTAssertTrue(create.waitForExistence(timeout: 10))
         create.tap()

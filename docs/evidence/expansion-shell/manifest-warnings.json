@@ -1,0 +1,32 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "640CEE56-F686-4692-8D9B-27EB7E4B4C98",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "C5F0D871-E0B1-4E40-9C23-53004A63B3FC.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "shell-explicit-role-change-warning_0_05484533-15DB-49DF-9926-E4DB27EE8931.png",
+        "timestamp" : 1792922572.657
+      }
+    ],
+    "testIdentifier" : "AdaptiveShellFormsTests/testRoleChangeRequiresConfirmationAndCancelKeepsRoom()",
+    "testIdentifierURL" : "test://com.apple.xcode/NorthstarOR/NorthstarORUITests/AdaptiveShellFormsTests/testRoleChangeRequiresConfirmationAndCancelKeepsRoom"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "640CEE56-F686-4692-8D9B-27EB7E4B4C98",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "9A0ADFCF-8D04-486C-B753-C77FABAC747A.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "settings-unsaved-changes-warning_0_4AFCE117-E190-4646-8FCC-1928CA1288DE.png",
+        "timestamp" : 1792922592.191
+      }
+    ],
+    "testIdentifier" : "AdaptiveShellFormsTests/testUnsavedSettingsRequireDiscard()",
+    "testIdentifierURL" : "test://com.apple.xcode/NorthstarOR/NorthstarORUITests/AdaptiveShellFormsTests/testUnsavedSettingsRequireDiscard"
+  }
+]
