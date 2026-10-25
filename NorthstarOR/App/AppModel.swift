@@ -76,6 +76,7 @@ final class AppModel {
     var demoPost: DemoPost = .room {
         didSet { if oldValue != demoPost { stopNearbyLink() } }
     }
+    private(set) var coveragePlans: [CoveragePlan] = []
     private(set) var questions: [SupportQuestion] = []
     private(set) var sessionNotes: [SessionNote] = []
     private(set) var remoteSession: SharedSessionSnapshot?
@@ -499,6 +500,7 @@ final class AppModel {
     }
     private func receiveSupport(_ envelope: SupportEnvelope) {
         guard loadState == .ready else { return }
+        if receiveCoverageEnvelope(envelope) { return }
         // Room accepts responses to its retained questions; Rep accepts self-contained briefs.
         if demoPost == .room, envelope.kind == .question || envelope.kind == .contextUpdate { return }
         if demoPost == .rep, envelope.kind == .questionAcknowledgement || envelope.kind == .reply { return }
@@ -540,6 +542,17 @@ final class AppModel {
             if case .connected = state, self.demoPost == .room {
                 self.publishSharedSession()
                 self.retryPendingSupport()
+            }
+            if case .connected = state {
+                if self.demoPost == .room {
+                    for plan in self.coveragePlans where plan.receivedOnThisDevice != true && plan.workspaceID == self.workspace?.id && self.coveragePlan(for: plan.caseID)?.recordID == plan.recordID {
+                        try? self.transmitCoverage(planID: plan.id, revision: plan.revision, response: false)
+                    }
+                } else {
+                    for plan in self.incomingCoveragePlans where plan.response != nil {
+                        try? self.transmitCoverage(planID: plan.id, revision: plan.revision, response: true)
+                    }
+                }
             }
             self.refreshNearbyDiscovery()
         }
@@ -763,6 +776,141 @@ final class AppModel {
     func inviteNearby(_ id: String) throws { try sync.nearby.invite(id) }
     func answerNearbyInvitation(accept: Bool) { sync.nearby.respondToInvitation(accept: accept) }
 
+    // MARK: - Versioned coverage coordination
+
+    func coveragePlan(for caseID: String) -> CoveragePlan? {
+        coveragePlans.filter { $0.receivedOnThisDevice != true && $0.workspaceID == workspace?.id && $0.caseID == caseID }.max { $0.revision < $1.revision }
+    }
+
+    var incomingCoveragePlans: [CoveragePlan] {
+        let remote = coveragePlans.filter { $0.receivedOnThisDevice == true }
+        return Dictionary(grouping: remote, by: { "\($0.workspaceID):\($0.caseID)" }).values
+            .compactMap { $0.max { $0.revision < $1.revision } }.sorted { $0.requestedAt > $1.requestedAt }
+    }
+
+    @discardableResult
+    func requestCoverage(caseID: String, mode: CoveragePlan.Mode, recipientID: String?, expectedRevision: Int?) throws -> CoveragePlan {
+        guard demoPost == .room, let workspace else { throw CoveragePlanError.wrongDevice }
+        guard let procedure = cases.first(where: { $0.id == caseID }) else { throw AppModelError.unknownCase(caseID) }
+        let previous = coveragePlan(for: caseID)
+        guard previous?.revision == expectedRevision else { throw CoveragePlanError.changed }
+        let recipient = reps.first { $0.id == recipientID }
+        if mode != .reschedule {
+            guard let recipient else { throw CoveragePlanError.ineligible }
+            let eligible = recommendation(for: procedure).options.contains { option in
+                switch option {
+                case .inPersonRep(let rep, _): return mode == .inPerson && rep.id == recipient.id
+                case .remoteRep(let rep): return mode == .remote && rep.id == recipient.id
+                case .reschedule: return false
+                }
+            }
+            guard eligible else { throw CoveragePlanError.ineligible }
+        }
+        let plan = CoveragePlan(id: previous?.id ?? UUID().uuidString, revision: (previous?.revision ?? 0) + 1,
+            workspaceID: workspace.id, caseID: caseID, caseReference: procedure.reference ?? procedure.id,
+            caseName: procedure.name, siteName: hospital(procedure.hospitalID)?.name ?? "Site not recorded",
+            deviceFamily: procedure.deviceFamily, mode: mode, recipient: mode == .reschedule ? nil : recipient,
+            requester: workspace.localParticipant, requestedAt: clock())
+        try plan.validate()
+        try retainCoverage(coveragePlans + [plan])
+        try transmitCoverage(planID: plan.id, revision: plan.revision, response: false)
+        return coveragePlan(for: caseID) ?? plan
+    }
+
+    func respondToCoverage(planID: String, revision: Int, accepted: Bool) throws {
+        guard demoPost == .rep, let actor = supportActor else { throw CoveragePlanError.wrongDevice }
+        guard let plan = incomingCoveragePlans.first(where: { $0.id == planID && $0.revision == revision }), plan.mode != .reschedule else { throw CoveragePlanError.changed }
+        guard plan.response == nil else { throw CoveragePlanError.alreadyAnswered }
+        let response = CoveragePlan.Response(planID: plan.id, revision: plan.revision, mode: plan.mode,
+            actor: actor, accepted: accepted, at: clock())
+        let updated = try plan.applying(response)
+        try retainCoverage(coveragePlans.map { $0.workspaceID == updated.workspaceID && $0.recordID == updated.recordID ? updated : $0 })
+        try transmitCoverage(planID: planID, revision: revision, response: true)
+    }
+
+    func retryCoverage(planID: String, revision: Int, response: Bool = false) throws {
+        try transmitCoverage(planID: planID, revision: revision, response: response)
+    }
+
+    private func retainCoverage(_ plans: [CoveragePlan]) throws {
+        var next = snapshot(); next.coveragePlans = plans
+        try persist(next)
+        coveragePlans = plans
+    }
+
+    private func transmitCoverage(planID: String, revision: Int, response: Bool) throws {
+        guard let index = coveragePlans.firstIndex(where: { $0.id == planID && $0.revision == revision }) else { throw CoveragePlanError.changed }
+        let plan = coveragePlans[index]
+        if response {
+            guard demoPost == .rep, incomingCoveragePlans.contains(where: { $0.id == planID && $0.revision == revision }), plan.response != nil else { throw CoveragePlanError.changed }
+        } else {
+            guard demoPost == .room, coveragePlan(for: plan.caseID)?.revision == revision else { throw CoveragePlanError.changed }
+        }
+        let connected: Bool = { if case .connected = linkState { true } else { false } }()
+        var updated = coveragePlans
+        if response { updated[index].response?.delivery = connected ? .waitingForPeer : .onThisDevice }
+        else { updated[index].delivery = connected ? .waitingForPeer : .onThisDevice }
+        try retainCoverage(updated)
+        guard connected else { return }
+        let envelope = response ? plan.responseEnvelope(plan.response!) : plan.envelope
+        do { try sync.sendSupport(envelope) } catch {
+            var failed = coveragePlans
+            if response { failed[index].response?.delivery = .failed } else { failed[index].delivery = .failed }
+            try? retainCoverage(failed)
+            throw error
+        }
+    }
+
+    /// Dedicated envelope handling; unrelated question payloads cannot enter plan storage.
+    private func receiveCoverageEnvelope(_ envelope: SupportEnvelope) -> Bool {
+        let isPlan = envelope.kind == .coveragePlan || envelope.kind == .coveragePlanResponse || (envelope.kind == .receipt && envelope.questionID.hasPrefix("plan:"))
+        guard isPlan else { return false }
+        guard [envelope.origin.workspaceID, envelope.origin.caseID].allSatisfy({ !$0.isEmpty }), envelope.origin.sessionID == "coverage-plan",
+              envelope.question == nil, envelope.note == nil, envelope.reply == nil,
+              envelope.acknowledgement == nil, envelope.context == nil else { return true }
+        do {
+            var next = coveragePlans
+            switch envelope.kind {
+            case .coveragePlan:
+                guard demoPost == .rep, var plan = envelope.coveragePlan, envelope.coveragePlanResponse == nil,
+                      envelope.receiptForID == nil, plan.response == nil,
+                      plan.origin == envelope.origin, plan.messageID == envelope.id,
+                      plan.messageID == envelope.questionID, plan.requestedAt == envelope.sentAt,
+                      plan.receivedOnThisDevice != true else { return true }
+                try plan.validate()
+                if let existing = next.first(where: { $0.workspaceID == plan.workspaceID && $0.recordID == plan.recordID }) {
+                    guard existing.envelope == plan.envelope else { return true }
+                } else {
+                    if let newest = incomingCoveragePlans.first(where: { $0.workspaceID == plan.workspaceID && $0.caseID == plan.caseID }) {
+                        guard plan.id == newest.id, plan.revision > newest.revision else { return true }
+                    }
+                    plan.delivery = .receivedByPeer
+                    plan.receivedOnThisDevice = true
+                    next.append(plan)
+                }
+            case .coveragePlanResponse:
+                guard demoPost == .room, let response = envelope.coveragePlanResponse, envelope.coveragePlan == nil,
+                      envelope.receiptForID == nil, response.messageID == envelope.id, response.at == envelope.sentAt,
+                      let index = next.firstIndex(where: { $0.origin == envelope.origin && $0.id == response.planID && $0.revision == response.revision }),
+                      let current = coveragePlan(for: next[index].caseID), current.recordID == next[index].recordID,
+                      current.messageID == envelope.questionID else { return true }
+                next[index] = try next[index].applying(response)
+                next[index].response?.delivery = .receivedByPeer
+            case .receipt:
+                guard envelope.coveragePlan == nil, envelope.coveragePlanResponse == nil,
+                      let target = envelope.receiptForID, envelope.id == target + ":receipt",
+                      let index = next.firstIndex(where: { $0.origin == envelope.origin && $0.messageID == envelope.questionID }) else { return true }
+                if target == next[index].messageID, demoPost == .room { next[index].delivery = .receivedByPeer }
+                else if target == next[index].response?.messageID, demoPost == .rep { next[index].response?.delivery = .receivedByPeer }
+                else { return true }
+            default: return true
+            }
+            try retainCoverage(next)
+            if envelope.kind != .receipt, case .connected = linkState { try? sync.sendSupport(.receipt(for: envelope, at: clock())) }
+        } catch { /* Storage failure stays visible. Never receipt an unretained response. */ }
+        return true
+    }
+
     // MARK: - Planning helpers
 
     func recommendation(for procedure: Procedure) -> CoverageMatcher.Recommendation {
@@ -824,6 +972,7 @@ final class AppModel {
         retainedSessions = []
         drafts = []
         questions = []
+        coveragePlans = []
         sessionNotes = []
         remoteSession = nil; remoteSessionCurrent = false
         supportContext = [:]
@@ -838,6 +987,7 @@ final class AppModel {
         forecasts = snapshot.forecasts
         planningEvidenceRecords = snapshot.planningEvidenceRecords
         drafts = snapshot.drafts
+        coveragePlans = snapshot.coveragePlans
         questions = snapshot.supportQuestions
         sessionNotes = snapshot.sessionNotes
         remoteSession = snapshot.remoteSession; remoteSessionCurrent = false
@@ -876,7 +1026,8 @@ final class AppModel {
                                  sessions: (retainedSessions + live).sorted(by: Self.sessionOrder),
                                  drafts: drafts.sorted { ($0.updatedAt, $0.key.kind) < ($1.updatedAt, $1.key.kind) },
                                  activeCaseID: activeCaseID ?? self.activeCaseID, supportQuestions: questions,
-                                 sessionNotes: sessionNotes, remoteSession: remoteSession, planningEvidenceRecords: planningEvidenceRecords)
+                                 sessionNotes: sessionNotes, remoteSession: remoteSession, coveragePlans: coveragePlans,
+                                 planningEvidenceRecords: planningEvidenceRecords)
     }
 
     /// Saves before the caller commits its change. On failure sets a persistent `saveError`.
