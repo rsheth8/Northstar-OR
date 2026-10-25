@@ -1,5 +1,7 @@
 # Task board
 
+- [~] (Rahil / Codex) **Demo call control repair:** distinguish connected-without-recording from missing peer and allow restarting a single laptop camera after hiding its preview; reserve AppModel call prerequisite, WorkspaceCallPanel/NearbyCallView guidance and NativeSessionIntegrationTests. Branch `sync/call-context-guidance`. Preserve all saved demo records.
+
 - [~] (Amartya / Codex) **Expansion recovery after partner usage limit:** take over PR #53 compile/form fixes first, then independently verify open expansion slices and reconcile their remaining gates. Isolated checkout `expansion-recovery`; preserves original branches and uses one driver. Reserves #53 WorkspaceForms/WorkspaceFormsTests and recovery evidence; no feature is marked complete until merged.
 
 - [x] (Amartya / Codex) **CI simulator baseline repair:** select an available iPad runtime bounded by the active simulator SDK and app minimum, wait for boot readiness, and test mixed-runtime selection. Branch `sync/ci-simulator-runtime`; reserves `scripts/check.sh`, `scripts/check-repo.sh`, `scripts/select-ipad-simulator.py`, `scripts/test_select_ipad_simulator.py`, `NorthstarORUITests/WorkspaceShellTests.swift`, `NorthstarORUITests/WorkspaceCallEntryTests.swift`, workflow documentation and README tooling credit. Required app/UI suites stay enabled.

@@ -24,9 +24,9 @@ struct WorkspaceCallAction: View {
             } else {
                 Button { model.requestCall() } label: { Label("Request call", systemImage: "video") }
                     .buttonStyle(NorthstarPrimaryButtonStyle(tone: .standard))
-                    .disabled(!connected || model.supportRecordingEnded || (model.demoPost == .rep && !model.remoteSessionCurrent))
+                    .disabled(model.callUnavailableReason != nil)
                     .accessibilityIdentifier("request-call")
-                Text(connected ? "The other device accepts before audio and video start." : "Connect devices to request a call. You can keep writing your question.")
+                Text(model.callUnavailableReason ?? "The other device accepts before audio and video start.")
                     .font(Northstar.Fonts.supporting)
                 if let state = model.callInvitation?.state {
                     Text(state == .declined ? "Call declined" : state == .expired ? "Call request expired" : "Call request canceled")
@@ -39,7 +39,6 @@ struct WorkspaceCallAction: View {
             }
         }
     }
-    private var connected: Bool { if case .connected = model.linkState { return true }; return false }
 }
 
 /// Lives outside tab navigation and sheets: minimizing never stops media.
@@ -141,7 +140,7 @@ struct WorkspaceCallMedia: View {
         Button { call.setCameraEnabled(!call.cameraEnabled) } label: {
             Label(call.cameraEnabled ? "Camera off" : "Camera on", systemImage: call.cameraEnabled ? "video" : "video.slash")
         }.buttonStyle(NorthstarSecondaryButtonStyle())
-            .disabled(call.status != "In call" || (!call.cameraEnabled && call.localVideoTrack == nil && !call.canSwitchCamera))
+            .disabled(call.status != "In call")
             .accessibilityIdentifier("call-camera-enabled")
     }
 }
