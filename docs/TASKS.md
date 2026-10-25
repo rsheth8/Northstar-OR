@@ -1,6 +1,6 @@
 # Task board
 
-- [~] (Amartya / Codex) **CI simulator baseline repair:** select an available iPad runtime bounded by the active simulator SDK and app minimum, wait for boot readiness, and test mixed-runtime selection. Branch `sync/ci-simulator-runtime`; reserves `scripts/check.sh`, `scripts/check-repo.sh`, `scripts/select-ipad-simulator.py`, `scripts/test_select_ipad_simulator.py`, workflow documentation and README tooling credit. Required app/UI suites stay enabled.
+- [~] (Amartya / Codex) **CI simulator baseline repair:** select an available iPad runtime bounded by the active simulator SDK and app minimum, wait for boot readiness, and test mixed-runtime selection. Branch `sync/ci-simulator-runtime`; reserves `scripts/check.sh`, `scripts/check-repo.sh`, `scripts/select-ipad-simulator.py`, `scripts/test_select_ipad_simulator.py`, `NorthstarORUITests/WorkspaceShellTests.swift`, `NorthstarORUITests/WorkspaceCallEntryTests.swift`, workflow documentation and README tooling credit. Required app/UI suites stay enabled.
 
 - [~] (Amartya / Codex) **CI recording-control identity repair:** replace duplicated adaptive recording actions with one layout tree and verify deferral before support entry. Branch `copilot/single-recording-controls`; reserves `Features/CoPilot/CoPilotView.swift`, `NorthstarORUITests/WorkspaceCallEntryTests.swift`, README API credit and `docs/evidence/recording-control-repair/`. No domain-state or transport changes.
 

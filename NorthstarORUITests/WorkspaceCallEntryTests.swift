@@ -38,7 +38,10 @@ final class WorkspaceCallEntryTests: XCTestCase {
         app.buttons["Done typing"].tap()
         let form = app.descendants(matching: .any).matching(identifier: "support-request-form").firstMatch
         let call = form.buttons["request-call"].firstMatch
-        for _ in 0..<5 where !call.isHittable { form.swipeUp() }
+        // A disabled call control is intentionally not an activation target.
+        // Reveal its accessibility element without scrolling past it while
+        // waiting for a hit point that a disabled control need not provide.
+        for _ in 0..<5 where !call.exists { form.swipeUp() }
         XCTAssertTrue(call.exists)
         XCTAssertFalse(call.isEnabled, "An unpaired device must not claim it can call")
         let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
