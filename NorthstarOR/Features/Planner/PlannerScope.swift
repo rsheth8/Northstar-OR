@@ -6,12 +6,12 @@ struct PlannerScope {
         var id: String { rawValue }
     }
     var recording: Recording = .all
-    var day: Date?
+    var day: DateComponents?
 
     func includes(_ procedure: Procedure, timeZone: TimeZone, hasSession: Bool, isActive: Bool) -> Bool {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = timeZone
-        if let day, !calendar.isDate(procedure.scheduledAt, inSameDayAs: day) { return false }
+        if let day, calendar.dateComponents([.year, .month, .day], from: procedure.scheduledAt) != day { return false }
         switch recording {
         case .all: return true
         case .notStarted: return !hasSession

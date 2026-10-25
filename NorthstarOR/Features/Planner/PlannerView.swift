@@ -41,9 +41,9 @@ struct PlannerView: View {
                     Picker("Recording", selection: $scope.recording) {
                         ForEach(PlannerScope.Recording.allCases) { Text($0.rawValue).tag($0) }
                     }
-                    Toggle("Filter by site-local day", isOn: Binding(get: { scope.day != nil }, set: { scope.day = $0 ? Date.now : nil }))
+                    Toggle("Filter by site-local day", isOn: Binding(get: { scope.day != nil }, set: { scope.day = $0 ? Calendar.current.dateComponents([.year, .month, .day], from: .now) : nil }))
                     if scope.day != nil {
-                        DatePicker("Scheduled day", selection: Binding(get: { scope.day ?? .now }, set: { scope.day = $0 }), displayedComponents: .date)
+                        DatePicker("Scheduled day", selection: Binding(get: { scope.day.flatMap { Calendar.current.date(from: $0) } ?? .now }, set: { scope.day = Calendar.current.dateComponents([.year, .month, .day], from: $0) }), displayedComponents: .date)
                     }
                 }
                 ForEach(visible, id: \.procedure.id) { rec in
