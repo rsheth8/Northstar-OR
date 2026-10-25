@@ -18,7 +18,7 @@ struct NearbyCallView: View {
                         Button("Set up microphone") {
                             Task {
                                 let allowed = await NearbyCallController.requestMicrophoneAccess()
-                                microphonePermission = allowed ? "Microphone access allowed. Reconnect and accept a call when ready." : "Microphone access is off. On Mac, open System Settings → Privacy & Security → Microphone and enable Northstar OR. On iPad, enable Microphone in Northstar’s Settings."
+                                microphonePermission = allowed ? "Microphone access allowed. Request or accept a call when a case is active." : "Microphone access is off. On Mac, open System Settings → Privacy & Security → Microphone and enable Northstar OR. On iPad, enable Microphone in Northstar’s Settings."
                             }
                         }
                         .buttonStyle(NorthstarSecondaryButtonStyle())
@@ -26,7 +26,6 @@ struct NearbyCallView: View {
                         if let microphonePermission { Text(microphonePermission).font(Northstar.Fonts.supporting) }
                     }
                     if let call = model.nearbyCall, model.callInvitation?.state == .accepted { WorkspaceCallMedia(call: call, compact: false, end: model.endRepCall) }
-                    if let error = model.nearbyError { Text(error).foregroundStyle(Northstar.Palette.alert) }
                     NavigationLink("Connect another Northstar device") { NearbyLinkSheet() }
                         .buttonStyle(NorthstarSecondaryButtonStyle())
                     WorkspaceCallAction()
