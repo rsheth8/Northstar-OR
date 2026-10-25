@@ -73,6 +73,7 @@ struct SessionRecordingState: Hashable, Codable {
     let itemStatuses: [String: RecordedItemStatus]
     let selectedItemID: String?
     let pendingAcknowledgment: RequiredAcknowledgment?
+    var endedAt: Date? = nil
     private(set) var schemaVersion: Int = supportedSchemaVersion
 
     func validate() throws {
@@ -88,6 +89,7 @@ struct SessionRecordingState: Hashable, Codable {
             try requireSessionValue(selectedItemID, "selectedItemID")
             guard itemStatuses[selectedItemID] != nil else { throw SessionContractError.unknownItem(selectedItemID) }
         }
+        if let endedAt { try validateSessionTime(endedAt); guard pendingAcknowledgment == nil else { throw SessionContractError.inconsistentAcknowledgment } }
         if let pendingAcknowledgment {
             try pendingAcknowledgment.validate()
             guard selectedItemID == pendingAcknowledgment.itemID,
@@ -98,7 +100,7 @@ struct SessionRecordingState: Hashable, Codable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case schemaVersion, identity, templateReference, startedAt, version, itemStatuses, selectedItemID, pendingAcknowledgment
+        case schemaVersion, identity, templateReference, startedAt, version, itemStatuses, selectedItemID, pendingAcknowledgment, endedAt
     }
 }
 
@@ -114,11 +116,13 @@ extension SessionRecordingState {
         itemStatuses = try values.decode([String: RecordedItemStatus].self, forKey: .itemStatuses)
         selectedItemID = try values.decodeIfPresent(String.self, forKey: .selectedItemID)
         pendingAcknowledgment = try values.decodeIfPresent(RequiredAcknowledgment.self, forKey: .pendingAcknowledgment)
+        endedAt = try values.decodeIfPresent(Date.self, forKey: .endedAt)
         try validate()
     }
 }
 
 enum SessionCommandAction: Hashable, Codable {
+    case endRecording, reopenRecording
     case selectItem
     case recordConfirmation
     case deferItem
@@ -149,7 +153,7 @@ struct SessionCommand: Identifiable, Hashable, Codable {
         try validateSessionContext(identity, actor: actor, target: targetItemID, time: issuedAt)
         guard expectedVersion >= 0 else { throw SessionContractError.invalidVersion }
         switch action {
-        case .selectItem, .recordConfirmation, .deferItem: break
+        case .selectItem, .recordConfirmation, .deferItem, .endRecording, .reopenRecording: break
         case .acknowledgeWarning(let acknowledgment):
             try acknowledgment.validate()
             guard acknowledgment.itemID == targetItemID else { throw SessionContractError.targetMismatch }
@@ -181,6 +185,7 @@ extension SessionCommand {
 }
 
 enum SessionEventPayload: Hashable, Codable {
+    case recordingEnded, recordingReopened
     case itemSelected
     case confirmationRecorded
     case itemDeferred(acknowledgmentID: String?)
@@ -215,7 +220,7 @@ struct SessionEvent: Identifiable, Hashable, Codable {
         try validateSessionContext(identity, actor: actor, target: targetItemID, time: occurredAt)
         guard acceptedVersion > 0 else { throw SessionContractError.invalidVersion }
         switch payload {
-        case .itemSelected, .confirmationRecorded: break
+        case .itemSelected, .confirmationRecorded, .recordingEnded, .recordingReopened: break
         case .itemDeferred(let acknowledgmentID):
             if let acknowledgmentID { try requireSessionValue(acknowledgmentID, "acknowledgment.id") }
         case .warningAcknowledged(let acknowledgment):

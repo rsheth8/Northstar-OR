@@ -343,6 +343,8 @@ final class AppModel {
             recentEvents: session.events.suffix(fullHistory ? session.events.count : 8).map { event in
                 let action: String
                 switch event.payload {
+                case .recordingEnded: action = "Recording explicitly ended"
+                case .recordingReopened: action = "Recording explicitly reopened"
                 case .itemSelected: action = "Item selected"
                 case .confirmationRecorded: action = "Team confirmation recorded"
                 case .itemDeferred: action = "Item deferred"

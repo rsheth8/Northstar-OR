@@ -183,6 +183,8 @@ struct CoPilotView: View {
     private func activityLabel(_ event: SessionEvent) -> String {
         let title = model.activeSession?.procedure.steps.first { $0.id == event.targetItemID }?.title ?? "Item"
         switch event.payload {
+        case .recordingEnded: return "Recording explicitly ended; unresolved items retained"
+        case .recordingReopened: return "Recording explicitly reopened"
         case .itemSelected: return "\(title) · Selected"
         case .confirmationRecorded: return "\(title) · Team confirmation recorded"
         case .itemDeferred: return "\(title) · Deferred"

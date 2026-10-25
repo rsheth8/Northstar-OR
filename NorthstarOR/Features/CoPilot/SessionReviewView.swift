@@ -33,6 +33,8 @@ struct SessionReviewView: View {
     }
     private func summary(_ payload: SessionEventPayload) -> String {
         switch payload {
+        case .recordingEnded: return "Recording explicitly ended; unresolved items retained"
+        case .recordingReopened: return "Recording explicitly reopened"
         case .itemSelected: return "Item selected"
         case .confirmationRecorded: return "Team confirmation recorded"
         case .itemDeferred: return "Item deferred"
