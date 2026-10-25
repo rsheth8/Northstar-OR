@@ -52,9 +52,30 @@ private struct CallStatusControls: View {
             NorthstarStatusLabel(call.status, tone: call.linkState == .disconnected ? .failure : .info)
                 .accessibilityIdentifier("call-status")
             Text(call.cameraStatus).font(Northstar.Fonts.supporting)
+            Text("Room camera · shared with the laptop")
+                .font(Northstar.Fonts.bodyStrong)
+            ZStack {
+                Northstar.Palette.bgSunken
+                if call.localVideoTrack != nil {
+                    NearbyCallCameraPreview(call: call)
+                } else {
+                    ContentUnavailableView("Camera preview", systemImage: "video.slash",
+                        description: Text(call.cameraStatus))
+                }
+            }
+            .frame(height: 220).clipShape(RoundedRectangle(cornerRadius: Northstar.Radius.sm))
+            .accessibilityLabel("Room camera preview")
+            .accessibilityIdentifier("call-camera-preview")
+            Text(call.muted ? "Microphone muted for this call" : "Microphone on for this call")
+                .font(Northstar.Fonts.bodyStrong)
+                .accessibilityIdentifier("call-microphone-state")
             HStack(spacing: Northstar.Space.s3) {
-                Button(call.muted ? "Unmute" : "Mute") { call.setMuted(!call.muted) }
-                    .buttonStyle(NorthstarSecondaryButtonStyle()).disabled(call.status != "In call")
+                Button { call.setMuted(!call.muted) } label: {
+                    Label(call.muted ? "Unmute microphone" : "Mute microphone",
+                        systemImage: call.muted ? "mic.slash.fill" : "mic.fill")
+                }
+                .buttonStyle(NorthstarSecondaryButtonStyle())
+                .accessibilityIdentifier("call-mute")
                 Button("End call", action: end).buttonStyle(NorthstarSecondaryButtonStyle())
             }
         }

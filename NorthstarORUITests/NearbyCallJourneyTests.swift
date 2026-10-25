@@ -33,8 +33,17 @@ final class NearbyCallJourneyTests: XCTestCase {
         }
         defer { removeUIInterruptionMonitor(permission) }
         XCTAssertTrue(app.staticTexts["In call"].waitForExistence(timeout: 35))
+        let mute = app.buttons["call-mute"]
+        mute.tap()
+        XCTAssertTrue(app.staticTexts["Microphone muted for this call"].exists)
+        XCTAssertEqual(mute.label, "Unmute microphone")
+        mute.tap()
+        XCTAssertEqual(mute.label, "Mute microphone")
         let saved = app.scrollViews["rep-call-content"].buttons["Send this saved question"]
-        if !saved.isHittable { app.swipeUp() }
+        var attempts = 0
+        while !saved.isHittable && attempts < 8 {
+            app.scrollViews["rep-call-content"].swipeUp(); attempts += 1
+        }
         XCTAssertTrue(saved.waitForExistence(timeout: 5)); saved.tap()
         XCTAssertTrue(app.staticTexts["See the fictional call training packet."].firstMatch.waitForExistence(timeout: 30))
         capture("call-reply-retained")

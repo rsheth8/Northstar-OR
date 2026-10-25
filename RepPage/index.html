@@ -23,11 +23,17 @@
 <body>
   <main>
     <h1>Northstar rep call</h1>
+    <p class="note">Call controls 3 · microphone and room camera</p>
     <p id="status" class="status" role="status">Join to allow your microphone</p>
     <button id="join" type="button">Join call</button>
     <button id="end" class="secondary" type="button" disabled>End call</button>
+    <button id="mute" class="secondary" type="button" disabled aria-pressed="false">Mute microphone</button>
+    <p id="mic-status" role="status">Laptop microphone: off</p>
     <button id="play" class="secondary" type="button" hidden>Play room audio</button>
-    <video id="remote" autoplay playsinline></video>
+    <p id="audio-status" class="note" role="status">Room audio: not connected</p>
+    <p id="video-status" class="note" role="status">Room camera: not connected</p>
+    <audio id="room-audio" autoplay></audio>
+    <video id="remote" autoplay playsinline muted></video>
     <p class="note">This call does not confirm a checklist item. Use headphones in the same room.</p>
     <section>
       <h2>Team question</h2>
@@ -44,6 +50,6 @@
     <p id="delivery" role="status"></p>
     <button id="send" type="button" disabled>Send reply</button>
   </main>
-  <script type="module" src="/call.js"></script>
+  <script type="module" src="/call.js?v=call-controls-3"></script>
 </body>
 </html>

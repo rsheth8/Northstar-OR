@@ -16,6 +16,7 @@ const { chromium } = require(process.env.NORTHSTAR_PLAYWRIGHT_MODULE || 'playwri
     });
     await page.goto('http://localhost:8080');
     await page.locator('#remote').evaluate(video => { video.muted = true; });
+    await page.locator('#room-audio').evaluate(audio => { audio.muted = true; });
     await page.getByRole('button',{name:'Join call',exact:true}).click();
     await page.waitForFunction(()=>document.querySelector('#status').textContent==='Waiting for the room iPad');
     console.log('Rep browser joined with SILENCED synthetic microphone; browser playback muted');

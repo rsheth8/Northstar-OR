@@ -1,6 +1,6 @@
 const $ = id => document.getElementById(id)
-const status = $('status'), video = $('remote'), select = $('questions')
-let pc, ws, channel, stream, run = 0
+const status = $('status'), video = $('remote'), roomAudio = $('room-audio'), select = $('questions')
+let pc, ws, channel, stream, audioTimer, run = 0
 let records
 try { records = JSON.parse(sessionStorage.getItem('northstar-call') || '{}') } catch { records = {} }
 const now = () => Date.now() / 1000 - 978307200 // Swift Date's reference epoch.
@@ -78,14 +78,28 @@ $('send').onclick = () => {
 }
 function end(message = 'Call ended. Saved questions remain on this laptop tab.') {
   run++
+  clearInterval(audioTimer); audioTimer = null
+  $('audio-status').textContent = 'Room audio: not connected'
+  $('video-status').textContent = 'Room camera: not connected'
   const old = pc; pc = null; channel = null; old?.close()
   const socket = ws; ws = null; socket?.close()
   stream?.getTracks().forEach(track => track.stop()); stream = null
-  video.srcObject = null; $('end').disabled = true; $('join').disabled = false; $('play').hidden = true
+  video.srcObject = null; roomAudio.srcObject = null;
+  $('mute').disabled = true; $('mute').textContent = 'Mute microphone'; $('mute').setAttribute('aria-pressed', 'false');
+  $('mic-status').textContent = 'Laptop microphone: off'; $('end').disabled = true; $('join').disabled = false; $('play').hidden = true
   status.textContent = message; render()
 }
 $('end').onclick = () => end()
-$('play').onclick = () => video.play().then(() => { $('play').hidden = true }).catch(() => { status.textContent = 'Room audio could not play. Check the laptop output.' })
+$('mute').onclick = () => {
+  const tracks = stream?.getAudioTracks() || []
+  if (!tracks.length) return
+  const muted = tracks.some(track => track.enabled)
+  tracks.forEach(track => { track.enabled = !muted })
+  $('mute').textContent = muted ? 'Unmute microphone' : 'Mute microphone'
+  $('mute').setAttribute('aria-pressed', String(muted))
+  $('mic-status').textContent = 'Laptop microphone: ' + (muted ? 'muted for this call' : 'on for this call')
+}
+$('play').onclick = () => roomAudio.play().then(() => { $('play').hidden = true }).catch(() => { status.textContent = 'Room audio could not play. Check the laptop output.' })
 $('join').onclick = async () => {
   end(); const generation = run
   if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
@@ -96,8 +110,31 @@ $('join').onclick = async () => {
     const media = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true }, video: false })
     if (run !== generation) { media.getTracks().forEach(track => track.stop()); return }
     stream = media
+    $('mute').disabled = false
+    $('mic-status').textContent = 'Laptop microphone: on for this call'
     const peer = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] })
     pc = peer
+    let previousEnergy = null
+    audioTimer = setInterval(async () => {
+      try {
+        const stats = await peer.getStats()
+        if (pc !== peer) return
+        const picture = [...stats.values()].find(report => report.type === 'inbound-rtp' && (report.kind === 'video' || report.mediaType === 'video'))
+        $('video-status').textContent = 'Room camera: ' + (!picture?.packetsReceived ? 'Waiting for iPad video' : picture.framesDecoded > 0 ? 'Video frames decoded on laptop' : 'Video packets arriving; waiting for a decoded frame')
+        const inbound = [...stats.values()].find(report => report.type === 'inbound-rtp' && (report.kind === 'audio' || report.mediaType === 'audio'))
+        const track = peer.getReceivers().find(receiver => receiver.track?.kind === 'audio')?.track
+        let detail
+        if (!track) detail = 'No audio track received from the iPad'
+        else if (!inbound?.packetsReceived) detail = 'Audio track found; waiting for iPad audio packets'
+        else if (roomAudio.muted || roomAudio.volume === 0) detail = 'Audio arriving; laptop player is muted'
+        else if (roomAudio.paused) { detail = 'Audio arriving; click Play room audio'; $('play').hidden = false }
+        else if (inbound.totalAudioEnergy === undefined) detail = 'Audio packets arriving; check headphone output and volume'
+        else if (previousEnergy !== null && inbound.totalAudioEnergy > previousEnergy + 0.000001) detail = 'Microphone signal arriving; laptop player is running'
+        else detail = 'Audio packets arriving; no microphone signal detected — speak near the iPad and check Mute'
+        previousEnergy = inbound?.totalAudioEnergy ?? null
+        $('audio-status').textContent = 'Room audio: ' + detail
+      } catch { /* The peer may have closed while a report was being collected. */ }
+    }, 1000)
     stream.getTracks().forEach(track => peer.addTrack(track, stream))
     const socket = new WebSocket(`ws://${location.host}/?role=rep`); ws = socket
     let pending = [], ready = false
@@ -105,8 +142,14 @@ $('join').onclick = async () => {
     peer.onicecandidate = event => { if (pc === peer && event.candidate) signal({ type: 'candidate', ...event.candidate.toJSON() }) }
     peer.ontrack = event => {
       if (pc !== peer) return
-      video.srcObject = event.streams[0] || new MediaStream([event.track])
-      video.play().catch(() => { $('play').hidden = false })
+      // Keep audio separate: video decode/autoplay failures must not replace or
+      // pause the room microphone stream. Collect tracks by kind, not arrival.
+      const player = event.track.kind === 'audio' ? roomAudio : video
+      const received = player.srcObject || new MediaStream()
+      if (!received.getTracks().includes(event.track)) received.addTrack(event.track)
+      player.srcObject = received
+      if (event.track.kind === 'video') video.muted = true
+      player.play().catch(() => { if (event.track.kind === 'audio') $('play').hidden = false })
     }
     peer.ondatachannel = event => {
       if (pc !== peer || event.channel.label !== 'northstar') return

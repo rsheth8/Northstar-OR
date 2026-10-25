@@ -37,3 +37,13 @@ Run `node RepPage/server.mjs`. With Playwright available and Chrome installed, r
 - [Focus after the real call reply, with warning still pending](focus-call-ipad13-1376x1032pt.png)
 - [Saved reply in the call sheet](call-sheet-ipad13-1376x1032pt.png)
 - [Laptop receipt of the room’s retained reply](rep-browser-call.png) — blank video is expected on this simulator run.
+
+## Physical trial follow-up: preview and call microphone controls
+
+Owner reported laptop-to-iPad speech audible, but iPad-to-laptop speech and camera were not seen/heard. This is partial user-reported hardware evidence, not a verified two-way call. Xcode also logged a failed local-network signaling attempt (-1009); that attempt cannot establish a connected call. The root cause of the original one-way audio report is not yet proven.
+
+Owner explicitly requested a local iPad camera area and laptop Mute/Unmute controls. Added a renderer of the same outbound camera track, with an explicit unavailable placeholder; retained both video track and source wrapper (RTCCameraVideoCapturer.delegate is weak in the shipped SDK). Camera-on status now follows capture completion. No second capture session or recording was added.
+
+iPad mute is now selectable while connecting, clearly says microphone on/muted for this call, applies the selection when the engine creates the track, and remains independent of system output volume. Added laptop microphone track enable/disable with visible state. Room audio has a dedicated audio element; a later video event cannot overwrite the audio stream. Receive-track aggregation handles streamless events and either arrival order. Existing browser diagnostics distinguish absent packets, absent microphone signal, muted/paused playback and video frames. Connection failure before WebSocket open is now surfaced immediately through URLSessionTaskDelegate.
+
+Verification: physical iPad build passed (`build/call-controls-device3.log`); `node --test RepPage/call-controls.test.mjs` passed one focused check against the real browser script for outgoing track mute/unmute, independent audio/video arrival, and cleanup. Syntax and diff checks passed. The earlier successful integration journey was extended with iPad mute UI assertions but **not rerun** for this follow-up; no fresh physical audio/video success is claimed. The installed build and browser page headed “Call controls 3 · microphone and room camera” are ready for the next owner-operated trial. No audible synthetic test was run.

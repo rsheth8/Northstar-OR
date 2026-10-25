@@ -9,6 +9,7 @@ final class NearbyCallController: ObservableObject, NearbyTransport {
     @Published private(set) var status = "Call ended"
     @Published private(set) var muted = false
     @Published private(set) var cameraStatus = "Camera off"
+    @Published private(set) var localVideoTrack: RTCVideoTrack?
     private(set) var linkState: NearbyLinkState = .idle
     var onEnvelope: ((SupportEnvelope) -> Void)?
     var onLinkState: ((NearbyLinkState) -> Void)?
@@ -35,7 +36,7 @@ final class NearbyCallController: ObservableObject, NearbyTransport {
             #else
             let camera = await AVCaptureDevice.requestAccess(for: .video)
             guard run == generation else { return }
-            cameraStatus = camera ? "Room camera on · video is not saved" : "Camera access is off · audio only"
+            cameraStatus = camera ? "Starting room camera" : "Camera access is off · audio only"
             #endif
             let engine = NearbyCallEngine()
             self.engine = engine
@@ -49,14 +50,22 @@ final class NearbyCallController: ObservableObject, NearbyTransport {
                 guard let self, self.generation == run else { return }
                 self.onEnvelope?(envelope)
             }
-            engine.onCameraError = { [weak self] in self?.cameraStatus = "Camera unavailable · audio only" }
+            engine.onCameraState = { [weak self] state in
+                guard let self, self.generation == run else { return }
+                self.cameraStatus = state
+            }
+            engine.onLocalVideoTrack = { [weak self] track in
+                guard let self, self.generation == run else { return }
+                self.localVideoTrack = track
+            }
             engine.start(url: url, camera: camera)
+            engine.setMuted(muted)
         }
     }
 
     func stop() {
         generation = UUID()
-        engine?.stop(); engine = nil
+        engine?.stop(); engine = nil; localVideoTrack = nil
         status = "Call ended"; muted = false; cameraStatus = "Camera off"
         setLink(.idle)
     }
@@ -75,7 +84,8 @@ final class NearbyCallController: ObservableObject, NearbyTransport {
 private final class NearbyCallEngine: NSObject, URLSessionWebSocketDelegate, RTCPeerConnectionDelegate, RTCDataChannelDelegate {
     var onStatus: ((String) -> Void)?
     var onEnvelope: ((SupportEnvelope) -> Void)?
-    var onCameraError: (() -> Void)?
+    var onCameraState: ((String) -> Void)?
+    var onLocalVideoTrack: ((RTCVideoTrack?) -> Void)?
     private static let factory: RTCPeerConnectionFactory = {
         RTCInitializeSSL()
         return RTCPeerConnectionFactory()
@@ -86,6 +96,9 @@ private final class NearbyCallEngine: NSObject, URLSessionWebSocketDelegate, RTC
     private var session: URLSession?
     private var audioTrack: RTCAudioTrack?
     private var capturer: RTCCameraVideoCapturer?
+    private var videoTrack: RTCVideoTrack?
+    // RTCVideoCapturer.delegate is weak; retain the actual delegate wrapper.
+    private var videoSource: RTCVideoSource?
     private var remoteDescriptionSet = false
     private var pendingCandidates: [RTCIceCandidate] = []
     private var connected = false
@@ -116,9 +129,13 @@ private final class NearbyCallEngine: NSObject, URLSessionWebSocketDelegate, RTC
         peer.add(audio, streamIds: ["northstar"])
         if camera {
             let source = Self.factory.videoSource()
+            videoSource = source
             let capture = RTCCameraVideoCapturer(delegate: source)
             capturer = capture
-            peer.add(Self.factory.videoTrack(with: source, trackId: "video0"), streamIds: ["northstar"])
+            let video = Self.factory.videoTrack(with: source, trackId: "video0")
+            videoTrack = video
+            peer.add(video, streamIds: ["northstar"])
+            onLocalVideoTrack?(video)
             startCamera(capture)
         }
         let channelConfig = RTCDataChannelConfiguration()
@@ -143,6 +160,7 @@ private final class NearbyCallEngine: NSObject, URLSessionWebSocketDelegate, RTC
     func stop() {
         timeout?.cancel(); timeout = nil
         let camera = capturer; capturer = nil; camera?.stopCapture()
+        videoTrack = nil; videoSource = nil; onLocalVideoTrack?(nil)
         let channel = dataChannel; dataChannel = nil; channel?.close()
         let peer = connection; connection = nil; peer?.close()
         let task = socket; socket = nil; task?.cancel(with: .goingAway, reason: nil)
@@ -173,10 +191,14 @@ private final class NearbyCallEngine: NSObject, URLSessionWebSocketDelegate, RTC
                   let a = CMVideoFormatDescriptionGetDimensions($0.formatDescription)
                   let b = CMVideoFormatDescriptionGetDimensions($1.formatDescription)
                   return abs(Int(a.width) - 640) + abs(Int(a.height) - 480) < abs(Int(b.width) - 640) + abs(Int(b.height) - 480)
-              }) else { onCameraError?(); return }
+              }) else { onCameraState?("Camera unavailable · audio only"); return }
         let fps = max(1, min(24, Int(format.videoSupportedFrameRateRanges.map(\.maxFrameRate).max() ?? 24)))
         camera.startCapture(with: device, format: format, fps: fps) { [weak self] error in
-            if error != nil { DispatchQueue.main.async { self?.onCameraError?() } }
+            DispatchQueue.main.async {
+                guard let self, self.capturer === camera else { return }
+                self.onCameraState?(error == nil ? "Room camera on · video is not saved" : "Camera unavailable · audio only")
+                if error != nil { self.onLocalVideoTrack?(nil) }
+            }
         }
     }
     private func makeOffer(_ peer: RTCPeerConnection) {
@@ -241,6 +263,13 @@ private final class NearbyCallEngine: NSObject, URLSessionWebSocketDelegate, RTC
         DispatchQueue.main.async { [weak self] in
             guard let self, self.socket === webSocketTask, let peer = self.connection else { return }
             self.receive(webSocketTask); self.makeOffer(peer)
+        }
+    }
+    nonisolated func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
+        guard let error else { return }
+        DispatchQueue.main.async { [weak self] in
+            guard let self, self.socket === task else { return }
+            self.fail("Cannot reach the laptop server. Check the server address, Wi-Fi and Northstar’s Local Network permission. " + error.localizedDescription)
         }
     }
     nonisolated func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didCloseWith closeCode: URLSessionWebSocketTask.CloseCode, reason: Data?) {
