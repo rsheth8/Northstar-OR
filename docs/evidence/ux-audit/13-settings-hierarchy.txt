@@ -1,0 +1,185 @@
+Attributes: Application, 0x116145a40, pid: 18895, label: 'Northstar OR'
+Element subtree:
+ →Application, 0x116145a40, pid: 18895, label: 'Northstar OR'
+    Window (Main), 0x116145b80, {{0.0, 0.0}, {1376.0, 1032.0}}
+      Other, 0x116145cc0, {{0.0, 0.0}, {1376.0, 1032.0}}
+        Other, 0x116145e00, {{0.0, 0.0}, {1376.0, 1032.0}}
+          Other, 0x116145f40, {{0.0, 0.0}, {1376.0, 1032.0}}
+            Other, 0x116146080, {{-1376.0, -1032.0}, {4128.0, 3096.0}}, identifier: 'PopoverDismissRegion', label: 'dismiss popup'
+            Other, 0x1161461c0, {{0.0, 0.0}, {1376.0, 1032.0}}
+              Other, 0x116146300, {{0.0, 0.0}, {1376.0, 1032.0}}
+                StaticText, 0x116146440, {{24.0, 54.5}, {157.0, 23.0}}, label: 'Northstar OR'
+                  Image, 0x116146580, {{24.0, 54.5}, {40.0, 23.0}}, label: 'BrandMark'
+                  StaticText, 0x1161466c0, {{76.0, 55.8}, {105.0, 20.5}}, label: 'Northstar OR'
+                StaticText, 0x116146800, {{874.0, 58.0}, {166.0, 16.0}}, identifier: 'header-workspace-name', label: 'Sample fictional workspace'
+                Image, 0x116146940, {{1057.5, 60.0}, {15.0, 12.0}}, identifier: 'ipad.landscape', label: 'ipad.landscape'
+                StaticText, 0x116146bc0, {{1057.5, 58.0}, {111.0, 16.0}}, label: 'On this device'
+                Button, 0x116146a80, {{1184.5, 44.0}, {167.5, 44.0}}, identifier: 'header-workspace-settings', label: 'Workspace settings'
+                  Image, 0x116146d00, {{1197.5, 58.5}, {14.0, 14.0}}, identifier: 'gearshape', label: 'gearshape'
+                  StaticText, 0x116146e40, {{1184.5, 44.0}, {167.5, 44.0}}, label: 'Workspace settings'
+                SegmentedControl, 0x116146f80, {{24.0, 106.5}, {240.0, 31.0}}, identifier: 'nearby-role'
+                  Button, 0x1161470c0, {{24.0, 106.5}, {120.0, 32.0}}, label: 'Room', Selected
+                  Button, 0x116147200, {{144.0, 106.5}, {120.0, 32.0}}, label: 'Rep'
+                Button, 0x116147480, {{1094.0, 112.0}, {122.5, 20.5}}, identifier: 'open-call', label: 'Session and call'
+                Button, 0x116147340, {{1224.5, 112.0}, {127.5, 20.5}}, label: 'Connect devices'
+                StaticText, 0x1161475c0, {{314.5, 144.0}, {747.0, 16.0}}, label: 'Fictional coordination record. Support links nearby demo devices. This app does not decide whether a procedure proceeds.'
+                Other, 0x116147700, {{0.0, 160.0}, {1376.0, 872.0}}
+                  Other, 0x116147840, {{0.0, 160.0}, {1376.0, 872.0}}
+                    Other, 0x116147980, {{0.0, 170.0}, {1376.0, 44.0}}
+                      Button, 0x116147ac0, {{514.5, 174.0}, {96.0, 36.0}}, identifier: 'list.bullet.rectangle', label: 'Co-pilot'
+                        Button, 0x116147c00, {{514.5, 174.0}, {96.0, 36.0}}, identifier: 'list.bullet.rectangle', label: 'Co-pilot'
+                      Button, 0x116147d40, {{610.5, 174.0}, {91.5, 36.0}}, identifier: 'calendar', label: 'Planner'
+                        Button, 0x116147e80, {{610.5, 174.0}, {91.5, 36.0}}, identifier: 'calendar', label: 'Planner'
+                      Button, 0x114c40000, {{702.0, 174.0}, {159.5, 36.0}}, identifier: 'headphones', label: 'Remote Support', Selected
+                        Button, 0x114c40140, {{702.0, 174.0}, {159.5, 36.0}}, identifier: 'headphones', label: 'Remote Support', Selected
+                  Other, 0x114c40280, {{0.0, 160.0}, {1376.0, 872.0}}
+                    Other, 0x114c403c0, {{0.0, 160.0}, {1376.0, 872.0}}
+                      Other, 0x114c40500, {{0.0, 160.0}, {1376.0, 872.0}}
+                        Other, 0x114c40640, {{0.0, 160.0}, {1376.0, 872.0}}
+                          Other, 0x114c40780, {{0.0, 160.0}, {1376.0, 872.0}}
+                            Other, 0x114c408c0, {{0.0, 160.0}, {1376.0, 872.0}}
+                              NavigationBar, 0x114c40a00, {{0.0, 170.0}, {1376.0, 54.0}}, identifier: 'Remote Support'
+                              Other, 0x114c40b40, {{0.0, 160.0}, {1376.0, 872.0}}
+                                Other, 0x114c40c80, {{0.0, 160.0}, {1376.0, 872.0}}
+                                  Other, 0x114c40dc0, {{0.0, 160.0}, {1376.0, 872.0}}
+                                    Other, 0x114c40f00, {{0.0, 160.0}, {1376.0, 872.0}}
+                                      ScrollView, 0x114c41040, {{0.0, 160.0}, {1376.0, 872.0}}
+                                        Other, 0x114c41180, {{0.0, 160.0}, {1376.0, 872.0}}
+                                          Other, 0x114c412c0, {{0.0, 160.0}, {1376.0, 118.8}}
+                                        Other, 0x114c41400, {{0.0, 160.0}, {1376.0, 872.0}}
+                                        Other, 0x114c41540, {{0.0, 224.0}, {1376.0, 682.0}}
+                                          StaticText, 0x114c41680, {{213.5, 248.0}, {115.0, 16.0}}, label: 'On this device'
+                                            Image, 0x114c417c0, {{213.5, 250.0}, {15.5, 12.0}}, identifier: 'ipad.landscape', label: 'ipad.landscape'
+                                            StaticText, 0x114c41900, {{213.5, 248.0}, {115.0, 16.0}}, label: 'On this device'
+                                          StaticText, 0x114c41a40, {{212.0, 280.0}, {648.0, 16.0}}, label: 'Messages stay with this case. Connect Northstar on the room iPad and the rep’s Mac to exchange updates.'
+                                          StaticText, 0x114c41b80, {{212.0, 312.0}, {203.0, 26.5}}, label: 'Current room record'
+                                          StaticText, 0x114c41cc0, {{212.0, 354.5}, {217.0, 20.5}}, label: 'Fictional pacemaker case A'
+                                          StaticText, 0x114c41e00, {{212.0, 391.0}, {207.5, 20.5}}, label: '8 confirmations unresolved'
+                                          StaticText, 0x114c41f40, {{212.0, 427.5}, {340.5, 16.0}}, label: 'Choose Connect devices on both devices before calling.'
+                                          StaticText, 0x114c42080, {{533.5, 479.0}, {309.0, 95.0}}, label: 'No question from the team yet'
+                                          StaticText, 0x114c421c0, {{361.5, 577.0}, {653.0, 18.0}}, label: 'Request support from the current Co-pilot item, including while an acknowledgment is pending.'
+                                          StaticText, 0x114c42300, {{212.0, 663.5}, {125.0, 20.5}}, label: 'Case messages'
+                                          StaticText, 0x114c42440, {{212.0, 692.0}, {180.0, 16.0}}, label: 'No messages in this case yet.'
+                                          TextField, 0x114c42580, {{224.0, 736.0}, {928.0, 22.0}}, identifier: 'session-note-draft', placeholderValue: 'Write a message for this case'
+                                            Other, 0x114c426c0, {{224.0, 744.0}, {928.0, 11.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                              Other, 0x114c42800, {{227.0, 752.0}, {922.0, 3.0}}
+                                          Button, 0x114c42940, {{207.0, 777.0}, {221.0, 82.0}}, identifier: 'session-note-send', label: 'Send message', Disabled
+                                            StaticText, 0x114c42a80, {{212.0, 782.0}, {211.0, 72.0}}, label: 'Send message', Disabled
+                                            Other, 0x114c42bc0, {{207.0, 777.0}, {221.0, 82.0}}, Disabled
+                                          StaticText, 0x114c42d00, {{212.0, 866.0}, {275.0, 16.0}}, label: 'A message does not confirm a checklist item.'
+                                        Other, 0x114c42e40, {{1343.0, 224.0}, {30.0, 778.0}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                                          Other, 0x114c42f80, {{1370.0, 333.0}, {3.0, 666.0}}
+                                        Other, 0x114c430c0, {{1343.0, 224.0}, {30.0, 778.0}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                                          Other, 0x114c43200, {{1370.0, 333.0}, {3.0, 666.0}}
+                              Other, 0x114c43340, {{0.0, 160.0}, {1376.0, 872.0}}
+                                Other, 0x114c43480, {{0.0, 160.0}, {1376.0, 872.0}}
+      Other, 0x114c435c0, {{0.0, 0.0}, {1376.0, 1032.0}}
+        Other, 0x114c43700, {{-1376.0, -1032.0}, {4128.0, 3096.0}}, identifier: 'PopoverDismissRegion', label: 'dismiss popup'
+        Other, 0x114c43840, {{398.0, 186.0}, {580.0, 650.0}}
+          Image, 0x114c43980, {{248.0, 36.0}, {880.0, 950.0}}
+          Other, 0x114c43ac0, {{398.0, 186.0}, {580.0, 650.0}}
+            Other, 0x114c43c00, {{398.0, 186.0}, {580.0, 650.0}}
+              Other, 0x114c43d40, {{398.0, 186.0}, {580.0, 650.0}}
+                Other, 0x114c43e80, {{398.0, 186.0}, {580.0, 650.0}}
+                  Other, 0x115334000, {{398.0, 186.0}, {580.0, 650.0}}
+                    Other, 0x115334140, {{398.0, 186.0}, {580.0, 650.0}}
+                      Other, 0x115334280, {{398.0, 186.0}, {580.0, 650.0}}
+                        NavigationBar, 0x1153343c0, {{398.0, 196.0}, {580.0, 54.0}}, identifier: 'Workspace settings'
+                          StaticText, 0x115334500, {{609.0, 207.5}, {157.5, 21.0}}, label: 'Workspace settings'
+                          Other, 0x115334640, {{898.0, 200.0}, {66.0, 36.0}}, identifier: 'settings-done', label: 'Done'
+                            Other, 0x115334780, {{898.0, 200.0}, {66.0, 36.0}}
+                              Button, 0x1153348c0, {{898.0, 200.0}, {66.0, 36.0}}, identifier: 'settings-done', label: 'Done'
+                        Other, 0x115334a00, {{398.0, 186.0}, {580.0, 650.0}}
+                          Other, 0x115334b40, {{398.0, 186.0}, {580.0, 650.0}}
+                            Other, 0x115334c80, {{398.0, 186.0}, {580.0, 650.0}}
+                              Other, 0x115334dc0, {{398.0, 186.0}, {580.0, 650.0}}
+                                CollectionView, 0x115334f00, {{398.0, 186.0}, {580.0, 650.0}}
+                                  Other, 0x115335040, {{378.0, -1050.0}, {620.0, 1410.0}}
+                                  Other, 0x115335180, {{398.0, 186.0}, {580.0, 650.0}}
+                                    Other, 0x1153352c0, {{398.0, 186.0}, {580.0, 118.8}}
+                                  Other, 0x115335400, {{398.0, 186.0}, {580.0, 650.0}}
+                                  Cell, 0x115335540, {{418.0, 250.0}, {540.0, 40.5}}
+                                    Other, 0x115335680, {{418.0, 250.0}, {540.0, 40.5}}
+                                    Other, 0x1153357c0, {{418.0, 250.0}, {540.0, 40.5}}
+                                      Other, 0x115335900, {{418.0, 250.0}, {540.0, 40.5}}
+                                        Other, 0x115335a40, {{418.0, 250.0}, {540.0, 40.5}}
+                                          StaticText, 0x115335b80, {{418.0, 250.0}, {540.0, 40.5}}, label: 'Workspace'
+                                  Cell, 0x115335cc0, {{418.0, 290.5}, {540.0, 52.0}}
+                                    Other, 0x115335e00, {{418.0, 290.5}, {540.0, 52.0}}
+                                      Other, 0x115335f40, {{418.0, 290.5}, {540.0, 52.0}}
+                                    Other, 0x115336080, {{418.0, 290.5}, {540.0, 52.0}}
+                                      Other, 0x1153361c0, {{418.0, 290.5}, {540.0, 52.0}}
+                                        Other, 0x115336300, {{418.0, 290.5}, {540.0, 52.0}}
+                                          TextField, 0x115336440, {{438.0, 305.5}, {500.0, 22.0}}, identifier: 'settings-workspace-name', placeholderValue: 'Workspace name', value: Sample fictional w...
+                                  Other, 0x115336580, {{378.0, 360.0}, {620.0, 513.0}}
+                                  Cell, 0x1153366c0, {{418.0, 360.0}, {540.0, 40.5}}
+                                    Other, 0x115336800, {{418.0, 360.0}, {540.0, 40.5}}
+                                    Other, 0x115336940, {{418.0, 360.0}, {540.0, 40.5}}
+                                      Other, 0x115336a80, {{418.0, 360.0}, {540.0, 40.5}}
+                                        Other, 0x115336bc0, {{418.0, 360.0}, {540.0, 40.5}}
+                                          StaticText, 0x115336d00, {{418.0, 360.0}, {540.0, 40.5}}, label: 'Sites'
+                                  Cell, 0x115336e40, {{418.0, 400.5}, {540.0, 117.5}}
+                                    Other, 0x115336f80, {{418.0, 400.5}, {540.0, 117.5}}
+                                      Other, 0x1153370c0, {{418.0, 400.5}, {540.0, 117.5}}
+                                    Other, 0x115337200, {{418.0, 400.5}, {540.0, 117.5}}
+                                      Other, 0x115337340, {{418.0, 400.5}, {540.0, 117.5}}
+                                        Other, 0x115337480, {{418.0, 400.5}, {540.0, 117.5}}
+                                          TextField, 0x1153375c0, {{438.0, 419.5}, {500.0, 22.0}}, placeholderValue: 'Site name', value: North Shore Commun...
+                                          TextField, 0x115337700, {{438.0, 449.5}, {500.0, 22.0}}, placeholderValue: 'Town', value: Grand Marais
+                                          StaticText, 0x115337840, {{438.0, 478.3}, {79.0, 20.5}}, label: 'Time zone'
+                                          Button, 0x115337980, {{438.0, 471.5}, {500.0, 34.5}}, label: 'Time zone, America/Chicago'
+                                            StaticText, 0x115337ac0, {{792.0, 478.5}, {130.0, 20.5}}, label: 'America/Chicago'
+                                  Cell, 0x115337c00, {{418.0, 518.0}, {540.0, 117.5}}
+                                    Other, 0x115337d40, {{418.0, 518.0}, {540.0, 117.5}}
+                                      Other, 0x115337e80, {{418.0, 518.0}, {540.0, 117.5}}
+                                    Other, 0x1162d0000, {{418.0, 518.0}, {540.0, 117.5}}
+                                      Other, 0x1162d0140, {{418.0, 518.0}, {540.0, 117.5}}
+                                        Other, 0x1162d0280, {{418.0, 518.0}, {540.0, 117.5}}
+                                          TextField, 0x1162d03c0, {{438.0, 537.0}, {500.0, 22.0}}, placeholderValue: 'Site name', value: Lakes Regional Med...
+                                          TextField, 0x1162d0500, {{438.0, 567.0}, {500.0, 22.0}}, placeholderValue: 'Town', value: Bemidji
+                                          StaticText, 0x1162d0640, {{438.0, 595.8}, {79.0, 20.5}}, label: 'Time zone'
+                                          Button, 0x1162d0780, {{438.0, 589.0}, {500.0, 34.5}}, label: 'Time zone, America/Chicago'
+                                            StaticText, 0x1162d08c0, {{792.0, 596.0}, {130.0, 20.5}}, label: 'America/Chicago'
+                                  Other, 0x1162d0a00, {{438.0, 517.0}, {500.0, 1.0}}
+                                  Cell, 0x1162d0b40, {{418.0, 635.5}, {540.0, 117.5}}
+                                    Other, 0x1162d0c80, {{418.0, 635.5}, {540.0, 117.5}}
+                                      Other, 0x1162d0dc0, {{418.0, 635.5}, {540.0, 117.5}}
+                                    Other, 0x1162d0f00, {{418.0, 635.5}, {540.0, 117.5}}
+                                      Other, 0x1162d1040, {{418.0, 635.5}, {540.0, 117.5}}
+                                        Other, 0x1162d1180, {{418.0, 635.5}, {540.0, 117.5}}
+                                          TextField, 0x1162d12c0, {{438.0, 654.5}, {500.0, 22.0}}, placeholderValue: 'Site name', value: Prairie Valley Hos...
+                                          TextField, 0x1162d1400, {{438.0, 684.5}, {500.0, 22.0}}, placeholderValue: 'Town', value: Worthington
+                                          StaticText, 0x1162d1540, {{438.0, 713.3}, {79.0, 20.5}}, label: 'Time zone'
+                                          Button, 0x1162d1680, {{438.0, 706.5}, {500.0, 34.5}}, label: 'Time zone, America/Chicago'
+                                            StaticText, 0x1162d17c0, {{792.0, 713.5}, {130.0, 20.5}}, label: 'America/Chicago'
+                                  Other, 0x1162d1900, {{438.0, 634.5}, {500.0, 1.0}}
+                                  Cell, 0x1162d1a40, {{418.0, 753.0}, {540.0, 74.0}}
+                                    Other, 0x1162d1b80, {{418.0, 753.0}, {540.0, 74.0}}
+                                      Other, 0x1162d1cc0, {{418.0, 753.0}, {540.0, 74.0}}
+                                    Other, 0x1162d1e00, {{418.0, 753.0}, {540.0, 74.0}}
+                                      Other, 0x1162d1f40, {{418.0, 753.0}, {540.0, 74.0}}
+                                        Other, 0x1162d2080, {{418.0, 753.0}, {540.0, 74.0}}
+                                          Button, 0x1162d21c0, {{418.0, 753.0}, {540.0, 74.0}}, identifier: 'settings-add-site', label: 'Add site'
+                                            Image, 0x1162d2300, {{457.0, 781.0}, {18.0, 18.0}}, identifier: 'plus', label: 'Add'
+                                            StaticText, 0x1162d2440, {{438.0, 768.0}, {137.0, 44.0}}, label: 'Add site'
+                                            Other, 0x1162d2580, {{433.0, 763.0}, {147.0, 54.0}}
+                                  Other, 0x1162d26c0, {{438.0, 752.0}, {500.0, 1.0}}
+                                  Cell, 0x1162d2800, {{418.0, 827.0}, {540.0, 46.0}}
+                                    Other, 0x1162d2940, {{418.0, 827.0}, {540.0, 46.0}}
+                                    Other, 0x1162d2a80, {{418.0, 827.0}, {540.0, 46.0}}
+                                      Other, 0x1162d2bc0, {{418.0, 827.0}, {540.0, 46.0}}
+                                        Other, 0x1162d2d00, {{418.0, 827.0}, {540.0, 46.0}}
+                                          StaticText, 0x1162d2e40, {{418.0, 827.0}, {540.0, 46.0}}, label: 'Swipe a site to remove it. Drive times to a removed site are dropped from contacts.'
+                                  Other, 0x1162d2f80, {{945.0, 250.0}, {30.0, 554.0}}, label: 'Vertical scroll bar, 2 pages', value: 0%
+                                    Other, 0x1162d30c0, {{972.0, 794.0}, {3.0, 7.0}}
+                                  Other, 0x1162d3200, {{945.0, 250.0}, {30.0, 554.0}}, label: 'Vertical scroll bar, 2 pages', value: 0%
+                                    Other, 0x1162d3340, {{972.0, 794.0}, {3.0, 7.0}}
+                        Other, 0x1162d3480, {{398.0, 186.0}, {580.0, 650.0}}
+                          Other, 0x1162d35c0, {{398.0, 186.0}, {580.0, 650.0}}
+Path to element:
+ →Application, 0x116145a40, pid: 18895, label: 'Northstar OR'
+Query chain:
+ →Find: Target Application 'edu.umn.northstar.or'
+  Output: {
+    Application, 0x1162d3700, pid: 18895, label: 'Northstar OR'
+  }

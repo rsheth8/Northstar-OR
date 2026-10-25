@@ -1,0 +1,208 @@
+Attributes: Application, 0x1162d0b40, pid: 18895, label: 'Northstar OR'
+Element subtree:
+ →Application, 0x1162d0b40, pid: 18895, label: 'Northstar OR'
+    Window (Main), 0x1162d0c80, {{0.0, 0.0}, {1376.0, 1032.0}}
+      Other, 0x1162d0dc0, {{0.0, 0.0}, {1376.0, 1032.0}}
+        Other, 0x1162d0f00, {{0.0, 0.0}, {1376.0, 1032.0}}
+          Other, 0x1162d1040, {{0.0, 0.0}, {1376.0, 1032.0}}
+            Other, 0x1162d1180, {{-1376.0, -1032.0}, {4128.0, 3096.0}}, identifier: 'PopoverDismissRegion', label: 'dismiss popup'
+            Other, 0x1162d12c0, {{0.0, 0.0}, {1376.0, 1032.0}}
+              Other, 0x1162d1400, {{0.0, 0.0}, {1376.0, 1032.0}}
+                StaticText, 0x1162d1540, {{24.0, 54.5}, {157.0, 23.0}}, label: 'Northstar OR'
+                  Image, 0x1162d1680, {{24.0, 54.5}, {40.0, 23.0}}, label: 'BrandMark'
+                  StaticText, 0x1162d17c0, {{76.0, 55.8}, {105.0, 20.5}}, label: 'Northstar OR'
+                StaticText, 0x1162d1900, {{874.0, 58.0}, {166.0, 16.0}}, identifier: 'header-workspace-name', label: 'Sample fictional workspace'
+                Image, 0x1162d1a40, {{1057.5, 60.0}, {15.0, 12.0}}, identifier: 'ipad.landscape', label: 'ipad.landscape'
+                StaticText, 0x1162d1b80, {{1057.5, 58.0}, {111.0, 16.0}}, label: 'On this device'
+                Button, 0x1162d1cc0, {{1184.5, 44.0}, {167.5, 44.0}}, identifier: 'header-workspace-settings', label: 'Workspace settings'
+                  Image, 0x1162d1e00, {{1197.5, 58.5}, {14.0, 14.0}}, identifier: 'gearshape', label: 'gearshape'
+                  StaticText, 0x1162d1f40, {{1184.5, 44.0}, {167.5, 44.0}}, label: 'Workspace settings'
+                SegmentedControl, 0x1162d2080, {{24.0, 106.5}, {240.0, 31.0}}, identifier: 'nearby-role'
+                  Button, 0x1162d2300, {{24.0, 106.5}, {120.0, 32.0}}, label: 'Room', Selected
+                  Button, 0x1162d21c0, {{144.0, 106.5}, {120.0, 32.0}}, label: 'Rep'
+                Button, 0x1162d2440, {{1094.0, 112.0}, {122.5, 20.5}}, identifier: 'open-call', label: 'Session and call'
+                Button, 0x1162d2580, {{1224.5, 112.0}, {127.5, 20.5}}, label: 'Connect devices'
+                StaticText, 0x1162d26c0, {{314.5, 144.0}, {747.0, 16.0}}, label: 'Fictional coordination record. Support links nearby demo devices. This app does not decide whether a procedure proceeds.'
+                Other, 0x1162d2800, {{0.0, 160.0}, {1376.0, 872.0}}
+                  Other, 0x1162d2940, {{0.0, 160.0}, {1376.0, 872.0}}
+                    Other, 0x1162d2a80, {{0.0, 170.0}, {1376.0, 44.0}}
+                      Button, 0x1162d2bc0, {{514.5, 174.0}, {96.0, 36.0}}, identifier: 'list.bullet.rectangle', label: 'Co-pilot'
+                        Button, 0x1162d2d00, {{514.5, 174.0}, {96.0, 36.0}}, identifier: 'list.bullet.rectangle', label: 'Co-pilot'
+                      Button, 0x1162d2e40, {{610.5, 174.0}, {91.5, 36.0}}, identifier: 'calendar', label: 'Planner'
+                        Button, 0x1162d2f80, {{610.5, 174.0}, {91.5, 36.0}}, identifier: 'calendar', label: 'Planner'
+                      Button, 0x1162d30c0, {{702.0, 174.0}, {159.5, 36.0}}, identifier: 'headphones', label: 'Remote Support', Selected
+                        Button, 0x1162d3200, {{702.0, 174.0}, {159.5, 36.0}}, identifier: 'headphones', label: 'Remote Support', Selected
+                  Other, 0x1162d3340, {{0.0, 160.0}, {1376.0, 872.0}}
+                    Other, 0x1162d3480, {{0.0, 160.0}, {1376.0, 872.0}}
+                      Other, 0x1162d35c0, {{0.0, 160.0}, {1376.0, 872.0}}
+                        Other, 0x1162d3700, {{0.0, 160.0}, {1376.0, 872.0}}
+                          Other, 0x1162d3840, {{0.0, 160.0}, {1376.0, 872.0}}
+                            Other, 0x1162d3980, {{0.0, 160.0}, {1376.0, 872.0}}
+                              NavigationBar, 0x1162d3ac0, {{0.0, 170.0}, {1376.0, 54.0}}, identifier: 'Remote Support'
+                              Other, 0x1162d3c00, {{0.0, 160.0}, {1376.0, 872.0}}
+                                Other, 0x1162d3d40, {{0.0, 160.0}, {1376.0, 872.0}}
+                                  Other, 0x1162d3e80, {{0.0, 160.0}, {1376.0, 872.0}}
+                                    Other, 0x116144000, {{0.0, 160.0}, {1376.0, 872.0}}
+                                      ScrollView, 0x116144140, {{0.0, 160.0}, {1376.0, 872.0}}
+                                        Other, 0x116144280, {{0.0, 160.0}, {1376.0, 872.0}}
+                                          Other, 0x1161443c0, {{0.0, 160.0}, {1376.0, 118.8}}
+                                        Other, 0x116144500, {{0.0, 160.0}, {1376.0, 872.0}}
+                                        Other, 0x116144640, {{0.0, 224.0}, {1376.0, 682.0}}
+                                          StaticText, 0x116144780, {{213.5, 248.0}, {115.0, 16.0}}, label: 'On this device'
+                                            Image, 0x1161448c0, {{213.5, 250.0}, {15.5, 12.0}}, identifier: 'ipad.landscape', label: 'ipad.landscape'
+                                            StaticText, 0x116144a00, {{213.5, 248.0}, {115.0, 16.0}}, label: 'On this device'
+                                          StaticText, 0x116144b40, {{212.0, 280.0}, {648.0, 16.0}}, label: 'Messages stay with this case. Connect Northstar on the room iPad and the rep’s Mac to exchange updates.'
+                                          StaticText, 0x116144c80, {{212.0, 312.0}, {203.0, 26.5}}, label: 'Current room record'
+                                          StaticText, 0x116144dc0, {{212.0, 354.5}, {217.0, 20.5}}, label: 'Fictional pacemaker case A'
+                                          StaticText, 0x116144f00, {{212.0, 391.0}, {207.5, 20.5}}, label: '8 confirmations unresolved'
+                                          StaticText, 0x116145040, {{212.0, 427.5}, {340.5, 16.0}}, label: 'Choose Connect devices on both devices before calling.'
+                                          StaticText, 0x116145180, {{533.5, 479.0}, {309.0, 95.0}}, label: 'No question from the team yet'
+                                          StaticText, 0x1161452c0, {{361.5, 577.0}, {653.0, 18.0}}, label: 'Request support from the current Co-pilot item, including while an acknowledgment is pending.'
+                                          StaticText, 0x116145400, {{212.0, 663.5}, {125.0, 20.5}}, label: 'Case messages'
+                                          StaticText, 0x116145540, {{212.0, 692.0}, {180.0, 16.0}}, label: 'No messages in this case yet.'
+                                          TextField, 0x116145680, {{224.0, 736.0}, {928.0, 22.0}}, identifier: 'session-note-draft', placeholderValue: 'Write a message for this case'
+                                            Other, 0x1161457c0, {{224.0, 744.0}, {928.0, 11.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                              Other, 0x116145900, {{227.0, 752.0}, {922.0, 3.0}}
+                                          Button, 0x116145a40, {{207.0, 777.0}, {221.0, 82.0}}, identifier: 'session-note-send', label: 'Send message', Disabled
+                                            StaticText, 0x116145b80, {{212.0, 782.0}, {211.0, 72.0}}, label: 'Send message', Disabled
+                                            Other, 0x116145cc0, {{207.0, 777.0}, {221.0, 82.0}}, Disabled
+                                          StaticText, 0x116145e00, {{212.0, 866.0}, {275.0, 16.0}}, label: 'A message does not confirm a checklist item.'
+                                        Other, 0x116145f40, {{1343.0, 224.0}, {30.0, 778.0}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                                          Other, 0x116146080, {{1370.0, 333.0}, {3.0, 666.0}}
+                                        Other, 0x1161461c0, {{1343.0, 224.0}, {30.0, 778.0}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                                          Other, 0x116146300, {{1370.0, 333.0}, {3.0, 666.0}}
+                              Other, 0x116146440, {{0.0, 160.0}, {1376.0, 872.0}}
+                                Other, 0x116146580, {{0.0, 160.0}, {1376.0, 872.0}}
+      Other, 0x1161466c0, {{0.0, 0.0}, {1376.0, 1032.0}}
+        Other, 0x116146800, {{-1376.0, -1032.0}, {4128.0, 3096.0}}, identifier: 'PopoverDismissRegion', label: 'dismiss popup'
+        Other, 0x116146940, {{398.0, 186.0}, {580.0, 650.0}}
+          Image, 0x116146a80, {{248.0, 36.0}, {880.0, 950.0}}
+          Other, 0x116146bc0, {{398.0, 186.0}, {580.0, 650.0}}
+            Other, 0x116146d00, {{398.0, 186.0}, {580.0, 650.0}}
+              Other, 0x116146e40, {{398.0, 186.0}, {580.0, 650.0}}
+                Other, 0x116146f80, {{398.0, 186.0}, {580.0, 650.0}}
+                  Other, 0x1161470c0, {{398.0, 186.0}, {580.0, 650.0}}
+                    Other, 0x116147200, {{398.0, 186.0}, {580.0, 650.0}}
+                      Other, 0x116147340, {{398.0, 186.0}, {580.0, 650.0}}
+                        NavigationBar, 0x116147480, {{398.0, 196.0}, {580.0, 54.0}}, identifier: 'New contact'
+                          Button, 0x1161475c0, {{408.0, 196.0}, {44.0, 44.0}}, identifier: 'BackButton', label: 'Contacts'
+                          StaticText, 0x116147700, {{637.5, 207.5}, {100.5, 21.0}}, label: 'New contact'
+                        Other, 0x116147840, {{398.0, 186.0}, {580.0, 650.0}}
+                          Other, 0x116147980, {{398.0, 186.0}, {580.0, 650.0}}
+                            Other, 0x116147ac0, {{398.0, 186.0}, {580.0, 650.0}}
+                              Other, 0x116147c00, {{398.0, 186.0}, {580.0, 650.0}}
+                                CollectionView, 0x116147d40, {{398.0, 186.0}, {580.0, 650.0}}
+                                  Other, 0x116147e80, {{378.0, -1050.0}, {620.0, 1514.0}}
+                                  Other, 0x11697c000, {{398.0, 186.0}, {580.0, 650.0}}
+                                    Other, 0x11697c140, {{398.0, 186.0}, {580.0, 118.8}}
+                                  Other, 0x11697c280, {{398.0, 186.0}, {580.0, 650.0}}
+                                  Cell, 0x11697c3c0, {{418.0, 250.0}, {540.0, 40.5}}
+                                    Other, 0x11697c500, {{418.0, 250.0}, {540.0, 40.5}}
+                                    Other, 0x11697c640, {{418.0, 250.0}, {540.0, 40.5}}
+                                      Other, 0x11697c780, {{418.0, 250.0}, {540.0, 40.5}}
+                                        Other, 0x11697c8c0, {{418.0, 250.0}, {540.0, 40.5}}
+                                          StaticText, 0x11697ca00, {{418.0, 250.0}, {540.0, 40.5}}, label: 'Contact'
+                                  Cell, 0x11697cb40, {{418.0, 290.5}, {540.0, 52.0}}
+                                    Other, 0x11697cc80, {{418.0, 290.5}, {540.0, 52.0}}
+                                      Other, 0x11697cdc0, {{418.0, 290.5}, {540.0, 52.0}}
+                                    Other, 0x11697cf00, {{418.0, 290.5}, {540.0, 52.0}}
+                                      Other, 0x11697d040, {{418.0, 290.5}, {540.0, 52.0}}
+                                        Other, 0x11697d180, {{418.0, 290.5}, {540.0, 52.0}}
+                                          TextField, 0x11697d2c0, {{438.0, 305.5}, {500.0, 22.0}}, identifier: 'contact-name', placeholderValue: 'Name'
+                                  Cell, 0x11697d400, {{418.0, 342.5}, {540.0, 52.0}}
+                                    Other, 0x11697d540, {{418.0, 342.5}, {540.0, 52.0}}
+                                      Other, 0x11697d680, {{418.0, 342.5}, {540.0, 52.0}}
+                                    Other, 0x11697d7c0, {{418.0, 342.5}, {540.0, 52.0}}
+                                      Other, 0x11697d900, {{418.0, 342.5}, {540.0, 52.0}}
+                                        Other, 0x11697da40, {{418.0, 342.5}, {540.0, 52.0}}
+                                          TextField, 0x11697db80, {{438.0, 357.5}, {500.0, 22.0}}, placeholderValue: 'Home base'
+                                  Other, 0x11697dcc0, {{438.0, 341.5}, {500.0, 1.0}}
+                                  Cell, 0x11697de00, {{418.0, 394.5}, {540.0, 52.0}}
+                                    Other, 0x11697df40, {{418.0, 394.5}, {540.0, 52.0}}
+                                      Other, 0x11697e080, {{418.0, 394.5}, {540.0, 52.0}}
+                                    Other, 0x11697e1c0, {{418.0, 394.5}, {540.0, 52.0}}
+                                      Other, 0x11697e300, {{418.0, 394.5}, {540.0, 52.0}}
+                                        Other, 0x11697e440, {{418.0, 394.5}, {540.0, 52.0}}
+                                          StaticText, 0x11697e580, {{438.0, 410.2}, {33.5, 20.5}}, label: 'Role'
+                                          Button, 0x11697e6c0, {{438.0, 403.5}, {500.0, 34.5}}, label: 'Role, Technical rep'
+                                            StaticText, 0x11697e800, {{820.5, 410.5}, {101.5, 20.5}}, label: 'Technical rep'
+                                  Other, 0x11697e940, {{438.0, 393.5}, {500.0, 1.0}}
+                                  Other, 0x11697ea80, {{378.0, 464.0}, {620.0, 226.5}}
+                                  Cell, 0x11697ebc0, {{418.0, 464.0}, {540.0, 40.5}}
+                                    Other, 0x11697ed00, {{418.0, 464.0}, {540.0, 40.5}}
+                                    Other, 0x11697ee40, {{418.0, 464.0}, {540.0, 40.5}}
+                                      Other, 0x11697ef80, {{418.0, 464.0}, {540.0, 40.5}}
+                                        Other, 0x11697f0c0, {{418.0, 464.0}, {540.0, 40.5}}
+                                          StaticText, 0x11697f200, {{418.0, 464.0}, {540.0, 40.5}}, label: 'Skills and availability'
+                                  Cell, 0x11697f340, {{418.0, 504.5}, {540.0, 52.0}}
+                                    Other, 0x11697f480, {{418.0, 504.5}, {540.0, 52.0}}
+                                      Other, 0x11697f5c0, {{418.0, 504.5}, {540.0, 52.0}}
+                                    Other, 0x11697f700, {{418.0, 504.5}, {540.0, 52.0}}
+                                      Other, 0x11697f840, {{418.0, 504.5}, {540.0, 52.0}}
+                                        Other, 0x11697f980, {{418.0, 504.5}, {540.0, 52.0}}
+                                          Switch, 0x11697fac0, {{418.0, 504.5}, {540.0, 52.0}}, label: 'Supports pacemaker cases', value: 1
+                                            StaticText, 0x11697fc00, {{438.0, 520.2}, {207.0, 20.5}}, label: 'Supports pacemaker cases'
+                                            Switch, 0x11697fd40, {{877.0, 516.5}, {63.0, 28.0}}, value: 1
+                                  Cell, 0x11697fe80, {{418.0, 556.5}, {540.0, 52.0}}
+                                    Other, 0x114c40000, {{418.0, 556.5}, {540.0, 52.0}}
+                                      Other, 0x114c40140, {{418.0, 556.5}, {540.0, 52.0}}
+                                    Other, 0x114c40280, {{418.0, 556.5}, {540.0, 52.0}}
+                                      Other, 0x114c403c0, {{418.0, 556.5}, {540.0, 52.0}}
+                                        Other, 0x114c40500, {{418.0, 556.5}, {540.0, 52.0}}
+                                          Switch, 0x114c40640, {{418.0, 556.5}, {540.0, 52.0}}, label: 'Listed as available', value: 1
+                                            StaticText, 0x114c40780, {{438.0, 572.2}, {138.5, 20.5}}, label: 'Listed as available'
+                                            Switch, 0x114c408c0, {{877.0, 568.5}, {63.0, 28.0}}, value: 1
+                                  Other, 0x114c40a00, {{438.0, 555.5}, {500.0, 1.0}}
+                                  Cell, 0x114c40b40, {{418.0, 608.5}, {540.0, 52.0}}
+                                    Other, 0x114c40c80, {{418.0, 608.5}, {540.0, 52.0}}
+                                      Other, 0x114c40dc0, {{418.0, 608.5}, {540.0, 52.0}}
+                                    Other, 0x114c40f00, {{418.0, 608.5}, {540.0, 52.0}}
+                                      Other, 0x114c41040, {{418.0, 608.5}, {540.0, 52.0}}
+                                        Other, 0x114c41180, {{418.0, 608.5}, {540.0, 52.0}}
+                                          Switch, 0x114c412c0, {{418.0, 608.5}, {540.0, 52.0}}, label: 'Can support remotely', value: 0
+                                            StaticText, 0x114c41400, {{438.0, 624.2}, {165.0, 20.5}}, label: 'Can support remotely'
+                                            Switch, 0x114c41540, {{877.0, 620.5}, {63.0, 28.0}}, value: 0
+                                  Other, 0x114c41680, {{438.0, 607.5}, {500.0, 1.0}}
+                                  Cell, 0x114c417c0, {{418.0, 660.5}, {540.0, 30.0}}
+                                    Other, 0x114c41900, {{418.0, 660.5}, {540.0, 30.0}}
+                                    Other, 0x114c41a40, {{418.0, 660.5}, {540.0, 30.0}}
+                                      Other, 0x114c41b80, {{418.0, 660.5}, {540.0, 30.0}}
+                                        Other, 0x114c41cc0, {{418.0, 660.5}, {540.0, 30.0}}
+                                          StaticText, 0x114c41e00, {{418.0, 660.5}, {540.0, 30.0}}, label: 'Stated by the team for planning. Not verified, and not a live status.'
+                                  Other, 0x114c41f40, {{378.0, 690.5}, {620.0, 280.0}}
+                                  Cell, 0x114c42080, {{418.0, 690.5}, {540.0, 40.5}}
+                                    Other, 0x114c421c0, {{418.0, 690.5}, {540.0, 40.5}}
+                                    Other, 0x114c42300, {{418.0, 690.5}, {540.0, 40.5}}
+                                      Other, 0x114c42440, {{418.0, 690.5}, {540.0, 40.5}}
+                                        Other, 0x114c42580, {{418.0, 690.5}, {540.0, 40.5}}
+                                          StaticText, 0x114c426c0, {{418.0, 690.5}, {540.0, 40.5}}, label: 'Simulated drive minutes'
+                                  Cell, 0x114c42800, {{418.0, 731.0}, {540.0, 74.0}}
+                                    Other, 0x114c42940, {{418.0, 731.0}, {540.0, 74.0}}
+                                      Other, 0x114c42a80, {{418.0, 731.0}, {540.0, 74.0}}
+                                    Other, 0x114c42bc0, {{418.0, 731.0}, {540.0, 74.0}}
+                                      Other, 0x114c42d00, {{418.0, 731.0}, {540.0, 74.0}}
+                                        Other, 0x114c42e40, {{418.0, 731.0}, {540.0, 74.0}}
+                                          StaticText, 0x114c42f80, {{438.0, 757.8}, {251.0, 20.5}}, label: 'North Shore Community Hospital'
+                                          TextField, 0x114c430c0, {{858.0, 757.0}, {80.0, 22.0}}, label: 'Drive minutes to North Shore Community Hospital', placeholderValue: 'min'
+                                  Cell, 0x114c43200, {{418.0, 805.0}, {540.0, 74.0}}
+                                    Other, 0x114c43340, {{418.0, 805.0}, {540.0, 74.0}}
+                                      Other, 0x114c43480, {{418.0, 805.0}, {540.0, 74.0}}
+                                    Other, 0x114c435c0, {{418.0, 805.0}, {540.0, 74.0}}
+                                      Other, 0x114c43700, {{418.0, 805.0}, {540.0, 74.0}}
+                                        Other, 0x114c43840, {{418.0, 805.0}, {540.0, 74.0}}
+                                          StaticText, 0x114c43980, {{438.0, 831.8}, {234.0, 20.5}}, label: 'Lakes Regional Medical Center'
+                                          TextField, 0x114c43ac0, {{858.0, 831.0}, {80.0, 22.0}}, label: 'Drive minutes to Lakes Regional Medical Center', placeholderValue: 'min'
+                                  Other, 0x114c43c00, {{438.0, 804.0}, {500.0, 1.0}}
+                                  Other, 0x114c43d40, {{945.0, 250.0}, {30.0, 554.0}}, label: 'Vertical scroll bar, 2 pages', value: 0%
+                                    Other, 0x114c43e80, {{972.0, 253.0}, {3.0, 407.5}}
+                                  Other, 0x115334000, {{945.0, 250.0}, {30.0, 554.0}}, label: 'Vertical scroll bar, 2 pages', value: 0%
+                                    Other, 0x115334140, {{972.0, 253.0}, {3.0, 407.5}}
+                        Other, 0x115334280, {{398.0, 186.0}, {580.0, 650.0}}
+                          Other, 0x1153343c0, {{398.0, 186.0}, {580.0, 650.0}}
+Path to element:
+ →Application, 0x1162d0b40, pid: 18895, label: 'Northstar OR'
+Query chain:
+ →Find: Target Application 'edu.umn.northstar.or'
+  Output: {
+    Application, 0x115334500, pid: 18895, label: 'Northstar OR'
+  }
