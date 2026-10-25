@@ -95,6 +95,7 @@ struct WorkspaceSetupView: View {
                 }
             }
             .accessibilityIdentifier("workspace-setup-form")
+            .scrollDismissesKeyboard(.immediately)
             .scrollContentBackground(.hidden)
             .background(Northstar.Palette.bgBase)
             .navigationTitle("Set up workspace")
