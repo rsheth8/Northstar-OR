@@ -26,7 +26,7 @@ struct WorkspaceBlockedView: View {
     @State private var errorMessage: String?
 
     var body: some View {
-        VStack(spacing: Northstar.Space.s5) {
+        VStack(spacing: Northstar.Space.s6) {
             NorthstarBanner(tone: .failure, title: "Saved data can't be opened", message: message)
             if let errorMessage {
                 NorthstarBanner(tone: .failure, title: "Not changed", message: errorMessage)
