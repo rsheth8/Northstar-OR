@@ -190,10 +190,13 @@ final class AppModel {
         let sample = Self.sampleWorkspace(asOf: clock(), post: demoPost)
         try sample.workspace.validate()
         let sorted = Self.sorted(sample.cases)
-        try persist(WorkspaceSnapshot(workspace: sample.workspace, forecasts: sample.forecasts, cases: sorted))
+        var seeded = WorkspaceSnapshot(workspace: sample.workspace, forecasts: sample.forecasts, cases: sorted)
+        seeded.planningEvidenceRecords = sample.planningEvidence
+        try persist(seeded)
         workspace = sample.workspace
         cases = sorted
         forecasts = sample.forecasts
+        planningEvidenceRecords = sample.planningEvidence
         loadState = .ready
         selectedDestination = demoPost == .rep ? .remoteSupport : .planner
     }
@@ -940,6 +943,8 @@ final class AppModel {
         let workspace: WorkspaceConfiguration
         let cases: [Procedure]
         let forecasts: [String: StormForecast]
+        /// Hourly fictional weather and closure evidence; matches `forecasts`.
+        var planningEvidence: [PlanningEvidence] = []
     }
 
     /// Fictional sample content as ordinary workspace records. Never progress or acceptance.
@@ -971,6 +976,9 @@ final class AppModel {
                                displayName: "Jordan Ellis", statedRole: .coordinator)
         let config = WorkspaceConfiguration(id: id, name: "Arrowhead Cardiac Coverage (fictional)", sites: sites,
                                             contacts: contacts, localParticipant: participant)
-        return SampleWorkspace(workspace: config, cases: cases, forecasts: seed.forecasts)
+        let evidence = FictionalPlanningScenarios.evidence(
+            asOf: seed.asOf, northShoreID: SampleData.Record.northShoreSite.rawValue,
+            lakesID: SampleData.Record.lakesSite.rawValue, prairieID: SampleData.Record.prairieSite.rawValue)
+        return SampleWorkspace(workspace: config, cases: cases, forecasts: seed.forecasts, planningEvidence: evidence)
     }
 }
