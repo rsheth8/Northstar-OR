@@ -1,6 +1,6 @@
 # Northstar OR: whole-product UX audit
 
-**Reviewed October 25, 2026. Baseline: `21b107b` (PR #47).** This is an expert inspection and simulator walkthrough, with proposed changes. It does not claim that these changes shipped or that OR staff validated the design. Keep DESIGN.md as the canonical guide. [PR #48](https://github.com/rsheth8/Northstar-OR/pull/48) separately addresses calls staying alongside the workspace; do not duplicate that implementation.
+**Reviewed October 25, 2026. Baseline: `21b107b` (PR #47).** This is an expert inspection and simulator walkthrough, with proposed changes. It does not claim that these changes shipped or that OR staff validated the design. Keep DESIGN.md as the canonical guide. [PR #48](https://github.com/rsheth8/Northstar-OR/pull/48) merged as `8982a7f` after these captures and addresses calls staying alongside the workspace, earlier Send placement and explicit request-topic affordances. Its source delta was inspected; these baseline images do not depict those improvements. Do not duplicate that implementation.
 
 ## Judgment
 
@@ -67,7 +67,7 @@ AHRQ's handoff guidance emphasizes clear information, receiver acknowledgment an
 
 Keep each row a separate task/branch/PR with the named files reserved before work. These are proposals, not active code claims.
 
-1. **Shared shell and accessibility:** NorthstarWorkspaceChrome, RootView and focused shell UI tests. Coordinate after PR #48 merges; no call engine or domain rewrite. Fix UX01/04 and expose direct empty-state routes through existing destination state.
+1. **Shared shell and accessibility:** NorthstarWorkspaceChrome, RootView and focused shell UI tests. Consume merged PR #48; no call engine or domain rewrite. Fix UX01/04 and expose direct empty-state routes through existing destination state.
 2. **Forms and exits:** workspace settings/contact/setup, followed by a separate Planner case-form slice. Persistent labels, dirty-draft guards, useful validation and visible save actions. Reuse existing persistence and form validation. Fix UX02/09/14.
 3. **Planner clarity:** day/record-state rows, applied-filter summary, unsupported-template explanation and concise logistical detail. Fix UX03/12/15. Keep named plan/acceptance implementation separate.
 4. **Co-pilot focus:** remove duplicate hierarchy, adaptive workflow navigation, one support entry and clearer warning/correction presentation. Fix UX06/08/10. Keep domain guards and retained drafts intact.

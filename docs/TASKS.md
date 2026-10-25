@@ -1,6 +1,6 @@
 # Task board
 
-- [~] (Rahil / Codex) **Whole-product UX audit:** inspect setup/settings/contacts, Planner/forms, Co-pilot/record review and rep support against actual iPad states; publish prioritized findings, page specifications and visual evidence. Branch `pitch/ux-workflow-audit`; reserves only `docs/UX_AUDIT.md`, `docs/evidence/ux-audit/`, `NorthstarORUITests/UXAuditJourneyTests.swift` for walkthrough evidence, and this row. App implementation and the active workspace-call PR remain separate.
+- [~] (Rahil / Codex) **Whole-product UX audit:** inspect setup/settings/contacts, Planner/forms, Co-pilot/record review and rep support against actual iPad states; publish prioritized findings, page specifications and visual evidence. Branch `pitch/ux-workflow-audit`; reserves only `docs/UX_AUDIT.md`, `docs/evidence/ux-audit/`, `NorthstarORUITests/UXAuditJourneyTests.swift` for walkthrough evidence, and this row. Application changes remain separate; the audit accounts for merged workspace-call PR #48.
 
 - [~] (Rahil / Codex) **Shared Wi-Fi support-session design:** owner selected extending the working local connection; document independent session joining, late-join recap, live thread and essential call controls. Documentation only on `sync/shared-session-design`; reserves `docs/superpowers/specs/2026-10-25-shared-support-session-design.md` and this row. Product implementation awaits design review. The owner reports the preceding real-device call works on the same Wi-Fi; this is user-reported evidence, not a new automated check.
 
