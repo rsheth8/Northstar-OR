@@ -64,7 +64,7 @@ struct WorkspaceSettingsView: View {
                             current = updated
                         })
                     } label: {
-                        Label("Contacts (\(workspace.contacts.count))", systemImage: "person.2")
+                        Label("Contacts (\(current.contacts.count))", systemImage: "person.2")
                     }
                     .frame(minHeight: Northstar.Target.minimum)
                     .accessibilityIdentifier("settings-contacts")
