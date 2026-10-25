@@ -1,7 +1,7 @@
 import Foundation
 
 // F18 v1: bounded local storage for one fictional workspace. Not an institutional audit,
-// backup or access-control system. Plans and pending messages are added after F06 lands.
+// backup or access-control system. Support requests (F06) are stored with their snapshots and messages.
 
 /// Identifies one unsent draft. Case and session are optional so workspace-level drafts fit.
 struct DraftKey: Hashable, Codable {
@@ -36,6 +36,10 @@ struct WorkspaceSnapshot: Hashable, Codable {
     var drafts: [DraftRecord] = []
     /// The case whose session was active when last saved. Must have a stored session.
     var activeCaseID: String? = nil
+    /// F06/F07 support requests with their questions, snapshots and messages.
+    var supportRequests: [SupportRequest] = []
+    /// Sessions recorded with reduced-support mode on (session context, not recording state).
+    var reducedSupportSessionIDs: [String] = []
 
     static let empty = WorkspaceSnapshot()
 
@@ -43,7 +47,8 @@ struct WorkspaceSnapshot: Hashable, Codable {
     func validate() throws {
         guard formatVersion == Self.supportedFormatVersion else { throw invalid("unsupported format version \(formatVersion)") }
         guard let workspace else {
-            guard forecasts.isEmpty, cases.isEmpty, sessions.isEmpty, drafts.isEmpty, activeCaseID == nil else {
+            guard forecasts.isEmpty, cases.isEmpty, sessions.isEmpty, drafts.isEmpty, activeCaseID == nil,
+                  supportRequests.isEmpty, reducedSupportSessionIDs.isEmpty else {
                 throw invalid("records exist without a workspace")
             }
             return
@@ -92,6 +97,49 @@ struct WorkspaceSnapshot: Hashable, Codable {
                 }
             }
         }
+        try validateSupport(workspace: workspace, caseIDs: caseIDs, sessionCases: sessionCases)
+    }
+
+    private func validateSupport(workspace: WorkspaceConfiguration, caseIDs: Set<String>,
+                                 sessionCases: [String: String]) throws {
+        for sessionID in reducedSupportSessionIDs where sessionCases[sessionID] == nil {
+            throw invalid("reduced-support context for unknown session \(sessionID)")
+        }
+        let contactIDs = Set(workspace.contacts.map(\.id))
+        var requestIDs = Set<String>(), questionIDs = Set<String>(), messageIDs = Set<String>()
+        var openCases = Set<String>()
+        for request in supportRequests {
+            let id = request.id
+            guard !id.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw invalid("support request without ID") }
+            guard requestIDs.insert(id).inserted else { throw invalid("duplicate support request \(id)") }
+            guard request.workspaceID == workspace.id else { throw invalid("support request \(id) belongs to another workspace") }
+            guard caseIDs.contains(request.caseID) else { throw invalid("support request \(id) has no case \(request.caseID)") }
+            // Withdrawn requests keep their contact's name, so the contact may since have been removed.
+            if request.status != .withdrawn, !contactIDs.contains(request.contactID) {
+                throw invalid("support request \(id) has no contact \(request.contactID)")
+            }
+            guard !request.reason.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                throw invalid("support request \(id) has no reason")
+            }
+            if request.status.isOpen, !openCases.insert(request.caseID).inserted {
+                throw invalid("case \(request.caseID) has more than one open support request")
+            }
+            if request.status == .requested, request.respondedAt != nil || !request.questions.isEmpty || !request.messages.isEmpty {
+                throw invalid("support request \(id) has activity before a response")
+            }
+            for question in request.questions {
+                guard questionIDs.insert(question.id).inserted else { throw invalid("duplicate support question \(question.id)") }
+                guard question.requestID == id else { throw invalid("question \(question.id) belongs to another request") }
+                guard sessionCases[question.sessionID] == request.caseID, question.snapshot.sessionID == question.sessionID,
+                      question.snapshot.caseID == request.caseID else {
+                    throw invalid("question \(question.id) has no matching session \(question.sessionID)")
+                }
+            }
+            for message in request.messages {
+                guard messageIDs.insert(message.id).inserted else { throw invalid("duplicate support message \(message.id)") }
+                guard message.requestID == id else { throw invalid("message \(message.id) belongs to another request") }
+            }
+        }
     }
 
     private func invalid(_ reason: String) -> RepositoryError { .invalidSnapshot(reason) }
@@ -99,7 +147,7 @@ struct WorkspaceSnapshot: Hashable, Codable {
 
 extension WorkspaceSnapshot {
     private enum CodingKeys: String, CodingKey {
-        case formatVersion, workspace, forecasts, cases, sessions, drafts, activeCaseID
+        case formatVersion, workspace, forecasts, cases, sessions, drafts, activeCaseID, supportRequests, reducedSupportSessionIDs
     }
 
     /// Synthesized decoding ignores property defaults, so additive fields must be decoded
@@ -113,6 +161,8 @@ extension WorkspaceSnapshot {
         sessions = try values.decodeIfPresent([StoredSession].self, forKey: .sessions) ?? []
         drafts = try values.decodeIfPresent([DraftRecord].self, forKey: .drafts) ?? []
         activeCaseID = try values.decodeIfPresent(String.self, forKey: .activeCaseID)
+        supportRequests = try values.decodeIfPresent([SupportRequest].self, forKey: .supportRequests) ?? []
+        reducedSupportSessionIDs = try values.decodeIfPresent([String].self, forKey: .reducedSupportSessionIDs) ?? []
     }
 }
 

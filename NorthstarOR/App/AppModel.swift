@@ -57,6 +57,8 @@ final class AppModel {
     var selectedDestination: Destination = .coPilot
     /// Cases whose saved session could not be rebuilt. Their stored data is kept as-is.
     private(set) var unreadableSessionCaseIDs: Set<String> = []
+    /// Every support request in this workspace, oldest first, with questions and messages.
+    private(set) var supportRequests: [SupportRequest] = []
 
     var reps: [DeviceRep] { workspace?.contacts ?? [] }
     var hospitals: [Hospital] { workspace?.sites ?? [] }
@@ -76,6 +78,8 @@ final class AppModel {
     /// Stored sessions not loaded live (unreadable or superseded); written back unchanged.
     @ObservationIgnored private var retainedSessions: [StoredSession] = []
     @ObservationIgnored private var drafts: [DraftRecord] = []
+    /// Reduced-support context of retained (not live) sessions, written back unchanged.
+    @ObservationIgnored private var retainedReducedSupportSessionIDs: Set<String> = []
     @ObservationIgnored private var pendingDraftSave: Task<Void, Never>?
 
     init(sync: SyncService = LocalSyncService(), store: WorkspaceStore = InMemoryWorkspaceStore(),
@@ -84,8 +88,13 @@ final class AppModel {
         self.clock = clock
         self.draftSaveDelay = draftSaveDelay
         self.repository = WorkspaceRepository(store: store, clock: clock)
+        // A transport may call back on any thread; always handle events on the main actor.
         subscription = sync.subscribe { [weak self] event in
-            MainActor.assumeIsolated { self?.handle(event) }
+            if Thread.isMainThread {
+                MainActor.assumeIsolated { self?.handle(event) }
+            } else {
+                DispatchQueue.main.async { MainActor.assumeIsolated { self?.handle(event) } }
+            }
         }
         load()
     }
@@ -172,6 +181,10 @@ final class AppModel {
         if let orphan = cases.first(where: { !siteIDs.contains($0.hospitalID) }) {
             throw AppModelError.siteInUse(orphan.hospitalID)
         }
+        let contactIDs = Set(config.contacts.map(\.id))
+        if let request = supportRequests.first(where: { $0.status != .withdrawn && !contactIDs.contains($0.contactID) }) {
+            throw SupportError.contactInUse(request.contactID)
+        }
         let nextForecasts = forecasts.filter { siteIDs.contains($0.key) }
         try persist(snapshot(workspace: config, forecasts: nextForecasts))
         self.workspace = config
@@ -218,6 +231,7 @@ final class AppModel {
             guard !unreadableSessionCaseIDs.contains(caseID) else { throw AppModelError.sessionUnreadable(caseID) }
             session = CoPilotSession(procedure: procedure, now: clock())
             guard session.isRecordingSupported else { throw AppModelError.recordingUnavailable }
+            session.appendSupportActivity(supportActivity(for: caseID))
             nextSessions[caseID] = session
         }
         try persist(snapshot(sessions: nextSessions, activeCaseID: caseID))
@@ -274,6 +288,156 @@ final class AppModel {
         try? persist(snapshot())
     }
 
+    // MARK: - Support (F06/F07)
+
+    /// This case's requests, oldest first, including withdrawn and declined ones.
+    func supportRequests(for caseID: String) -> [SupportRequest] {
+        supportRequests.filter { $0.caseID == caseID }
+    }
+
+    /// The case's one current plan: its latest request, unless that was withdrawn.
+    func currentRequest(for caseID: String) -> SupportRequest? {
+        guard let latest = supportRequests.last(where: { $0.caseID == caseID }), latest.status != .withdrawn else { return nil }
+        return latest
+    }
+
+    func supportRequest(_ id: String) -> SupportRequest? { supportRequests.first { $0.id == id } }
+
+    /// Requests a named contact for a case. Any open request for the case is withdrawn.
+    @discardableResult
+    func requestSupport(caseID: String, contactID: String, arrangement: SupportArrangement, reason: String,
+                        requestID: String = UUID().uuidString) throws -> SupportRequest {
+        guard let workspace else { throw AppModelError.noWorkspace }
+        guard cases.contains(where: { $0.id == caseID }) else { throw AppModelError.unknownCase(caseID) }
+        guard let contact = workspace.contacts.first(where: { $0.id == contactID }) else {
+            throw SupportError.unknownContact(contactID)
+        }
+        if arrangement == .remote, !contact.canSupportRemotely { throw SupportError.contactNotRemoteCapable }
+        let reason = reason.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !reason.isEmpty else { throw SupportError.reasonRequired }
+        guard reason.count <= SupportError.maximumTextLength else { throw SupportError.textTooLong }
+        let request = SupportRequest(id: requestID, workspaceID: workspace.id, caseID: caseID, contactID: contact.id,
+            contactName: contact.name, contactRole: contact.statedRole ?? .technicalRep, arrangement: arrangement,
+            reason: reason, requestedByName: workspace.localParticipant.displayName, requestedAt: clock(),
+            status: .requested, respondedAt: nil, withdrawnAt: nil, questions: [], messages: [])
+        try apply(.requested(request), broadcast: true)
+        return supportRequest(requestID) ?? request
+    }
+
+    /// The coordinator withdraws a requested or accepted request. Repeating it changes nothing.
+    func withdrawRequest(_ id: String) throws {
+        guard workspace != nil else { throw AppModelError.noWorkspace }
+        guard supportRequest(id) != nil else { throw SupportError.unknownRequest(id) }
+        try apply(.withdrawn(requestID: id, at: clock()), broadcast: true)
+    }
+
+    /// The named contact accepts or declines (rep role on this device). Repeating the same
+    /// answer changes nothing; changing an answer is refused.
+    func respond(toRequest id: String, accept: Bool) throws {
+        guard workspace != nil else { throw AppModelError.noWorkspace }
+        guard supportRequest(id) != nil else { throw SupportError.unknownRequest(id) }
+        try apply(.responded(requestID: id, accepted: accept, at: clock()), broadcast: true)
+    }
+
+    /// Asks the accepted contact a question from the case being recorded. Allowed while an
+    /// acknowledgment is pending; recording state is not changed. The snapshot is captured now
+    /// and never updated.
+    @discardableResult
+    func askQuestion(requestID: String, text: String, questionID: String = UUID().uuidString) throws -> SupportQuestion {
+        guard let workspace else { throw AppModelError.noWorkspace }
+        guard let request = supportRequest(requestID) else { throw SupportError.unknownRequest(requestID) }
+        if let existing = request.questions.first(where: { $0.id == questionID }) { return existing }
+        try Self.requireAccepted(request)
+        guard currentRequest(for: request.caseID)?.id == request.id else { throw SupportError.notCurrentRequest }
+        let text = try Self.validatedText(text)
+        guard let session = activeSession else { throw AppModelError.noActiveSession }
+        guard activeCaseID == request.caseID, session.procedure.id == request.caseID else { throw SupportError.notActiveCase }
+        let participant = workspace.localParticipant
+        let now = clock()
+        let snapshot = Self.supportSnapshot(session: session, site: hospital(session.procedure.hospitalID), request: request,
+                                            askedBy: participant, at: now)
+        let question = SupportQuestion(id: questionID, requestID: request.id, sessionID: session.identity.sessionID,
+            text: text, askedByName: participant.displayName, askedByRole: participant.statedRole, askedAt: now,
+            snapshot: snapshot, acknowledgedAt: nil, acknowledgedByName: nil)
+        try apply(.questionAsked(question), broadcast: true)
+        return question
+    }
+
+    /// The contact acknowledges the question. Acknowledging again changes nothing.
+    func acknowledgeQuestion(requestID: String, questionID: String) throws {
+        guard workspace != nil else { throw AppModelError.noWorkspace }
+        guard let request = supportRequest(requestID) else { throw SupportError.unknownRequest(requestID) }
+        guard let question = request.questions.first(where: { $0.id == questionID }) else {
+            throw SupportError.unknownQuestion(questionID)
+        }
+        if question.isAcknowledged { return }
+        try apply(.questionAcknowledged(requestID: requestID, questionID: questionID, byName: request.contactName,
+                                        at: clock()), broadcast: true)
+    }
+
+    /// A message from the contact (`fromRep`) or from the team (the workspace's local
+    /// participant). Requires an accepted request. Retrying with the same `messageID` after a
+    /// failed save sends it once.
+    @discardableResult
+    func sendMessage(requestID: String, text: String, fromRep: Bool,
+                     messageID: String = UUID().uuidString) throws -> SupportMessage {
+        guard let workspace else { throw AppModelError.noWorkspace }
+        guard let request = supportRequest(requestID) else { throw SupportError.unknownRequest(requestID) }
+        if let existing = request.messages.first(where: { $0.id == messageID }) { return existing }
+        try Self.requireAccepted(request)
+        let text = try Self.validatedText(text)
+        let participant = workspace.localParticipant
+        let message = SupportMessage(id: messageID, requestID: requestID,
+            senderName: fromRep ? request.contactName : participant.displayName,
+            senderRole: fromRep ? request.contactRole : participant.statedRole,
+            isFromRep: fromRep, text: text, sentAt: clock())
+        try apply(.messageSent(message), broadcast: true)
+        return message
+    }
+
+    /// Recording events accepted after the question's snapshot, for "Changes since the
+    /// question". Empty when the session is not live on this device.
+    func changes(since question: SupportQuestion) -> [SessionEvent] {
+        guard let session = sessions.values.first(where: { $0.identity.sessionID == question.sessionID }) else { return [] }
+        return session.events.filter { $0.acceptedVersion > question.snapshot.recordingVersion }
+    }
+
+    /// Readable support history for a case, oldest first (also merged into its session log).
+    func supportActivity(for caseID: String) -> [LogEntry] {
+        supportRequests(for: caseID).flatMap(\.activityEntries).sorted { $0.timestamp < $1.timestamp }
+    }
+
+    /// Captures what the session has recorded right now as an immutable value.
+    static func supportSnapshot(session: CoPilotSession, site: Hospital?, request: SupportRequest,
+                                askedBy: LocalParticipant, at time: Date) -> SupportContextSnapshot {
+        let procedure = session.procedure
+        let statuses = session.recordingState?.itemStatuses ?? [:]
+        let items = procedure.steps.map {
+            SupportContextSnapshot.ItemSnapshot(id: $0.id, title: $0.title, isRequired: $0.isRequired,
+                                                status: statuses[$0.id] ?? .unrecorded)
+        }
+        let lastConfirmation = session.events.last { event in
+            switch event.payload {
+            case .confirmationRecorded: true
+            case .recordCorrected(_, let status, _, _, _): status == .teamConfirmed
+            default: false
+            }
+        }
+        let template = templates.first { $0.reference == procedure.templateReference }
+        let templateLabel = template.map { "\($0.name), version \($0.reference.version)" } ?? "No supported template"
+        return SupportContextSnapshot(workspaceID: session.identity.workspaceID, caseID: procedure.id,
+            sessionID: session.identity.sessionID, caseReference: procedure.reference, caseTitle: procedure.name,
+            siteName: site?.name ?? "Site not recorded", siteTown: site?.town ?? "", deviceFamily: procedure.deviceFamily,
+            scheduledAt: procedure.scheduledAt, templateLabel: templateLabel, templateReference: procedure.templateReference,
+            currentItemID: session.currentStep?.id, currentItemTitle: session.currentStep?.title,
+            pendingAcknowledgmentItemTitle: session.pendingAlert?.title,
+            unresolved: items.filter { $0.status != .teamConfirmed }, confirmed: items.filter { $0.status == .teamConfirmed },
+            mostRecentConfirmationTitle: lastConfirmation.flatMap { event in procedure.steps.first { $0.id == event.targetItemID }?.title },
+            arrangement: request.arrangement, logisticalReason: request.reason, contactName: request.contactName,
+            askedByName: askedBy.displayName, askedByRole: askedBy.statedRole,
+            recordingVersion: session.events.count, capturedAt: time)
+    }
+
     // MARK: - Planning helpers
 
     func recommendation(for procedure: Procedure) -> CoverageMatcher.Recommendation {
@@ -285,15 +449,80 @@ final class AppModel {
     // MARK: - Private
 
     private func handle(_ event: SyncEvent) {
+        if case .support(let workspaceID, let change) = event {
+            guard workspaceID == workspace?.id else { return }
+            // Local changes are already applied (a no-op here); changes from elsewhere are
+            // applied and saved, or ignored if they don't fit this device's records.
+            try? apply(change, broadcast: false)
+            return
+        }
         guard let activeSession else { return }
         switch event {
         case .reducedSupportChanged(let id, let on) where id == activeSession.procedure.id:
-            activeSession.setReducedSupport(on)
+            guard activeSession.reducedSupport != on else { return }
+            activeSession.setReducedSupport(on, at: clock())
+            // Session context, not recording: if saving fails, saveError explains it and the
+            // next successful save includes it.
+            try? persist(snapshot())
         case .remoteMessage(let id, let from, let text) where id == activeSession.procedure.id:
             activeSession.receiveRemoteMessage(text, from: from)
         default:
             break
         }
+    }
+
+    /// Applies one support change: save first, then commit, add readable session-log entries
+    /// and (for local actions) broadcast. A repeated change is a no-op. On a failed save
+    /// nothing changes and `saveError` explains it.
+    private func apply(_ change: SupportChange, broadcast: Bool) throws {
+        guard let workspace else { throw AppModelError.noWorkspace }
+        let before = supportRequests
+        let next = try change.applying(to: before)
+        guard next != before else { return }
+        try persist(snapshot(supportRequests: next))
+        supportRequests = next
+        appendActivity(for: change, before: before)
+        if broadcast { sync.send(.support(workspaceID: workspace.id, change: change)) }
+    }
+
+    private func appendActivity(for change: SupportChange, before: [SupportRequest]) {
+        guard let request = supportRequest(change.requestID), let session = sessions[request.caseID] else { return }
+        var entries: [LogEntry] = []
+        switch change {
+        case .requested:
+            for old in before where old.caseID == request.caseID && old.status.isOpen {
+                entries.append(SupportActivity.withdrawn(old, at: request.requestedAt))
+            }
+            entries.append(SupportActivity.requested(request))
+        case .responded(_, let accepted, let time):
+            entries.append(SupportActivity.responded(request, accepted: accepted, at: time))
+        case .withdrawn(_, let time):
+            entries.append(SupportActivity.withdrawn(request, at: time))
+        case .questionAsked(let question):
+            entries.append(SupportActivity.asked(question, contactName: request.contactName))
+        case .questionAcknowledged(_, let questionID, _, let time):
+            if let question = request.questions.first(where: { $0.id == questionID }) {
+                entries.append(SupportActivity.acknowledged(question, contactName: request.contactName, at: time))
+            }
+        case .messageSent(let message):
+            entries.append(SupportActivity.message(message, contactName: request.contactName))
+        }
+        session.appendSupportActivity(entries)
+    }
+
+    private static func requireAccepted(_ request: SupportRequest) throws {
+        switch request.status {
+        case .accepted: return
+        case .requested: throw SupportError.requestNotAccepted
+        case .declined, .withdrawn: throw SupportError.requestClosed
+        }
+    }
+
+    private static func validatedText(_ text: String) throws -> String {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { throw SupportError.textRequired }
+        guard trimmed.count <= SupportError.maximumTextLength else { throw SupportError.textTooLong }
+        return trimmed
     }
 
     private func resetState() {
@@ -308,6 +537,8 @@ final class AppModel {
         retainedSessions = []
         drafts = []
         unreadableSessionCaseIDs = []
+        supportRequests = []
+        retainedReducedSupportSessionIDs = []
         saveError = nil
         loadState = .loading
     }
@@ -330,6 +561,13 @@ final class AppModel {
             sessions[caseID] = session
             unreadableSessionCaseIDs.remove(caseID)
         }
+        supportRequests = snapshot.supportRequests
+        let reduced = Set(snapshot.reducedSupportSessionIDs)
+        for (caseID, session) in sessions {
+            if reduced.contains(session.identity.sessionID) { session.setReducedSupport(true, at: session.startedAt) }
+            session.appendSupportActivity(supportActivity(for: caseID))
+        }
+        retainedReducedSupportSessionIDs = reduced.filter { id in retainedSessions.contains { $0.state.identity.sessionID == id } }
         if let caseID = snapshot.activeCaseID, let session = sessions[caseID] {
             activeCaseID = caseID
             activeSession = session
@@ -340,13 +578,17 @@ final class AppModel {
     /// The full snapshot from current state, with optional replacements for a pending change.
     private func snapshot(workspace: WorkspaceConfiguration? = nil, forecasts: [String: StormForecast]? = nil,
                           cases: [Procedure]? = nil, sessions: [String: CoPilotSession]? = nil,
-                          activeCaseID: String?? = nil) -> WorkspaceSnapshot {
-        let live = (sessions ?? self.sessions).values.compactMap(\.storedSession)
+                          activeCaseID: String?? = nil, supportRequests: [SupportRequest]? = nil) -> WorkspaceSnapshot {
+        let liveSessions = (sessions ?? self.sessions).values
+        let live = liveSessions.compactMap(\.storedSession)
+        let reduced = retainedReducedSupportSessionIDs.union(liveSessions.filter(\.reducedSupport).map(\.identity.sessionID))
         return WorkspaceSnapshot(workspace: workspace ?? self.workspace, forecasts: forecasts ?? self.forecasts,
                                  cases: cases ?? self.cases,
                                  sessions: (retainedSessions + live).sorted(by: Self.sessionOrder),
                                  drafts: drafts.sorted { ($0.updatedAt, $0.key.kind) < ($1.updatedAt, $1.key.kind) },
-                                 activeCaseID: activeCaseID ?? self.activeCaseID)
+                                 activeCaseID: activeCaseID ?? self.activeCaseID,
+                                 supportRequests: supportRequests ?? self.supportRequests,
+                                 reducedSupportSessionIDs: reduced.sorted())
     }
 
     /// Saves before the caller commits its change. On failure sets a persistent `saveError`.

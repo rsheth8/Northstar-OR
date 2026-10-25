@@ -218,6 +218,13 @@ final class CoPilotSession {
     func receiveRemoteMessage(_ text: String, from name: String, at time: Date = .now) {
         log.append(LogEntry(.remoteMessage, "\(name): \(text)", at: time))
     }
+    /// Adds readable support history (F07) in time order. Display only: never changes recording.
+    func appendSupportActivity(_ entries: [LogEntry]) {
+        for entry in entries {
+            let index = log.lastIndex { $0.timestamp <= entry.timestamp }.map { $0 + 1 } ?? 0
+            log.insert(entry, at: index)
+        }
+    }
 }
 
 private extension SessionEvent {

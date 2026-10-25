@@ -5,9 +5,13 @@ enum SyncEvent: Codable, Hashable {
     case reducedSupportChanged(procedureID: String, on: Bool)
     case logAppended(procedureID: String, entry: LogEntry)
     case remoteMessage(procedureID: String, from: String, text: String)
+    /// A support request, response, question, acknowledgment or message (F06/F07). Already
+    /// applied by the sender; receivers apply it idempotently.
+    case support(workspaceID: String, change: SupportChange)
 }
 
-/// The shared backend boundary. Features only talk to this protocol,
+/// The shared backend boundary. Handlers may be called on any thread; receivers hop to their
+/// own actor. Features only talk to this protocol,
 /// so the backend (Firebase, a small Node server, or MultipeerConnectivity) can be swapped
 /// without touching UI code. See docs/TASKS.md for the open decision.
 protocol SyncService: AnyObject {
