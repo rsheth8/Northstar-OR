@@ -1,49 +1,134 @@
 <p align="center"><img src="docs/brand/lockup-horizontal-dark@2x.png" alt="Northstar OR" width="420"></p>
 
+<p align="center"><b>The storm cuts the road. It shouldn't cut the support.</b></p>
+
 # Northstar OR
 
-**A storm-aware surgical co-pilot for rural Minnesota hospitals.** Built in 24 hours for the Medtronic × UMN Social Coding Club hackathon, prompt: *Connect & Intersect*.
+**A coordination app for rural operating rooms when the device rep can't get there.** Native iPad app for the room team, plus a native Mac app for the remote device representative. Built in 24 hours for the Medtronic × UMN Social Coding Club hackathon. The prompt was *Connect & Intersect*.
 
-When a blizzard prevents an expert from reaching a small-town hospital, Northstar OR helps the team arrange support, track reported workflow progress, and share context. Device representatives provide technical device support; clinical specialists have distinct roles and responsibilities.
+> **Simulated data only.** Every hospital, person and case is fictional. Northstar is a hackathon demonstration, not a medical device. It records what the team reports and shares context; it never makes clinical decisions, programs a device or judges whether a procedure should proceed.
 
-- **Planner + Coverage Matcher.** Surfaces coverage risk and ranks logistical options for human review. The planned coordinator flow commits to one named-rep request or marks the case to reschedule, keeps backups visible, and distinguishes availability from acceptance.
-- **iPad Co-pilot.** Tracks team-reported checklist progress, surfaces unresolved confirmations, and records timestamped events. Voice controls and focused camera observations are planned extensions. It prompts and documents; it never makes clinical decisions.
-- **Remote Support Link.** Prepares context so a human expert can join with the team's question, current workflow, and unresolved items. Teams should be able to request help at any time; a deviation is not a prerequisite.
+## The problem
 
-> All data is simulated. Northstar OR is a hackathon demonstration and is not validated or intended for clinical use. It does not verify surgical correctness or determine whether a procedure should proceed.
+Pacemaker and ICD procedures normally have a manufacturer's device representative in the room to run the programmer and help with the device. Heart Rhythm Society policy limits reps to technical support under a physician's direction, and names *distance from the facility* as a reason remote support is allowed.
 
-## Start here with your partner
+In rural Minnesota that distance is real, and a blizzard can close the road. When the rep can't come, today's fallback is a phone or video call. The rep starts with no context: which case, which device, what the team has already confirmed and what's still open. In emergency-department studies, device checks that depended on a rep or programmer took a median of **2.5–3.5 hours** ([REMEDY](https://clinicaltrials.gov/study/NCT01871090), [CEEM 2016](https://doaj.org/article/938332f9eb5840ba82ca0e853343f78e)). About **45%** of device patients arrive without their device ID card ([EP Monthly](https://epmonthly.com/article/remote-cied-interrogator-usage-in-the-emergency-department/)).
 
-Read [the product brief](docs/PRODUCT.md) for the agreed experience, boundaries, camera/AI scope, and demo. Follow [the UI/UX rules](docs/DESIGN.md) for screen layouts, truthful states, accessibility, and review criteria. Read [the team workflow](docs/TEAM_WORKFLOW.md), then claim one task in [the task board](docs/TASKS.md). Build one coherent simulated procedure before broadening to other procedure types.
+Manufacturer remote-support tools share video and the programmer screen. None of the ones we found share the *case state*: what's confirmed, what's deferred and what the question is about. Northstar fills that gap.
 
-[The Rahil + Amartya execution plan](docs/PARTNER_EXECUTION.md) assigns all implementation slices, file ownership, two focused build lanes and release responsibilities. [Copyable agent briefs](docs/AGENT_BRIEFS.md) start Rahil on F03 and Amartya on F01 after that claim is visible. Those implementation tasks are not started by publishing the plan.
+## What it does
 
-[The detailed implementation plan](docs/IMPLEMENTATION_PLAN.md) maps the inspected starter to shared state contracts, 28 dependency-sized implementation slices, screen specifications, acceptance tests, deadline cut lines, and later institutional evaluation gates. Its backlog is proposed work; TASKS.md remains the ownership and completion record.
+Northstar has three tabs: **Planner** (before the case), **Co-pilot** (during the case) and **Remote Support** (for the rep).
 
-[The presentation delivery plan](docs/DEMO_READINESS.md) narrows that backlog to the must-work demonstration, a timed script, alternate-path tests, rehearsal evidence, fallback and submission checks. Implementation starts with the fictional fixture and shared state contracts; presentation drafting starts before final integration.
+| | Planner | Co-pilot | Remote Support |
+|---|---|---|---|
+| **Who** | Coordinator | Room team (iPad) | Device rep (Mac) |
+| **What it does** | Checks who can actually reach the case: stated skills, availability, drive time and setup buffer versus a simulated road closure. Ranks in-person, remote and reschedule options **with plain-language reasons**. It never picks for you. | Records what the team reports at each step of a fictional pacemaker coordination checklist. A deferred required step stays pinned behind an amber warning until it's acknowledged or corrected. Every correction keeps the original. | The rep joins late and immediately sees the case, the checklist and what's still open. Questions carry a frozen snapshot of the context. The rep acknowledges and replies. Either side can start a two-way audio call with room-camera video. |
 
-**Revised product target:** a configurable fictional workspace with editable support contacts, normal case creation, explicit start/resume and retained records/drafts. [The product foundation](docs/PRODUCT_FOUNDATION.md) defines those core capabilities; optional samples use the same workflows. The owner-confirmed presentation is **five minutes**, including setup and repeatability proof. [The institutional interface study](docs/DESIGN_REFERENCES.md) explains the worklist/context/task direction using public medical-software references. Setup, contacts, case forms and local storage now exist in this integrated candidate; see the feature audit below for verification and remaining gaps.
+### Screenshots
 
-**Core journey:** coverage disruption → a human accepts support → the team records progress → a team member requests help → the expert receives context → the team reviews the session record.
+These are real simulator captures from the app's UI tests, taken during development. They show the earlier sample data (`proc-1`, the version 1 checklist). The demo workspace uses GM-1025 and the pacemaker milestones described in [the demo runbook](docs/DEMO_WORKSPACE.md).
 
-The final logo, app icon, editable artwork, and usage guidance are in [the brand kit](docs/brand/README.md).
+<table>
+<tr>
+<td width="50%"><img src="docs/readme/planner.png" alt="Planner with coverage assessment and ranked support options"><br><b>Planner.</b> Coverage risk per case, the reasons behind it and ranked support options, marked "Not requested" until someone chooses.</td>
+<td width="50%"><img src="docs/readme/copilot-deferral.png" alt="Co-pilot with a deferred required item and acknowledgment warning"><br><b>Co-pilot.</b> A required item was deferred. It stays pinned with a persistent warning, and acknowledgment and correction remain available.</td>
+</tr>
+<tr>
+<td><img src="docs/readme/room-support.png" alt="Room iPad showing the team's question, the rep's acknowledgment and reply"><br><b>Support in context, on the room iPad.</b> The team's question, the rep's acknowledgment and reply, next to the still-pinned deferral.</td>
+<td><img src="docs/readme/mac-rep.jpg" alt="Mac rep app showing checklist state, why support is remote and case messages"><br><b>The rep's Mac.</b> The open checklist, why support is remote, what changed since the request and the case messages, all without being told.</td>
+</tr>
+</table>
 
-The approved design uses neutral typography, flat controls, quiet navy surfaces, and meaningful status colors. The logo and shared styling are implemented; adaptive screen layouts, scalable text, and explicit support/checklist states remain in [the ordered UX plan](docs/TASKS.md#ux-delivery-order).
+## How it works
 
-## What works today
+### The journey
 
-The current local candidate supports native Northstar on the room iPad and rep Mac (Mac Catalyst). [The native demo guide and feature audit](docs/NATIVE_DEMO_STATUS.md) distinguishes implemented, verified and unfinished features.
+```mermaid
+sequenceDiagram
+    autonumber
+    participant P as Planner (iPad)
+    participant C as Co-pilot (iPad, room)
+    participant R as Remote Support (Mac, rep)
+    P->>P: Blizzard closes the road before the rep can arrive. High risk, remote options ranked with reasons
+    P->>C: Coordinator chooses the remote rep and starts recording
+    C->>C: Team records confirmations and defers "Programmer and analyzer ready"
+    C-->>R: Live case state: checklist, unresolved items, why support is remote
+    C->>R: Question + frozen context snapshot
+    R->>C: Acknowledge, then reply
+    C-)R: Request call
+    R-)C: Accept. Two-way audio + room camera
+    C->>C: Correct the deferred item (original kept) and confirm the rest
+    Note over C: "All team confirmations recorded". A full record of who helped, when, and what changed
+```
 
-| Capability | Current implementation | Remaining limit |
-| --- | --- | --- |
-| Workspace and cases | Blank/sample setup, editable settings/contacts, validated new/edit case, explicit start/resume, local persistence | Fictional data only; physical full-journey rehearsal remains required |
-| Planner | Rule-based logistical options/reasons and reduced-support context | Named-rep plan requests/acceptance/rescheduling are not implemented |
-| Co-pilot | Explicit confirmation/defer/acknowledgment/correction and retained recording history | Touch is the working input; voice commands remain unwired |
-| Native Remote Support | Same-Wi-Fi paired Mac/iPad case recap, live progress, contextual questions, acknowledgment/reply and case messages | Physical delivery proof is recorded separately; no internet or closed-app notifications |
-| Call | Native invitation/acceptance, two-way audio/video, workspace call dock and floating tile, mute/end and camera off/on/flip | Earlier native two-way audio + room video confirmed by owner. New rep camera and workspace call layout await physical recheck; see `docs/evidence/workspace-calls/README.md`. |
-| Voice alerts | Short spoken recording alerts; optional rep alerts outside calls | Not conversational AI or hands-free commands |
-| Camera interpretation / AI | Not implemented | Sharing video and displaying recorded recap do not interpret images or generate AI answers |
-| Session records | Versioned local workspace/case/session/draft/message persistence | No institutional export, authentication or clinical validation |
+### Architecture
+
+One SwiftUI codebase runs as the **room app on iPad** and the **rep app on Mac** (Mac Catalyst). Each device keeps its own records. The two connect directly over the local network, with no server.
+
+```mermaid
+flowchart LR
+    subgraph iPad["Room iPad"]
+        UI1["Planner · Co-pilot · Remote Support"] --> AM1["AppModel<br/>(shared state, guarded commands)"]
+        AM1 --> CM["CoverageMatcher<br/>(pure, rule-based)"]
+        AM1 --> CS["CoPilotSession<br/>(recording state machine)"]
+        AM1 --> Repo1[("WorkspaceRepository<br/>versioned local JSON")]
+        AM1 --> Sync1["SyncService"]
+    end
+    subgraph Mac["Rep Mac (Catalyst)"]
+        UI2["Remote Support"] --> AM2["AppModel"]
+        AM2 --> Repo2[("WorkspaceRepository")]
+        AM2 --> Sync2["SyncService"]
+    end
+    Sync1 <-->|"Multipeer Connectivity<br/>encrypted, explicit pairing<br/>case snapshot · questions · replies · receipts"| Sync2
+    Sync1 <-.->|"WebRTC<br/>audio + room video"| Sync2
+```
+
+- **Features never talk to the network directly.** Everything goes through `SyncService`, so the transport can be swapped. Today it's nearby Wi-Fi; an internet relay is the next step.
+- **Save first, then send.** A message is saved before it's sent and retried after reconnecting. "Saved", "received" and "acknowledged" are shown as separate states.
+- **The room is the only recording authority.** The rep can read, ask, acknowledge and reply, but can't change the checklist.
+
+### Coverage Matcher rules
+
+```mermaid
+flowchart TD
+    A["Each contact"] --> B{"Stated technical rep?"}
+    B -- No --> X1["Not technical coverage"]
+    B -- Yes --> C{"Device family is a stated skill?"}
+    C -- No --> X2["Not qualified"]
+    C -- Yes --> D{"Available?"}
+    D -- No --> X3["Unavailable (not offered remotely)"]
+    D -- Yes --> E{"Drive time recorded?"}
+    E -- No --> X4["Drive time unknown"]
+    E -- Yes --> F{"Drive + 45 min setup fits before start?"}
+    F -- No --> X5["Arrives after setup deadline"]
+    F -- Yes --> G{"Arrives before simulated road closure?"}
+    G -- No --> X6["Arrives after road closure"]
+    G -- Yes --> OK["In-person option"]
+    X5 & X6 --> RM["Remote option, if remote-capable"]
+    OK & RM --> Rank["Rank: in-person by drive time, then remote, then Reschedule if nobody can attend in person"]
+```
+
+Risk is **low** (someone can attend), **elevated** (roads close during the case window) or **high** (nobody can attend in person). Each contact gets a sentence explaining its result. No AI and no black-box score.
+
+## The demo scenario
+
+**Arrowhead Cardiac Coverage (fictional).** Case **GM-1025** is a pacemaker case in Grand Marais on the North Shore. A simulated blizzard drops 14 inches of snow and closes the shoreline highway in 90 minutes. Ana Lindqvist, the rep in Duluth, is 110 minutes away and can't make it, so the team gets her remotely.
+
+- [`docs/DEMO_SCRIPT.md`](docs/DEMO_SCRIPT.md): the five-minute script, setup and fallbacks.
+- [`docs/DEMO_WORKSPACE.md`](docs/DEMO_WORKSPACE.md): every site, case, contact and weather value, and why it's realistic.
+- [`reports/Rural device rep coverage gaps.md`](reports/Rural%20device%20rep%20coverage%20gaps.md): the sourced research behind the problem, plus the claims we deliberately don't make.
+
+## What works and what doesn't
+
+| Area | In the build | Not in the build |
+|---|---|---|
+| Workspace and cases | Blank or sample setup, editable sites and contacts, new and edit case, explicit start and resume, local persistence across relaunch | Multi-user accounts, verified identity |
+| Planner | Rule-based coverage risk, reasons and ranked options; versioned coverage-request contracts | Request and accept buttons in Planner; map; live weather or road data (weather is fictional, hourly scenario data) |
+| Co-pilot | Explicit confirm, defer, acknowledge and correct; pinned warnings; unresolved-first history; bounded voice commands (optional, touch remains the fallback) | Ending or reopening a recording; camera observation |
+| Remote Support | Paired iPad↔Mac case brief, live progress, snapshot questions, acknowledgment, replies, retained messages | Internet or distant transport; push notifications when the app is closed |
+| Calls | Invitation and acceptance, two-way audio, room-camera video, mute and end | Physical checks of every control are still pending; see [`docs/NATIVE_DEMO_STATUS.md`](docs/NATIVE_DEMO_STATUS.md) |
+| AI | None | No AI or image interpretation. Video is shared, not analyzed |
 
 ## Run it
 
@@ -55,37 +140,50 @@ xcodegen generate          # creates NorthstarOR.xcodeproj from project.yml
 open NorthstarOR.xcodeproj
 ```
 
-Pick your own team under *Signing & Capabilities*, then run on an iPad (landscape). The `.xcodeproj` is generated and git-ignored, so re-run `xcodegen generate` after pulling changes that add files.
+1. Choose your own team under *Signing & Capabilities*.
+2. Run on an **iPad** (landscape). This is the room.
+3. Run on **My Mac (Mac Catalyst)**. This is the rep; it defaults to the Rep role.
+4. On both: **Load sample workspace**, then **Connect devices → Find Northstar devices**, and accept the pairing. Both devices need the same Wi-Fi and Local Network access.
 
-## Before opening a PR
+The `.xcodeproj` is generated and git-ignored. Run `xcodegen generate` again after pulling changes that add files.
 
-Run `bash scripts/check-repo.sh` and `bash scripts/check.sh`. GitHub runs repository checks and the iPad build/tests on every PR. See [the team workflow](docs/TEAM_WORKFLOW.md) for branches, review, pairing, and recovery.
+**Tests:** `bash scripts/check-repo.sh` and `bash scripts/check.sh`. GitHub Actions runs the repository checks plus the iPad build and unit/UI tests on every PR.
 
 ## Project layout
 
 ```
 NorthstarOR/
-  App/              entry point, AppModel (shared state), RootView tabs
-  DesignSystem/     NorthstarTheme.swift (colors, type, spacing, buttons)
-  Models/           Hospital, DeviceRep, Procedure, LogEntry, ...
-  Data/             SampleData (all simulated)
-  Services/         SyncService (backend boundary), voice in/out
+  App/              entry point, AppModel (shared state + commands), RootView
+  DesignSystem/     Northstar theme tokens, components, workspace chrome
+  Models/           workspace, case, session, support-exchange, coverage-plan, planning-evidence contracts
+  Data/             fictional sample workspace, coordination template, hourly weather scenarios
+  Services/         WorkspaceRepository (storage), SyncService, Multipeer transport, WebRTC calls, voice
   Features/
-    CoPilot/        CoPilotSession state machine + iPad view
-    Planner/        CoverageMatcher engine + planner view
-    RemoteSupport/  ContextPackage + remote rep view
-NorthstarORTests/   unit tests for the matcher, session, and voice parsing
-docs/               PRODUCT.md (scope), DESIGN.md (UI/UX rules), IMPLEMENTATION_PLAN.md (blueprint), TASKS.md (ownership), brand/ (logos)
+    Workspace/      setup, settings, contacts
+    Planner/        CoverageMatcher, case list and detail, case form
+    CoPilot/        CoPilotSession state machine, recording UI, support panel, call view, voice
+    RemoteSupport/  rep brief, questions and replies, pairing
+NorthstarORTests/   unit and integration tests (matcher, session, storage, support exchange, voice, sample data)
+NorthstarORUITests/ simulator journeys with screenshot evidence
+docs/               product, design, demo script and runbook, status, evidence
 ```
+
+## Further reading
+
+| Doc | What's in it |
+|---|---|
+| [PRODUCT.md](docs/PRODUCT.md) | Product scope and boundaries |
+| [DESIGN.md](docs/DESIGN.md) | UI/UX rules, screen contracts, accessibility |
+| [NATIVE_DEMO_STATUS.md](docs/NATIVE_DEMO_STATUS.md) | Feature audit: what's implemented, verified and pending |
+| [OR_LANDSCAPE.md](docs/OR_LANDSCAPE.md) | How an OR case runs; existing tools |
+| [TASKS.md](docs/TASKS.md) | Task board and ownership |
+| [TEAM_WORKFLOW.md](docs/TEAM_WORKFLOW.md) | Branches, PRs and checks |
+| [brand/](docs/brand/README.md) | Logo, app icon and usage |
 
 ## Team
 
 - Rahil Sheth ([@rsheth8](https://github.com/rsheth8))
-- Amartya
-
-## In-app rep call
-
-The demo uses **Northstar on both devices**: iPad Room and Mac Catalyst Rep, paired through Connect devices. Follow [native demo setup and evidence](docs/NATIVE_DEMO_STATUS.md). `RepPage/` remains an experimental browser harness and is not the native demo station.
+- Amartya Setty
 
 ## Tools, libraries, and AI credits
 
@@ -105,3 +203,4 @@ Required by the hackathon rules. Keep this list up to date.
 - Institutional shooting-star identity: OpenAI Codex created the connected star/pulse SVG artwork, neutral wordmark composition, and export tooling, informed by the team's direction and earlier OpenAI image-generation exploration. Rural scenes are preserved as presentation illustrations in `docs/brand/archive/`. AppKit/Swift and Pillow export the production PNGs; these are build tools only, with no new app dependency.
 - AI assistance: Claude (Anthropic) helped with brainstorming, the pitch proposal, the brand and logo, and the starter code scaffold. All code was written during the event.
 - AI assistance: OpenAI Codex helped review the starter and document the product direction/status, UI/UX rules, configurable product foundation, institutional interface reference study, implementation blueprint, partner/subagent execution plan, five-minute presentation plan, and task roadmap. No vendor screenshots/assets, AI runtime or camera library were added by this documentation update.
+- AI assistance: Claude Code (Anthropic) helped research rural device-rep coverage, build the fictional demo data and checklist wording, write the demo script, and write this README with diagrams. README screenshots are the app's own simulator captures from `docs/evidence/`, resized and rotated.
