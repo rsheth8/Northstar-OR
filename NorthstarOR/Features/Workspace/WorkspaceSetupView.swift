@@ -72,7 +72,7 @@ struct WorkspaceSetupView: View {
                         .buttonStyle(NorthstarPrimaryButtonStyle(tone: .standard))
                         .accessibilityIdentifier("setup-create")
                     Button("Load sample workspace") {
-                        if !draft.workspaceName.isEmpty || !draft.site.name.isEmpty || !draft.site.town.isEmpty || !draft.participantName.isEmpty { confirmingSample = true } else { loadSample() }
+                        if draft != WorkspaceSetupDraft() { confirmingSample = true } else { loadSample() }
                     }
                         .buttonStyle(NorthstarSecondaryButtonStyle())
                         .accessibilityIdentifier("setup-load-sample")
