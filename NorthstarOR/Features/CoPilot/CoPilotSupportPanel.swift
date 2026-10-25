@@ -23,6 +23,7 @@ struct CoPilotSupportPanel: View {
                 Spacer()
                 Image(systemName: "headphones").foregroundStyle(Northstar.Palette.ice)
             }
+            WorkspaceCallAction()
             if let question, !composing {
                 Label(question.recipientName, systemImage: "person.crop.circle").font(Northstar.Fonts.bodyStrong)
                 Text("Fictional technical rep").font(Northstar.Fonts.supporting).foregroundStyle(Northstar.Palette.inkMuted)

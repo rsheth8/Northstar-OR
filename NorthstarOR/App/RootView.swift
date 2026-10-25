@@ -50,6 +50,7 @@ struct RootView: View {
                             }
                         }
                     }
+                    CallWorkspace {
                     TabView(selection: $model.selectedDestination) {
                         Group { if model.demoPost == .room { CoPilotView() } else { RemoteSupportView() } }
                             .tabItem { Label("Co-pilot", systemImage: "list.bullet.rectangle") }
@@ -61,9 +62,10 @@ struct RootView: View {
                             .tabItem { Label("Remote Support", systemImage: "headphones") }
                             .tag(AppModel.Destination.remoteSupport)
                     }
+                    }
                 }
-                .onChange(of: model.callInvitation?.id) { _, _ in
-                    if model.callInvitation?.state == .requested, model.callInvitation?.from.rawValue != model.demoPost.rawValue { showCall = true }
+                .onChange(of: model.callInvitation?.state) { _, state in
+                    if state == .accepted { showCall = false }
                 }
                 .onChange(of: model.demoPost) { _, role in
                     model.selectedDestination = role == .rep ? .remoteSupport : .coPilot

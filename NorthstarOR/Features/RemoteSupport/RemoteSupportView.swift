@@ -18,6 +18,7 @@ struct RemoteSupportView: View {
                 VStack(alignment: .leading, spacing: Northstar.Space.s4) {
                     NorthstarStatusLabel(model.linkState.label, tone: .info, systemImage: "ipad.landscape")
                     Text("Messages stay with this case. Connect Northstar on the room iPad and the rep’s Mac to exchange updates.").font(Northstar.Fonts.supporting).foregroundStyle(Northstar.Palette.inkMuted)
+                    WorkspaceCallAction()
                     if model.demoPost == .room, let session = model.activeSession {
                         Text("Current room record").font(Northstar.Fonts.title)
                         Text(session.procedure.name).font(Northstar.Fonts.bodyStrong)
@@ -60,6 +61,10 @@ private struct NativeSessionBrief: View {
             Text("\(snapshot.context.caseReference) · \(snapshot.context.siteName)")
             NorthstarStatusLabel(current ? "Live room record" : "Disconnected · last saved copy", tone: current ? .info : .attention)
             Text(snapshot.recordingSummary)
+            if let selected = snapshot.context.selectedItemTitle {
+                Label("Room selected: \(selected)", systemImage: "location.circle")
+                    .font(Northstar.Fonts.bodyStrong)
+            }
             if !snapshot.saved { NorthstarBanner(tone: .attention, title: "Room has unsaved changes", message: "This update is not yet saved on the room device.") }
             ForEach(snapshot.context.lines) { line in
                 Label("\(line.title) · \(line.status == .teamConfirmed ? "Team-confirmed" : line.status == .deferred ? "Deferred" : "Unrecorded")",

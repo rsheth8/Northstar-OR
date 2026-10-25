@@ -7,6 +7,7 @@ struct SupportRequestSheet: View {
     @State private var recipientID = ""
     @State private var error: String?
     @State private var pendingQuestionID: String?
+    @State private var addedTopicID: String?
     private var contacts: [DeviceRep] { model.reps.filter { $0.statedRole == .technicalRep } }
     private var draft: Binding<String> {
         Binding(get: { (try? model.supportDraftKey()).map { model.draft(for: $0) } ?? "" }, set: {
@@ -15,6 +16,7 @@ struct SupportRequestSheet: View {
     }
     var body: some View {
         NavigationStack {
+            ScrollViewReader { scroll in
             Form {
                 Section("Recipient") {
                     if contacts.isEmpty { Text("Add a technical rep in Workspace settings.") }
@@ -24,15 +26,7 @@ struct SupportRequestSheet: View {
                     TextEditor(text: draft).focused($questionFocused).frame(minHeight: 110)
                         .accessibilityLabel("What should the rep answer?").accessibilityIdentifier("support-question-draft")
                         .disabled(pendingQuestionID != nil)
-                }
-                Section("Context that will be sent") {
-                    if let context = try? model.supportSnapshot() {
-                        Text(context.selectedItemTitle ?? "No selected item").font(Northstar.Fonts.bodyStrong)
-                        ForEach(context.lines.filter { $0.status != .teamConfirmed }) { line in
-                            Label(line.title, systemImage: line.status == .deferred ? "exclamationmark.triangle" : "circle")
-                        }
-                    }
-                    Text("The snapshot is captured when you send. Replies do not confirm checklist items.").font(Northstar.Fonts.supporting)
+                        .id("support-question-input")
                 }
                 Section {
                     if let error { NorthstarBanner(tone: .failure, title: "Not sent", message: error) }
@@ -41,10 +35,57 @@ struct SupportRequestSheet: View {
                         .disabled(contacts.isEmpty || draft.wrappedValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                         .accessibilityIdentifier("support-question-send")
                 }
+                Section("Talk live") {
+                    WorkspaceCallAction()
+                    Text("Your question draft stays saved when you request a call.").font(Northstar.Fonts.supporting)
+                }
+                Section("Context that will be sent") {
+                    if let context = try? model.supportSnapshot() {
+                        Text(context.selectedItemTitle ?? "No selected item").font(Northstar.Fonts.bodyStrong)
+                        ForEach(context.lines.filter { $0.status != .teamConfirmed }) { line in
+                            VStack(alignment: .leading, spacing: Northstar.Space.s2) {
+                                Text(line.title).font(Northstar.Fonts.bodyStrong)
+                                Text(line.status == .deferred ? "Recorded as deferred" : "No confirmation recorded")
+                                    .font(Northstar.Fonts.supporting)
+                                Button("Ask about this item") {
+                                    let topic = "Question about “\(line.title)”: "
+                                    if !draft.wrappedValue.contains(topic) {
+                                        draft.wrappedValue += draft.wrappedValue.isEmpty ? topic : "\n" + topic
+                                    }
+                                    addedTopicID = line.id
+                                    scroll.scrollTo("support-question-input", anchor: .top)
+                                    questionFocused = true
+                                }
+                                .buttonStyle(NorthstarSecondaryButtonStyle())
+                                .disabled(pendingQuestionID != nil)
+                                .accessibilityLabel("Ask about \(line.title)")
+                                .accessibilityIdentifier("support-topic-\(line.id)")
+                                if addedTopicID == line.id {
+                                    Label("Added to question draft", systemImage: "checkmark.circle")
+                                        .font(Northstar.Fonts.supporting)
+                                        .foregroundStyle(Northstar.Palette.ink)
+                                }
+                            }
+                        }
+                    }
+                    Text("These are recorded checklist states. Ask about an item to add it to your draft; this never changes its checklist status. The snapshot is captured when you send.").font(Northstar.Fonts.supporting)
+                }
+
             }
+            .accessibilityIdentifier("support-request-form")
             .navigationTitle("Request support").navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Close") { model.flushPendingSave(); dismiss() } } }
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("Close") { model.flushPendingSave(); dismiss() } }
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("Done typing") { questionFocused = false }
+                }
+            }
             .onAppear { recipientID = contacts.first?.id ?? "" }
+            .onChange(of: model.callInvitation?.state) { _, state in
+                if state == .requested || state == .accepted { model.flushPendingSave(); dismiss() }
+            }
+            }
         }
     }
     private func send() {

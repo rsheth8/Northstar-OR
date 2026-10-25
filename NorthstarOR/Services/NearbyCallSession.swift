@@ -9,6 +9,8 @@ final class NearbyCallController: ObservableObject, NearbyTransport {
     @Published private(set) var status = "Call ended"
     @Published private(set) var muted = false
     @Published private(set) var cameraStatus = "Camera off"
+    @Published private(set) var remoteCameraEnabled = true
+    @Published private(set) var remoteCameraStatus = "Waiting for peer camera"
     @Published private(set) var cameraEnabled = false
     @Published private(set) var cameraFacing = "back"
     @Published private(set) var canSwitchCamera = false
@@ -63,9 +65,9 @@ final class NearbyCallController: ObservableObject, NearbyTransport {
             let camera = false
             cameraStatus = "Camera unavailable in the simulator"
             #else
-            let camera = role == .room ? await AVCaptureDevice.requestAccess(for: .video) : false
+            let camera = await AVCaptureDevice.requestAccess(for: .video)
             guard run == generation else { return }
-            cameraStatus = role == .rep ? "Waiting for room camera" : (camera ? "Starting room camera" : "Camera access is off · audio only")
+            cameraStatus = camera ? "Starting your camera" : "Camera access is off · audio only"
             #endif
             let engine = NearbyCallEngine()
             self.engine = engine
@@ -82,6 +84,11 @@ final class NearbyCallController: ObservableObject, NearbyTransport {
             engine.onCameraState = { [weak self] state in
                 guard let self, self.generation == run else { return }
                 self.cameraStatus = state
+            }
+            engine.onRemoteCameraState = { [weak self] enabled in
+                guard let self, self.generation == run else { return }
+                self.remoteCameraEnabled = enabled
+                self.remoteCameraStatus = enabled ? "Peer camera on" : "Peer camera off · audio can continue"
             }
             engine.onLocalVideoTrack = { [weak self] track in
                 guard let self, self.generation == run else { return }
@@ -111,6 +118,7 @@ final class NearbyCallController: ObservableObject, NearbyTransport {
         pendingSignals.removeAll()
         status = "Call ended"; muted = false; cameraStatus = "Camera off"
         cameraEnabled = false; cameraFacing = "back"; canSwitchCamera = false
+        remoteCameraEnabled = true; remoteCameraStatus = "Waiting for peer camera"
         setLink(.idle)
     }
     func setMuted(_ value: Bool) { muted = value; engine?.setMuted(value) }
@@ -131,6 +139,7 @@ private final class NearbyCallEngine: NSObject, URLSessionWebSocketDelegate, RTC
     var onStatus: ((String) -> Void)?
     var onEnvelope: ((SupportEnvelope) -> Void)?
     var onCameraState: ((String) -> Void)?
+    var onRemoteCameraState: ((Bool) -> Void)?
     var onLocalVideoTrack: ((RTCVideoTrack?) -> Void)?
     var onRemoteVideoTrack: ((RTCVideoTrack?) -> Void)?
     var onCameraControl: ((Bool, String, Bool) -> Void)?
@@ -192,7 +201,11 @@ private final class NearbyCallEngine: NSObject, URLSessionWebSocketDelegate, RTC
             videoTrack = video
             peer.add(video, streamIds: ["northstar"])
             cameraEnabled = true
-            startCamera(capture, position: .back)
+            startCamera(capture, position: role == .rep ? .front : .back)
+        } else {
+            let receiveVideo = RTCRtpTransceiverInit()
+            receiveVideo.direction = .recvOnly
+            peer.addTransceiver(of: .video, init: receiveVideo)
         }
         if sendSignal == nil {
             let channelConfig = RTCDataChannelConfiguration()
@@ -319,7 +332,7 @@ private final class NearbyCallEngine: NSObject, URLSessionWebSocketDelegate, RTC
         signal(["type": "camera", "enabled": enabled, "facing": facing])
     }
     private func makeOffer(_ peer: RTCPeerConnection) {
-        peer.offer(for: RTCMediaConstraints(mandatoryConstraints: ["OfferToReceiveAudio": "true", "OfferToReceiveVideo": "false"], optionalConstraints: nil)) { [weak self] sdp, error in
+        peer.offer(for: RTCMediaConstraints(mandatoryConstraints: ["OfferToReceiveAudio": "true", "OfferToReceiveVideo": "true"], optionalConstraints: nil)) { [weak self] sdp, error in
             DispatchQueue.main.async {
                 guard let self, self.connection === peer else { return }
                 guard let sdp, error == nil else { self.fail("Could not prepare the call. Retry."); return }
@@ -328,6 +341,7 @@ private final class NearbyCallEngine: NSObject, URLSessionWebSocketDelegate, RTC
                         guard let self, self.connection === peer else { return }
                         guard error == nil else { self.fail("Could not prepare the call. Retry."); return }
                         self.signal(["type": "offer", "sdp": sdp.sdp])
+                        self.signal(["type": "camera", "enabled": self.cameraEnabled])
                     }
                 }
             }
@@ -372,6 +386,7 @@ private final class NearbyCallEngine: NSObject, URLSessionWebSocketDelegate, RTC
                                     guard let self, self.connection === peer else { return }
                                     guard error == nil else { self.fail("Could not answer the call. Retry."); return }
                                     self.signal(["type": "answer", "sdp": answer.sdp])
+                                    self.signal(["type": "camera", "enabled": self.cameraEnabled])
                                 }
                             }
                         }
@@ -379,8 +394,8 @@ private final class NearbyCallEngine: NSObject, URLSessionWebSocketDelegate, RTC
                 }
             }
         case "camera":
-            guard role == .rep, let enabled = message["enabled"] as? Bool else { return }
-            onCameraState?(enabled ? "Room camera on · video is not saved" : "Room camera off")
+            guard let enabled = message["enabled"] as? Bool else { return }
+            onRemoteCameraState?(enabled)
         case "end": fail("Call ended. Your saved messages are kept.")
         case "answer":
             guard role == .room else { return }
@@ -442,7 +457,7 @@ private final class NearbyCallEngine: NSObject, URLSessionWebSocketDelegate, RTC
     }
     nonisolated private func publishRemoteVideo(_ track: RTCVideoTrack?, peer: RTCPeerConnection) {
         DispatchQueue.main.async { [weak self] in
-            guard let self, self.connection === peer, self.role == .rep, let track else { return }
+            guard let self, self.connection === peer, let track else { return }
             self.onRemoteVideoTrack?(track)
         }
     }
