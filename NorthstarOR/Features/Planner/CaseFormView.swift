@@ -40,7 +40,7 @@ struct CaseFormView: View {
             Form {
                 if let saveFailure {
                     Section {
-                        NorthstarBanner(tone: .alert, title: "Case not saved", message: saveFailure)
+                        NorthstarBanner(tone: .failure, title: "Case not saved", message: saveFailure)
                             .accessibilityIdentifier("case-form-save-error")
                     }
                 }
