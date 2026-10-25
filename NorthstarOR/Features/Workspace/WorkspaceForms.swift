@@ -108,7 +108,7 @@ struct SiteDraft: Identifiable, Hashable {
         } else {
             guard let lat = Double(latitude), let lon = Double(longitude),
                   lat.isFinite, lon.isFinite, (-90...90).contains(lat), (-180...180).contains(lon) else {
-                throw WorkspaceContractError.invalidCoordinates
+                throw WorkspaceContractError.invalidCoordinates(id)
             }
             site.latitude = lat
             site.longitude = lon
