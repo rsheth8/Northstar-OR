@@ -45,6 +45,23 @@ Sources are in [the research report](../reports/Rural%20device%20rep%20coverage%
 
 **Say "fictional, representative scenario".** No documented case of a blizzard stranding a device rep was found, so don't present GM-1025 as a true story. A real 16-bed critical access hospital would more often need rep help for a patient who already has a device than for a new implant. The case title stays generic for that reason.
 
+## Co-pilot checklist (fictional pacemaker coordination, version 2)
+
+Each item records what the team **reports** at a coordination milestone. It follows the WHO time-out and sign-out pause points plus the technical steps a device rep normally supports: confirming device and lead models, running the programmer, taking lead measurements and the final interrogation. Northstar never enters values, judges results or tells anyone what to do.
+
+| # | Item | Normally rep-supported | Good item to defer in the demo |
+| --- | --- | --- | --- |
+| 1 | Time-out recorded | No | |
+| 2 | Device and lead models confirmed | Yes | |
+| 3 | Programmer and analyzer ready | Yes | **Yes**: no rep on site, so the team can't confirm who runs the programmer |
+| 4 | Lead positioning reported | No | |
+| 5 | Lead measurements documented | Yes | |
+| 6 | Leads connected to device | Yes | |
+| 7 | Final interrogation documented | Yes | |
+| 8 | Sign-out and handoff | No | Device ID card details: about 45% of device patients arrive without the card |
+
+All eight are required, so deferring any of them raises the pinned acknowledgment warning. Cases saved with the older version 1 wording show "Recording unavailable", and their data is kept unchanged. Reset demo devices before rehearsing.
+
 ## Reset before every rehearsal and before presenting
 
 The weather clock starts when the sample is loaded:
@@ -57,15 +74,16 @@ To reset a device, delete and reinstall the app, then **Load sample workspace**.
 
 ## Demo text to use
 
-- **Team question (iPad):** "We deferred the technical support tools confirmation. Can you confirm which fictional programmer model we should have ready for this case?"
-- **Rep reply (Mac):** use the Suggested text "I can discuss technical documentation; the team retains clinical decisions." or type "The fictional model reference is on the device ID card; please confirm it on screen and I'll walk through the documentation."
+- **Defer in Co-pilot:** record item 1 (Time-out recorded) and item 2, then defer item 3, **Programmer and analyzer ready**.
+- **Team question (iPad):** "We deferred programmer setup. No rep is on site because of the road closure. Can you walk our staff through connecting the programmer for this fictional device?"
+- **Rep replies (Mac, Suggested text menu):** "Received. I can see the case brief and the deferred item." then "I can walk your team through the programmer connection screens; the physician directs any programming." Other options: "Please read me the model and serial number from the device packaging…" and "I'm supporting remotely. Please keep a team member at the programmer."
 - **Voice phrases (when the voice branch merges):** "record confirmation", "defer item", "acknowledge deferral", "open planner", "open co-pilot", "show unresolved items", "stop listening".
 
 ## Suggested five-minute path
 
 1. **iPad (room):** Planner → **GM-1025**. Read the coverage assessment: blizzard, Ana arrives after the closure, remote options, Reschedule. Show the map and weather when those views are merged.
 2. Optional: **New case** to show ordinary case creation at any site.
-3. GM-1025 → **Start recording**. In Co-pilot record the first item, then **Defer** a required item. The amber warning persists and the item stays pinned.
+3. GM-1025 → **Start recording**. In Co-pilot record items 1–2, then **Defer** item 3, Programmer and analyzer ready. The amber warning persists and the item stays pinned.
 4. **Connect devices** on both iPad and Mac (same Wi-Fi, Local Network allowed). Accept the pairing.
 5. If coverage requests are merged: request Ana (remote) from Planner and accept on the Mac.
 6. **Mac (Ana):** Remote Support shows the case, checklist and deferred item without being told anything.
