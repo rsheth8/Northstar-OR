@@ -91,6 +91,7 @@ docs/               PRODUCT.md (scope), DESIGN.md (UI/UX rules), IMPLEMENTATION_
 Required by the hackathon rules. Keep this list up to date.
 
 - Swift, SwiftUI, Observation, AVFoundation (text-to-speech), Speech (on-device recognition), MapKit
+- Apple Multipeer Connectivity for the experimental, explicitly paired nearby two-iPad support adapter. Physical-device proof remains separately recorded in docs/evidence/nearby-support/.
 - XcodeGen for project generation
 - GitHub Actions with `actions/checkout` and `actions/upload-artifact` for CI; Dependabot for action updates
 - Inter Display (SIL Open Font License) for the logo wordmark

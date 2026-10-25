@@ -3,47 +3,65 @@ import XCTest
 final class SupportPresentationTests: XCTestCase {
     @MainActor func testLocalDraftNavigationAndMessage() {
         continueAfterFailure = false
-        XCUIDevice.shared.orientation = .landscapeLeft
-        let app = XCUIApplication()
-        app.launchArguments += ["-NorthstarSampleWorkspace"]
-        app.launch()
-        XCTAssertTrue(app.buttons["Remote Support"].firstMatch.waitForExistence(timeout: 15))
+        let app = launch()
+        app.buttons["request-support"].tap()
+        let question = app.textViews["support-question-draft"]
+        XCTAssertTrue(question.waitForExistence(timeout: 5))
+        question.tap(); question.typeText("Where is the fictional reference?")
+        app.buttons["Hide keyboard"].tap()
+        let send = app.buttons["support-question-send"]
+        scrollTo(send, app)
+        send.tap()
         app.buttons["Remote Support"].firstMatch.tap()
-        // SwiftUI Menu labels reject the AX scroll-to-visible action XCUITest
-        // uses before tapping; the control is on screen, so tap its center.
-        app.buttons["Suggested text"].firstMatch.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
-        let prompt = "Which technical support question would you like to discuss?"
-        app.buttons[prompt].firstMatch.tap()
-        let draft = app.descendants(matching: .any)["support-draft"].firstMatch
-        XCTAssertTrue(draft.exists)
-        app.buttons["Planner"].firstMatch.tap()
-        app.buttons["Remote Support"].firstMatch.tap()
-        XCTAssertEqual(draft.value as? String, prompt)
-        draft.tap()
+        let draft = app.textViews["support-reply-draft"]
+        XCTAssertTrue(draft.waitForExistence(timeout: 5))
+        scrollTo(draft, app); draft.tap(); draft.typeText("See the fictional training packet.")
+        app.buttons["Hide keyboard"].tap()
+        app.buttons["Planner"].firstMatch.tap(); app.buttons["Remote Support"].firstMatch.tap()
+        XCTAssertEqual(draft.value as? String, "See the fictional training packet.")
         capture("Remote-support-keyboard-draft")
-        XCTAssertTrue(app.buttons["support-send"].isHittable)
-        app.buttons["support-send"].tap()
-        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", prompt)).firstMatch.waitForExistence(timeout: 5))
+        let reply = app.buttons["support-reply-send"]; scrollTo(reply, app); reply.tap()
+        XCTAssertTrue(app.staticTexts["See the fictional training packet."].firstMatch.waitForExistence(timeout: 5))
         capture("Remote-support-local-message")
     }
-
     @MainActor func testEnlargedTextBrief() {
         continueAfterFailure = false
-        XCUIDevice.shared.orientation = .landscapeLeft
-        let app = XCUIApplication()
-        app.launchArguments += ["-NorthstarSampleWorkspace"]
-        app.launchArguments += ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
-        app.launch()
-        XCTAssertTrue(app.buttons["Remote Support"].firstMatch.waitForExistence(timeout: 15))
+        let app = launch(enlarged: true)
         app.buttons["Remote Support"].firstMatch.tap()
-        XCTAssertTrue(app.descendants(matching: .any)["support-draft"].firstMatch.waitForExistence(timeout: 5))
-        capture("Remote-support-accessibility5")
+        XCTAssertTrue(app.staticTexts["No question from the team yet"].waitForExistence(timeout: 5))
+        capture("Remote-support-accessibility5-empty")
+        app.buttons["Co-pilot"].firstMatch.tap()
+        let request = app.buttons["request-support"]; scrollTo(request, app); request.tap()
+        let question = app.textViews["support-question-draft"]
+        XCTAssertTrue(question.waitForExistence(timeout: 5))
+        question.tap(); question.typeText("Fictional enlarged-text question")
+        app.buttons["Hide keyboard"].tap()
+        let send = app.buttons["support-question-send"]; scrollTo(send, app)
+        XCTAssertTrue(send.isEnabled)
+        capture("Support-request-accessibility5")
+        send.tap()
+        app.buttons["Remote Support"].firstMatch.tap()
+        let ack = app.buttons["acknowledge-question"]
+        XCTAssertTrue(ack.waitForExistence(timeout: 5)); scrollTo(ack, app)
+        capture("Support-brief-accessibility5")
     }
-
+    @MainActor private func launch(enlarged: Bool = false) -> XCUIApplication {
+        XCUIDevice.shared.orientation = .landscapeLeft
+        let app = XCUIApplication(); app.launchArguments = ["-NorthstarSampleWorkspace"]
+        if enlarged { app.launchArguments += ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"] }
+        app.launch(); XCTAssertTrue(app.buttons["request-support"].waitForExistence(timeout: 15)); return app
+    }
+    @MainActor private func scrollTo(_ element: XCUIElement, _ app: XCUIApplication) {
+        var count = 0
+        while !element.isHittable && count < 12 {
+            if app.navigationBars["Request support"].exists { app.collectionViews.firstMatch.swipeUp() }
+            else if app.scrollViews["copilot-current-scroll"].exists { app.scrollViews["copilot-current-scroll"].swipeUp() }
+            else { app.scrollViews.firstMatch.swipeUp() }
+            count += 1
+        }
+        XCTAssertTrue(element.isHittable)
+    }
     @MainActor private func capture(_ name: String) {
-        let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
-        attachment.name = name
-        attachment.lifetime = .keepAlways
-        add(attachment)
+        let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot()); attachment.name = name; attachment.lifetime = .keepAlways; add(attachment)
     }
 }

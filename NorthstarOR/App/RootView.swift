@@ -4,6 +4,7 @@ struct RootView: View {
     @Environment(AppModel.self) private var model
     @State private var showingSettings = false
     @State private var retryError: String?
+    @State private var showNearby = false
 
     var body: some View {
         @Bindable var model = model
@@ -25,8 +26,18 @@ struct RootView: View {
             case .ready:
                 VStack(spacing: 0) {
                     NorthstarWorkspaceHeader(
+                        communicationLabel: model.linkState.label,
                         workspaceName: model.workspace?.name,
                         onOpenSettings: model.workspace == nil ? nil : { showingSettings = true })
+                    HStack {
+                        Picker("This iPad", selection: $model.demoPost) {
+                            Text("Room").tag(DemoPost.room); Text("Rep").tag(DemoPost.rep)
+                        }.pickerStyle(.segmented).frame(maxWidth: 240).accessibilityIdentifier("nearby-role")
+                        Spacer()
+                        Button("Nearby iPad") { showNearby = true }.frame(minHeight: Northstar.Target.minimum)
+                    }.padding(.horizontal, Northstar.Space.s6)
+                    Text("Fictional coordination record. Nearby links two iPads. This app does not decide whether a procedure proceeds.")
+                        .font(Northstar.Fonts.supporting).padding(.horizontal, Northstar.Space.s6)
                     if let saveError = model.saveError {
                         SaveFailureBanner(message: retryError ?? saveError) {
                             do { try model.retrySave(); retryError = nil } catch {
@@ -46,6 +57,7 @@ struct RootView: View {
                             .tag(AppModel.Destination.remoteSupport)
                     }
                 }
+                .sheet(isPresented: $showNearby) { NearbyLinkSheet() }
                 .sheet(isPresented: $showingSettings) {
                     if let workspace = model.workspace {
                         WorkspaceSettingsView(workspace: workspace, onSave: { try model.updateWorkspace($0) })

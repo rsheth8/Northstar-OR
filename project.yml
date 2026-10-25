@@ -21,6 +21,12 @@ targets:
     platform: iOS
     sources:
       - path: NorthstarOR
+    info:
+      path: build/NorthstarOR-Info.plist
+      properties:
+        NSLocalNetworkUsageDescription: "Connect two nearby iPads to exchange fictional support questions and replies."
+        NSBonjourServices:
+          - _nstar-or._tcp
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: edu.umn.northstar.or

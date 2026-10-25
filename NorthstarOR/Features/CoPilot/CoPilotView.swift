@@ -3,10 +3,11 @@ import SwiftUI
 struct CoPilotView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.dynamicTypeSize) private var typeSize
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var showRequest = false
     @State private var announcer = VoiceAnnouncer()
     @State private var showWorkflow = false
     @State private var showActivity = false
-    @State private var showSupport = false
     @State private var correction: CoPilotCorrectionRequest?
     @State private var commandError: String?
 
@@ -44,10 +45,11 @@ struct CoPilotView: View {
                                 .frame(maxWidth: 800, alignment: .leading)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                         }
+                        .accessibilityIdentifier("copilot-current-scroll")
                         .background(Northstar.Palette.bgRaised)
                         if wide {
                             Divider()
-                            activity(session).frame(width: 260)
+                            ScrollView { VStack(alignment: .leading, spacing: Northstar.Space.s4) { supportSummary(session); activity(session) }.padding(Northstar.Space.s4) }.frame(width: 280)
                                 .background(Northstar.Palette.bgBase)
                         }
                     }
@@ -62,7 +64,7 @@ struct CoPilotView: View {
                 }
                 ToolbarItemGroup(placement: .topBarTrailing) {
                     Button { showActivity = true } label: { Label("Activity", systemImage: "clock") }
-                    Button { showSupport = true } label: { Label("Support context", systemImage: "headphones") }
+                    Button { model.selectedDestination = .remoteSupport } label: { Label("Support context", systemImage: "headphones") }
                 }
             }
             .sheet(isPresented: $showWorkflow) {
@@ -81,21 +83,7 @@ struct CoPilotView: View {
                         .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { showActivity = false } } }
                 }
             }
-            .sheet(isPresented: $showSupport) {
-                NavigationStack {
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: Northstar.Space.s4) {
-                            NorthstarStatusLabel("On this device", tone: .info, systemImage: "ipad.landscape")
-                            Text("Support requests and acceptance are not available in this build. The Remote Support tab can add local technical-support messages to this recording.")
-                                .font(Northstar.Fonts.body)
-                            activity(session, messagesOnly: true)
-                        }.padding(Northstar.Space.s6)
-                    }
-                    .navigationTitle("Support context")
-                    .navigationBarTitleDisplayMode(.inline)
-                    .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { showSupport = false } } }
-                }
-            }
+            .sheet(isPresented: $showRequest) { SupportRequestSheet() }
             .sheet(item: $correction) { request in
                 CoPilotCorrectionSheet(request: request)
             }
@@ -158,7 +146,7 @@ struct CoPilotView: View {
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
-                    .disabled(session.pendingAlert != nil || activation == nil)
+                    .disabled(model.demoPost == .rep || session.pendingAlert != nil || activation == nil)
                     .accessibilityLabel("Item \(index + 1), \(step.title), \(label(status))")
                     .accessibilityAddTraits(selected ? .isSelected : [])
                 }
@@ -182,7 +170,9 @@ struct CoPilotView: View {
                     Text(step.detail).font(Northstar.Fonts.body).foregroundStyle(Northstar.Palette.inkMuted)
                     NorthstarStatusLabel(label(status), tone: tone(status), systemImage: symbol(status))
                 }
-                if let acknowledgment = session.recordingState?.pendingAcknowledgment {
+                if model.demoPost == .rep {
+                    Text("This iPad is the rep. Checklist recording stays on the room iPad.")
+                } else if let acknowledgment = session.recordingState?.pendingAcknowledgment {
                     NorthstarBanner(tone: .attention, title: "Deferred · Acknowledgment required",
                         message: "Acknowledgment leaves this item deferred. Review and correction remain available.")
                     let activation = command(session, .acknowledgeWarning(acknowledgment: acknowledgment)).map(RecordingCommandActivation.init)
@@ -201,22 +191,41 @@ struct CoPilotView: View {
                         .font(Northstar.Fonts.body).foregroundStyle(Northstar.Palette.inkMuted)
                     Button("Review items") { showWorkflow = true }.buttonStyle(NorthstarSecondaryButtonStyle())
                 }
-                if let request = correctionRequest(session, step: step) {
+                if model.demoPost == .room {
+                    Button("Request support") { showRequest = true }.buttonStyle(NorthstarSecondaryButtonStyle(size: .large)).accessibilityIdentifier("request-support")
+                }
+                if model.demoPost == .room, let request = correctionRequest(session, step: step) {
                     Button("Correct record") { correction = request }
                         .buttonStyle(NorthstarSecondaryButtonStyle(size: .large))
                 }
-                if let reply = session.log.last(where: { $0.kind == .remoteMessage }) {
-                    Divider()
-                    NorthstarBanner(tone: .info, title: "Latest local support message", message: reply.message)
-                    Text(reply.timestamp.formatted(date: .omitted, time: .shortened))
-                        .font(Northstar.Fonts.supporting).foregroundStyle(Northstar.Palette.inkMuted)
-                }
+                supportSummary(session)
+
             } else {
                 Text(session.recordingSummary).font(Northstar.Fonts.title)
                 Text("This record describes team statements, not clinical work or outcomes.")
                     .font(Northstar.Fonts.body).foregroundStyle(Northstar.Palette.inkMuted)
                 Button("Review items") { showWorkflow = true }.buttonStyle(NorthstarSecondaryButtonStyle(size: .large))
             }
+        }
+    }
+
+    @ViewBuilder private func supportSummary(_ session: CoPilotSession) -> some View {
+        if let question = model.latestQuestion(for: session.identity.sessionID) {
+            VStack(alignment: .leading, spacing: Northstar.Space.s3) {
+                if let reply = question.reply {
+                    NorthstarBanner(tone: .info, title: "Reply from \(reply.from)", message: reply.text).transition(.opacity)
+                    Text("This reply does not confirm the checklist item.").font(Northstar.Fonts.supporting)
+                    Text(reply.at.formatted(date: .omitted, time: .shortened)).font(Northstar.Fonts.supporting)
+                } else {
+                    Text("Support · \(question.recipientName)").font(Northstar.Fonts.bodyStrong)
+                    Text(question.text).font(Northstar.Fonts.body)
+                    NorthstarStatusLabel(question.delivery.label, tone: question.delivery == .failed ? .failure : .info)
+                }
+                if model.demoPost == .room, question.delivery == .failed || question.delivery == .waitingForPeer {
+                    Button("Retry same question") { do { try model.retrySupportMessage(question.messageID) } catch { commandError = "Not sent. Your question is kept." } }.buttonStyle(NorthstarSecondaryButtonStyle())
+                }
+                Button("View support exchange") { model.selectedDestination = .remoteSupport }.buttonStyle(NorthstarSecondaryButtonStyle())
+            }.animation(reduceMotion ? nil : .easeOut(duration: 0.18), value: question.replyAt)
         }
     }
 

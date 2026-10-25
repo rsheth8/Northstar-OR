@@ -36,6 +36,7 @@ struct WorkspaceSnapshot: Hashable, Codable {
     var drafts: [DraftRecord] = []
     /// The case whose session was active when last saved. Must have a stored session.
     var activeCaseID: String? = nil
+    var supportQuestions: [SupportQuestion] = []
 
     static let empty = WorkspaceSnapshot()
 
@@ -43,7 +44,7 @@ struct WorkspaceSnapshot: Hashable, Codable {
     func validate() throws {
         guard formatVersion == Self.supportedFormatVersion else { throw invalid("unsupported format version \(formatVersion)") }
         guard let workspace else {
-            guard forecasts.isEmpty, cases.isEmpty, sessions.isEmpty, drafts.isEmpty, activeCaseID == nil else {
+            guard forecasts.isEmpty, cases.isEmpty, sessions.isEmpty, drafts.isEmpty, supportQuestions.isEmpty, activeCaseID == nil else {
                 throw invalid("records exist without a workspace")
             }
             return
@@ -80,6 +81,20 @@ struct WorkspaceSnapshot: Hashable, Codable {
             throw invalid("active case \(activeCaseID) has no stored session")
         }
 
+        var questionIDs = Set<String>()
+        for question in supportQuestions {
+            guard questionIDs.insert(question.id).inserted,
+                  SupportExchange.apply(.question(question), to: SupportInbox(), current: nil).accepted else {
+                throw invalid("invalid support question")
+            }
+            let inbox = SupportInbox(questions: [question])
+            if let ack = question.acknowledgementEnvelope {
+                guard SupportExchange.apply(ack, to: inbox, current: nil).accepted else { throw invalid("invalid acknowledgment") }
+            }
+            if let reply = question.replyEnvelope {
+                guard SupportExchange.apply(reply, to: inbox, current: nil).accepted else { throw invalid("invalid reply") }
+            }
+        }
         var draftKeys = Set<DraftKey>()
         for draft in drafts {
             let key = draft.key
@@ -99,7 +114,7 @@ struct WorkspaceSnapshot: Hashable, Codable {
 
 extension WorkspaceSnapshot {
     private enum CodingKeys: String, CodingKey {
-        case formatVersion, workspace, forecasts, cases, sessions, drafts, activeCaseID
+        case formatVersion, workspace, forecasts, cases, sessions, drafts, activeCaseID, supportQuestions
     }
 
     /// Synthesized decoding ignores property defaults, so additive fields must be decoded
@@ -113,6 +128,7 @@ extension WorkspaceSnapshot {
         sessions = try values.decodeIfPresent([StoredSession].self, forKey: .sessions) ?? []
         drafts = try values.decodeIfPresent([DraftRecord].self, forKey: .drafts) ?? []
         activeCaseID = try values.decodeIfPresent(String.self, forKey: .activeCaseID)
+        supportQuestions = try values.decodeIfPresent([SupportQuestion].self, forKey: .supportQuestions) ?? []
     }
 }
 

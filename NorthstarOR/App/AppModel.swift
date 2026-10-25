@@ -72,6 +72,16 @@ final class AppModel {
     static let templates = [FictionalCoordinationTemplate.template]
     static let sampleWorkspaceID = "sample-workspace"
 
+    var demoPost: DemoPost = .room {
+        didSet { if oldValue != demoPost { stopNearbyLink() } }
+    }
+    private(set) var questions: [SupportQuestion] = []
+    private(set) var linkState: NearbyLinkState = .idle
+    private(set) var nearbyPeers: [NearbyPeer] = []
+    private(set) var nearbyInvitation: NearbyPeer?
+    private(set) var nearbyError: String?
+    private var supportContext: [SupportOrigin: SupportContextSnapshot] = [:]
+
     private let repository: WorkspaceRepository
     private let clock: () -> Date
     private let draftSaveDelay: Duration
@@ -80,18 +90,20 @@ final class AppModel {
     @ObservationIgnored private var sessions: [String: CoPilotSession] = [:]
     /// Stored sessions not loaded live (unreadable or superseded); written back unchanged.
     @ObservationIgnored private var retainedSessions: [StoredSession] = []
-    @ObservationIgnored private var drafts: [DraftRecord] = []
+    private var drafts: [DraftRecord] = []
     @ObservationIgnored private var pendingDraftSave: Task<Void, Never>?
 
     init(sync: SyncService = LocalSyncService(), store: WorkspaceStore = InMemoryWorkspaceStore(),
-         clock: @escaping () -> Date = Date.init, draftSaveDelay: Duration = .milliseconds(800)) {
+         clock: @escaping () -> Date = Date.init, draftSaveDelay: Duration = .milliseconds(800), post: DemoPost = .room) {
         self.sync = sync
+        self.demoPost = post
         self.clock = clock
         self.draftSaveDelay = draftSaveDelay
         self.repository = WorkspaceRepository(store: store, clock: clock)
         subscription = sync.subscribe { [weak self] event in
             MainActor.assumeIsolated { self?.handle(event) }
         }
+        bindNearby()
         load()
     }
 
@@ -211,6 +223,7 @@ final class AppModel {
     /// the active session has a pending acknowledgment. Does not change `selectedDestination`.
     @discardableResult
     func startOrResume(caseID: String) throws -> CoPilotSession {
+        guard demoPost == .room else { throw AppModelError.recordingUnavailable }
         guard workspace != nil else { throw AppModelError.noWorkspace }
         guard let procedure = cases.first(where: { $0.id == caseID }) else { throw AppModelError.unknownCase(caseID) }
         if let activeSession, activeCaseID != caseID, activeSession.pendingAlert != nil {
@@ -239,9 +252,11 @@ final class AppModel {
     /// save, or `retrySave()`, includes it.
     @discardableResult
     func record(_ command: SessionCommand) throws -> SessionEvent {
+        guard demoPost == .room else { throw AppModelError.recordingUnavailable }
         guard let activeSession else { throw AppModelError.noActiveSession }
         let event = try activeSession.apply(command)
         try? persist(snapshot())
+        publishSupportContext()
         return event
     }
 
@@ -280,6 +295,160 @@ final class AppModel {
         try? persist(snapshot())
     }
 
+    // MARK: - Contextual support (separate from checklist events)
+
+    func supportSnapshot() throws -> SupportContextSnapshot {
+        guard let session = activeSession, let state = session.recordingState,
+              let template = session.procedure.templateReference else { throw AppModelError.noActiveSession }
+        let procedure = session.procedure
+        let acknowledgments = session.events.compactMap { event -> String? in
+            if case .warningAcknowledged(let ack) = event.payload { return ack.id }
+            return nil
+        }
+        return SupportContextSnapshot(capturedAt: clock(), caseReference: procedure.reference ?? procedure.id,
+            caseName: procedure.name, siteName: hospital(procedure.hospitalID)?.name ?? "Not recorded",
+            deviceFamily: procedure.deviceFamily, templateID: template.id, templateVersion: template.version,
+            selectedItemID: session.currentStep?.id, selectedItemTitle: session.currentStep?.title,
+            reducedSupport: session.reducedSupport, logisticalReason: recommendation(for: procedure).reasons.first,
+            lines: procedure.steps.map { .init(id: $0.id, title: $0.title,
+                status: state.itemStatuses[$0.id] ?? .unrecorded, normallyCoveredByRep: $0.normallyCoveredByRep) },
+            recentEvents: session.events.suffix(8).map { event in
+                let action: String
+                switch event.payload {
+                case .itemSelected: action = "Item selected"
+                case .confirmationRecorded: action = "Team confirmation recorded"
+                case .itemDeferred: action = "Item deferred"
+                case .warningAcknowledged: action = "Deferral warning acknowledged"
+                case .recordCorrected: action = "Record corrected; original retained"
+                }
+                let title = procedure.steps.first { $0.id == event.targetItemID }?.title ?? "Item"
+                return "\(event.occurredAt.formatted(date: .omitted, time: .shortened)) · \(event.actor.displayName) · \(event.source.rawValue) · \(title): \(action)"
+            },
+            recordingRevision: state.version, acknowledgmentIDs: Array(Set(acknowledgments)).sorted())
+    }
+
+    func latestQuestion(for sessionID: String?) -> SupportQuestion? {
+        questions.last { sessionID == nil || $0.sessionID == sessionID }
+    }
+    func liveContext(for question: SupportQuestion) -> SupportContextSnapshot? { supportContext[question.origin] }
+    func supportDraftKey(question: SupportQuestion? = nil) throws -> DraftKey {
+        guard let workspace else { throw AppModelError.noWorkspace }
+        if let question {
+            return DraftKey(workspaceID: workspace.id, caseID: nil, sessionID: nil, kind: "supportReply:" + question.id)
+        }
+        guard let session = activeSession else { throw AppModelError.noActiveSession }
+        return DraftKey(workspaceID: workspace.id, caseID: session.procedure.id,
+            sessionID: session.identity.sessionID, kind: "supportQuestion")
+    }
+
+    @discardableResult
+    func sendSupportQuestion(text: String, recipient: DeviceRep) throws -> SupportQuestion {
+        guard demoPost == .room, let workspace, let session = activeSession,
+              session.isRecordingSupported, reps.contains(where: { $0.id == recipient.id && $0.statedRole == .technicalRep }) else { throw AppModelError.recordingUnavailable }
+        let question = try SupportQuestion.make(id: UUID().uuidString, workspaceID: workspace.id,
+            caseID: session.procedure.id, sessionID: session.identity.sessionID, text: text, sender: workspace.localParticipant,
+            recipientContactID: recipient.id, recipientName: recipient.name, sentAt: clock(), snapshot: supportSnapshot())
+        questions.append(question)
+        try persist(snapshot())
+        try transmitSupport(.question(question))
+        return questions.last { $0.id == question.id }!
+    }
+
+    private func respondingActor(for question: SupportQuestion) throws -> LocalParticipant {
+        guard let workspace else { throw AppModelError.noWorkspace }
+        if demoPost == .rep { return workspace.localParticipant }
+        guard question.workspaceID == workspace.id, linkState == .idle,
+              let contact = reps.first(where: { $0.id == question.recipientContactID && $0.statedRole == .technicalRep }) else {
+            throw AppModelError.recordingUnavailable
+        }
+        return LocalParticipant(id: contact.id, workspaceID: workspace.id, displayName: contact.name, statedRole: .technicalRep)
+    }
+    func acknowledgeQuestion(_ id: String) throws {
+        guard let index = questions.firstIndex(where: { $0.id == id }) else { throw SupportExchangeError.unknownMessage }
+        _ = try respondingActor(for: questions[index])
+        if questions[index].acknowledgement == nil {
+            questions[index] = try SupportExchange.acknowledge(questions[index], by: respondingActor(for: questions[index]), at: clock())
+            try persist(snapshot())
+        }
+        if let envelope = questions[index].acknowledgementEnvelope { try transmitSupport(envelope) }
+    }
+    func sendSupportReply(_ id: String, text: String) throws {
+        guard let index = questions.firstIndex(where: { $0.id == id }) else { throw SupportExchangeError.unknownMessage }
+        _ = try respondingActor(for: questions[index])
+        if questions[index].reply == nil {
+            questions[index] = try SupportExchange.reply(questions[index], text: text, from: respondingActor(for: questions[index]), at: clock())
+            try persist(snapshot())
+        }
+        if let envelope = questions[index].replyEnvelope { try transmitSupport(envelope) }
+    }
+    func retrySupportMessage(_ messageID: String) throws {
+        for question in questions {
+            let candidates = [SupportEnvelope.question(question), question.acknowledgementEnvelope, question.replyEnvelope].compactMap { $0 }
+            if let envelope = candidates.first(where: { $0.id == messageID }) {
+                if envelope.kind == .question {
+                    guard demoPost == .room, question.workspaceID == workspace?.id else { throw AppModelError.foreignWorkspace }
+                } else { _ = try respondingActor(for: question) }
+                try transmitSupport(envelope)
+                return
+            }
+        }
+        throw SupportExchangeError.unknownMessage
+    }
+    private func transmitSupport(_ envelope: SupportEnvelope) throws {
+        if linkState == .idle {
+            questions = try SupportExchange.markDelivery(messageID: envelope.id, delivery: .onThisDevice,
+                in: SupportInbox(questions: questions)).questions
+            try persist(snapshot()); return
+        }
+        var inbox = SupportInbox(questions: questions, liveContext: supportContext)
+        inbox = try SupportExchange.markDelivery(messageID: envelope.id, delivery: .waitingForPeer, in: inbox)
+        questions = inbox.questions
+        try persist(snapshot())
+        do {
+            try sync.sendSupport(envelope)
+        } catch {
+            questions = try SupportExchange.markDelivery(messageID: envelope.id, delivery: .failed,
+                in: SupportInbox(questions: questions)).questions
+            try? persist(snapshot())
+            throw error
+        }
+    }
+    private func receiveSupport(_ envelope: SupportEnvelope) {
+        guard loadState == .ready else { return }
+        // Room accepts responses to its retained questions; Rep accepts self-contained briefs.
+        if demoPost == .room, envelope.kind == .question || envelope.kind == .contextUpdate { return }
+        if demoPost == .rep, envelope.kind == .questionAcknowledgement || envelope.kind == .reply { return }
+        let applied = SupportExchange.apply(envelope, to: SupportInbox(questions: questions, liveContext: supportContext), current: nil)
+        guard applied.accepted else { return }
+        questions = applied.inbox.questions
+        supportContext = applied.inbox.liveContext
+        do { try persist(snapshot()) } catch { return }
+        if applied.receiptForID != nil, envelope.kind != .contextUpdate, case .connected = linkState {
+            try? sync.sendSupport(.receipt(for: envelope, at: clock()))
+        }
+    }
+    private func publishSupportContext() {
+        guard demoPost == .room, let session = activeSession,
+              let question = latestQuestion(for: session.identity.sessionID), let context = try? supportSnapshot() else { return }
+        supportContext[question.origin] = context
+        if case .connected = linkState { try? sync.sendSupport(.context(context, for: question)) }
+    }
+    private func bindNearby() {
+        linkState = sync.nearby.linkState
+        sync.nearby.onEnvelope = { [weak self] in self?.receiveSupport($0) }
+        sync.nearby.onLinkState = { [weak self] state in self?.linkState = state; self?.refreshNearbyDiscovery() }
+        sync.nearby.onDiscoveryChange = { [weak self] in self?.refreshNearbyDiscovery() }
+        refreshNearbyDiscovery()
+    }
+    private func refreshNearbyDiscovery() {
+        nearbyPeers = sync.nearby.peers; nearbyInvitation = sync.nearby.invitation; nearbyError = sync.nearby.errorMessage
+    }
+    func installNearbyTransport(_ transport: NearbyTransport) { sync.installNearby(transport); bindNearby() }
+    func startNearbyLink() { installNearbyTransport(MultipeerNearbyTransport(role: demoPost)); sync.nearby.start() }
+    func stopNearbyLink() { sync.nearby.stop(); linkState = .idle; refreshNearbyDiscovery() }
+    func inviteNearby(_ id: String) throws { try sync.nearby.invite(id) }
+    func answerNearbyInvitation(accept: Bool) { sync.nearby.respondToInvitation(accept: accept) }
+
     // MARK: - Planning helpers
 
     func recommendation(for procedure: Procedure) -> CoverageMatcher.Recommendation {
@@ -293,7 +462,7 @@ final class AppModel {
     private func handle(_ event: SyncEvent) {
         guard let activeSession else { return }
         switch event {
-        case .reducedSupportChanged(let id, let on) where id == activeSession.procedure.id:
+        case .reducedSupportChanged(let id, let on) where demoPost == .room && id == activeSession.procedure.id:
             activeSession.setReducedSupport(on)
         case .remoteMessage(let id, let from, let text) where id == activeSession.procedure.id:
             activeSession.receiveRemoteMessage(text, from: from)
@@ -313,6 +482,8 @@ final class AppModel {
         sessions = [:]
         retainedSessions = []
         drafts = []
+        questions = []
+        supportContext = [:]
         unreadableSessionCaseIDs = []
         saveError = nil
         loadState = .loading
@@ -323,6 +494,7 @@ final class AppModel {
         cases = Self.sorted(snapshot.cases)
         forecasts = snapshot.forecasts
         drafts = snapshot.drafts
+        questions = snapshot.supportQuestions
         // The latest run per case is live; anything else is retained unchanged.
         var visitedCases = Set<String>()
         for stored in snapshot.sessions.sorted(by: Self.sessionOrder).reversed() {
@@ -357,7 +529,7 @@ final class AppModel {
                                  cases: cases ?? self.cases,
                                  sessions: (retainedSessions + live).sorted(by: Self.sessionOrder),
                                  drafts: drafts.sorted { ($0.updatedAt, $0.key.kind) < ($1.updatedAt, $1.key.kind) },
-                                 activeCaseID: activeCaseID ?? self.activeCaseID)
+                                 activeCaseID: activeCaseID ?? self.activeCaseID, supportQuestions: questions)
     }
 
     /// Saves before the caller commits its change. On failure sets a persistent `saveError`.

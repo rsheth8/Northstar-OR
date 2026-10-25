@@ -3,6 +3,7 @@ import SwiftUI
 /// Brand identity stays separate from native tab and destination navigation.
 struct NorthstarWorkspaceHeader: View {
     /// The configured workspace name; nil while no workspace exists yet.
+    var communicationLabel: String = "On this device"
     var workspaceName: String?
     /// Present only when a workspace can be edited.
     var onOpenSettings: (() -> Void)?
@@ -50,7 +51,7 @@ struct NorthstarWorkspaceHeader: View {
                 .lineLimit(1)
                 .accessibilityIdentifier("header-workspace-name")
         }
-        Label("On this device", systemImage: "ipad.landscape")
+        Label(communicationLabel, systemImage: "ipad.landscape")
         if let onOpenSettings {
             Button(action: onOpenSettings) {
                 Label("Workspace settings", systemImage: "gearshape")
