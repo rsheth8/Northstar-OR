@@ -2,6 +2,8 @@ import SwiftUI
 
 struct RootView: View {
     @Environment(AppModel.self) private var model
+    @Environment(\.dynamicTypeSize) private var typeSize
+    @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var showingSettings = false
     @State private var retryError: String?
     @State private var showNearby = false
@@ -31,10 +33,7 @@ struct RootView: View {
                         communicationLabel: model.linkState.label,
                         workspaceName: model.workspace?.name,
                         onOpenSettings: model.workspace == nil ? nil : { showingSettings = true })
-                    ViewThatFits(in: .horizontal) {
-                        HStack { deviceControls }.fixedSize(horizontal: true, vertical: false)
-                        VStack(alignment: .leading, spacing: 0) { deviceControls }
-                    }
+                    deviceLayout { deviceControls }
                     .font(Northstar.Fonts.supporting)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, Northstar.Space.s4)
@@ -88,6 +87,12 @@ struct RootView: View {
         }
         .background(Northstar.Palette.bgBase)
     }
+    private var deviceLayout: AnyLayout {
+        typeSize.isAccessibilitySize || sizeClass == .compact
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: 0))
+            : AnyLayout(HStackLayout(spacing: Northstar.Space.s2))
+    }
+
     @ViewBuilder private var deviceControls: some View {
         Menu {
             Button("Room device") { requestRole(.room) }

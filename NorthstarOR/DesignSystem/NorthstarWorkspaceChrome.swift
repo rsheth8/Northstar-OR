@@ -20,6 +20,7 @@ struct NorthstarWorkspaceHeader: View {
                 context
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, Northstar.Space.s6)
         .padding(.vertical, Northstar.Space.s1)
         .foregroundStyle(Northstar.Palette.Workspace.onHeader)
