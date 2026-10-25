@@ -257,7 +257,7 @@ struct PlannerView: View {
             Text("Review a frozen summary of this case’s recorded items, corrections and support exchanges. Unrecorded information stays visible.")
             Button("Create report for review", systemImage: "doc.text") {
                 let session = model.session(for: procedure.id)
-                report = CaseReport(procedure: procedure, site: model.hospital(procedure.hospitalID), state: session?.recordingState, events: session?.events ?? [], questions: model.questions, forecast: model.forecasts[procedure.hospitalID], capturedAt: .now)
+                report = CaseReport(procedure: procedure, site: model.hospital(procedure.hospitalID), state: session?.recordingState, events: session?.events ?? [], questions: model.questions, notes: model.sessionNotes, forecast: model.forecasts[procedure.hospitalID], capturedAt: .now)
             }.buttonStyle(NorthstarPrimaryButtonStyle(tone: .standard))
             Spacer()
         }.padding(Northstar.Space.s6)
