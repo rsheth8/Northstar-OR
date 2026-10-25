@@ -1,5 +1,6 @@
 import SwiftUI
 import AVFoundation
+import Combine
 
 struct VoiceControlsView: View {
     @Environment(AppModel.self) private var model
@@ -11,10 +12,11 @@ struct VoiceControlsView: View {
     @State private var router = VoiceCommandRouter()
     @State private var captured: SessionCommand?
     @State private var error: String?
+    @State private var observedCallStatus: String?
     @State private var permissionRequest = UUID()
 
     private var blocked: Bool {
-        model.demoPost != .room || model.nearbyCall != nil || model.callInvitation?.state == .accepted || correctionOpen || session.isFinished
+        model.demoPost != .room || VoiceAudioPolicy.callOwnsAudio(invitationAccepted: model.callInvitation?.state == .accepted, status: observedCallStatus ?? model.nearbyCall?.status) || correctionOpen || session.isFinished
     }
     private var context: String {
         "\(session.identity.sessionID):\(session.events.count):\(session.currentStep?.id ?? "none"):\(blocked):\(model.selectedDestination):\(String(describing: model.callInvitation)): choose-actor-\(model.workspace?.localParticipant.id ?? "none")"
@@ -42,6 +44,10 @@ struct VoiceControlsView: View {
                 HStack { listeningButtons }
                 VStack(alignment: .leading) { listeningButtons }
             }
+        }
+        .onReceive(model.nearbyCall?.$status.eraseToAnyPublisher() ?? Just("Call ended").eraseToAnyPublisher()) { status in
+            observedCallStatus = status
+            if VoiceAudioPolicy.callOwnsAudio(invitationAccepted: model.callInvitation?.state == .accepted, status: status) { stop() }
         }
         .onChange(of: context) { _, _ in stop() }
         .onChange(of: scenePhase) { _, value in if value != .active { stop() } }

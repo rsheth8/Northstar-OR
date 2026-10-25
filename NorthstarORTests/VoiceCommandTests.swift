@@ -78,4 +78,15 @@ final class VoiceCommandTests: XCTestCase {
         XCTAssertNotNil(session.recordingState?.pendingAcknowledgment)
     }
 
+    func testEndedAndFailedRetainedCallDoesNotBlockVoice() {
+        for status in ["Call ended", "Microphone access is off. Enable it in Settings, then retry.", "Call disconnected. Your saved questions are kept. Restart to reconnect."] {
+            XCTAssertFalse(VoiceAudioPolicy.callOwnsAudio(invitationAccepted: false, status: status))
+        }
+        for status in ["Allow microphone access", "Connecting", "In call"] {
+            XCTAssertTrue(VoiceAudioPolicy.callOwnsAudio(invitationAccepted: false, status: status))
+        }
+        XCTAssertTrue(VoiceAudioPolicy.callOwnsAudio(invitationAccepted: true, status: "Call ended"))
+        XCTAssertFalse(VoiceAudioPolicy.callOwnsAudio(invitationAccepted: false, status: nil))
+    }
+
 }

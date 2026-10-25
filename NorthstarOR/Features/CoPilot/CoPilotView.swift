@@ -336,7 +336,8 @@ struct CoPilotView: View {
             .buttonStyle(NorthstarPrimaryButtonStyle(tone: .standard))
             .accessibilityIdentifier("record-confirmation")
         Button("Defer item") {
-            if apply(deferItem, to: session), step.isRequired {
+            if apply(deferItem, to: session), step.isRequired,
+               !VoiceAudioPolicy.callOwnsAudio(invitationAccepted: model.callInvitation?.state == .accepted, status: model.nearbyCall?.status) {
                 announcer.say("\(step.title) was deferred. Acknowledgment required.")
             }
         }

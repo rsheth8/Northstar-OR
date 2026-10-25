@@ -34,3 +34,11 @@ import Observation
 
     func invalidate() { pending = nil; heard = nil }
 }
+
+/// Uses the controller's implemented statuses, rather than retained object presence.
+/// A stopped/failed controller remains retained for its visible error and retry UI.
+enum VoiceAudioPolicy {
+    static func callOwnsAudio(invitationAccepted: Bool, status: String?) -> Bool {
+        invitationAccepted || status == "Allow microphone access" || status == "Connecting" || status == "In call"
+    }
+}
