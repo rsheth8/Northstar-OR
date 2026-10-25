@@ -417,4 +417,46 @@ final class AppModelTests: XCTestCase {
         model.selectedDestination = .remoteSupport
         XCTAssertEqual(model.selectedDestination, .remoteSupport)
     }
+
+    // MARK: - Start over and demo sample
+
+    func testStartOverClearsThisDeviceAndAllowsAFreshSample() throws {
+        let store = InMemoryWorkspaceStore()
+        let model = try configured(store)
+        try model.startOrResume(caseID: "case-a")
+        try record(model, .recordConfirmation)
+        try model.startOverOnThisDevice()
+        XCTAssertEqual(model.loadState, .needsSetup)
+        XCTAssertNil(model.workspace)
+        XCTAssertEqual(model.cases, [])
+        XCTAssertNil(model.activeSession)
+        // The cleared state is what a relaunch reads, and setup or the sample is allowed again.
+        XCTAssertEqual(self.model(store).loadState, .needsSetup)
+        try model.loadSampleWorkspace()
+        XCTAssertEqual(model.cases.map(\.id), ["proc-1", "proc-2", "proc-3"])
+        XCTAssertNil(model.activeSession)
+    }
+
+    func testStartOverKeepsRecordsWhenSavingFails() throws {
+        let store = InMemoryWorkspaceStore()
+        let model = try configured(store)
+        store.failWrites = true
+        XCTAssertThrowsError(try model.startOverOnThisDevice())
+        store.failWrites = false
+        XCTAssertEqual(self.model(store).cases.map(\.id), ["case-a", "case-b"])
+        XCTAssertThrowsError(try self.model(InMemoryWorkspaceStore()).startOverOnThisDevice()) {
+            XCTAssertEqual($0 as? AppModelError, .noWorkspace)
+        }
+    }
+
+    func testDemoSampleNamesTheCoordinatorOnTheRoomAndTheRepOnTheRepStation() throws {
+        let room = model(InMemoryWorkspaceStore())
+        try room.loadSampleWorkspace()
+        XCTAssertEqual(room.workspace?.localParticipant.statedRole, .coordinator)
+        XCTAssertEqual(room.cases.compactMap(\.reference), ["GM-1025", "WO-1026", "BJ-1026"])
+        let rep = AppModel(store: InMemoryWorkspaceStore(), clock: { self.time }, post: .rep)
+        try rep.loadSampleWorkspace()
+        XCTAssertEqual(rep.workspace?.localParticipant.displayName, "Ana Lindqvist")
+        XCTAssertEqual(rep.workspace?.localParticipant.statedRole, .technicalRep)
+    }
 }
