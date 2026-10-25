@@ -18,6 +18,7 @@ struct WorkspaceLoadingView: View {
 /// Saved data cannot be opened. Explains why and offers only actions that exist.
 struct WorkspaceBlockedView: View {
     let message: String
+    let canRetry: Bool
     let canSetAside: Bool
     let onRetry: () -> Void
     let onSetAside: () throws -> Void
@@ -32,9 +33,11 @@ struct WorkspaceBlockedView: View {
                     .accessibilityIdentifier("blocked-error")
             }
             HStack(spacing: Northstar.Space.s4) {
-                Button("Retry", action: onRetry)
-                    .buttonStyle(NorthstarSecondaryButtonStyle())
-                    .accessibilityIdentifier("blocked-retry")
+                if canRetry {
+                    Button("Retry", action: onRetry)
+                        .buttonStyle(NorthstarSecondaryButtonStyle())
+                        .accessibilityIdentifier("blocked-retry")
+                }
                 if canSetAside {
                     Button("Set aside and start fresh") {
                         do { try onSetAside(); errorMessage = nil } catch {

@@ -18,6 +18,7 @@ struct RootView: View {
             case .blocked(let message):
                 WorkspaceBlockedView(
                     message: message,
+                    canRetry: model.canRetryLoad,
                     canSetAside: model.canSetAsideStoredData,
                     onRetry: { model.load() },
                     onSetAside: { try model.setAsideUnreadableData() })
