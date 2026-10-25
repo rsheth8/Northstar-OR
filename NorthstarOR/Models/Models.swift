@@ -49,8 +49,10 @@ struct StormForecast: Hashable, Codable {
     var asOf: Date? = nil
     /// Additive optional flag; nil retains legacy semantics.
     var closureIsUnknown: Bool? = nil
+    var recordedClosureAt: Date? = nil
 
     var roadClosureAt: Date? {
+        if let recordedClosureAt { return recordedClosureAt }
         guard let asOf, let hours = roadClosureInHours, hours.isFinite else { return nil }
         return asOf.addingTimeInterval(hours * 3600)
     }

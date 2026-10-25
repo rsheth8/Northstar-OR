@@ -19,13 +19,15 @@ struct PlanningEvidence: Codable, Hashable, Identifiable {
     var revision: Int = 1
     var source: String
     var scenario: String
-    var recordedAt: Date = .now
+    var recordedAt: Date? = .now
     var issuedAt: Date?
     var validFrom: Date?
     var validUntil: Date?
     var summary: String
     var closure: Closure = .unknown
     var samples: [WeatherSample] = []
+    /// Legacy summaries do not establish hourly measurements.
+    var summarySnowfallInches: Double? = nil
 
     enum ValidationError: Error, LocalizedError {
         case invalid(String)
@@ -38,6 +40,7 @@ struct PlanningEvidence: Codable, Hashable, Identifiable {
         }
         try require(!id.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !siteID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && revision >= 0, "Planning evidence identity is invalid.")
         try require(!source.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !scenario.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !summary.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, "Enter a source, scenario and summary.")
+        if let amount = summarySnowfallInches { try require(amount.isFinite && amount >= 0, "Snowfall summary must be zero or more.") }
         for date in [recordedAt, issuedAt, validFrom, validUntil].compactMap({ $0 }) {
             try require(date.timeIntervalSince1970.isFinite, "Planning dates must be valid.")
         }
@@ -64,18 +67,18 @@ struct PlanningEvidence: Codable, Hashable, Identifiable {
     /// Matcher and graph receive the same revision. A known absolute closure is preserved,
     /// even if its issue time is unknown; recordedAt is only a mathematical reference here.
     var forecast: StormForecast {
-        let baseline = issuedAt ?? recordedAt
         return StormForecast(summary: summary,
-            roadClosureInHours: closureAt.map { $0.timeIntervalSince(baseline) / 3600 },
-            snowfallInches: samples.reduce(0) { $0 + $1.snowfallInches }, asOf: baseline,
-            closureIsUnknown: closure == .unknown)
+            roadClosureInHours: issuedAt.flatMap { baseline in closureAt.map { $0.timeIntervalSince(baseline) / 3600 } },
+            snowfallInches: samples.isEmpty ? (summarySnowfallInches ?? 0) : samples.reduce(0) { $0 + $1.snowfallInches },
+            asOf: issuedAt, closureIsUnknown: closure == .unknown, recordedClosureAt: closureAt)
     }
 
     static func legacy(siteID: String, forecast: StormForecast) -> PlanningEvidence {
         PlanningEvidence(id: "legacy-\(siteID)", siteID: siteID, revision: 0,
             source: "Legacy fictional summary", scenario: "Retained summary",
-            recordedAt: forecast.asOf ?? Date(timeIntervalSince1970: 0), issuedAt: forecast.asOf,
+            recordedAt: forecast.asOf, issuedAt: forecast.asOf,
             summary: forecast.summary,
-            closure: forecast.roadClosureAt.map(Closure.at) ?? (forecast.roadClosureInHours == nil ? .noneRecorded : .unknown))
+            closure: forecast.roadClosureAt.map(Closure.at) ?? (forecast.roadClosureInHours == nil ? .noneRecorded : .unknown),
+            summarySnowfallInches: forecast.snowfallInches)
     }
 }
