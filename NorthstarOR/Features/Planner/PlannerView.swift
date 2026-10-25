@@ -48,11 +48,13 @@ struct PlannerView: View {
             }
             .accessibilityIdentifier("planner-worklist")
             .safeAreaInset(edge: .top) {
+                if !visible.isEmpty {
                 Text(scopeSummary).font(Northstar.Fonts.supporting)
                     .foregroundStyle(Northstar.Palette.inkMuted)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(Northstar.Space.s3)
                     .background(Northstar.Palette.bgBase)
+                }
             }
             .listStyle(.sidebar)
             .scrollContentBackground(.hidden)
@@ -83,7 +85,7 @@ struct PlannerView: View {
                     ContentUnavailableView {
                         Label("No matching cases", systemImage: "calendar")
                     } description: {
-                        Text(model.cases.isEmpty ? "No fictional cases are available in this workspace." : "Try another search or show all cases.")
+                        Text(scopeSummary + "\n" + (model.cases.isEmpty ? "No fictional cases are available in this workspace." : "Try another search or show all cases."))
                     } actions: {
                         if model.cases.isEmpty && model.demoPost == .room {
                             Button("Create fictional case") { showingNewCase = true }

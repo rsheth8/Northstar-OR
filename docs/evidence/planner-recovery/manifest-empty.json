@@ -1,0 +1,26 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "640CEE56-F686-4692-8D9B-27EB7E4B4C98",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "C4106868-74BF-49B7-A0D2-7C115530F5E8.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Planner-filter-empty_0_E304097B-5206-4966-9824-9DC8152A4B19.png",
+        "timestamp" : 1792922469.98
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "640CEE56-F686-4692-8D9B-27EB7E4B4C98",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "0305B927-C1C3-495D-A0D7-84F3B79ADA8C.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Planner-selected-case-default_0_E325584A-B801-4B2F-BE35-B4679367CD82.png",
+        "timestamp" : 1792922461.089
+      }
+    ],
+    "testIdentifier" : "PlannerPresentationTests/testBrowseAndFilterWithoutSwitchingRecording()",
+    "testIdentifierURL" : "test://com.apple.xcode/NorthstarOR/NorthstarORUITests/PlannerPresentationTests/testBrowseAndFilterWithoutSwitchingRecording"
+  }
+]
