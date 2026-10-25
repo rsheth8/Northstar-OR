@@ -1,5 +1,7 @@
 # Complete Experience and Product Expansion Implementation Plan
 
+Current implementation and recovery gaps are tracked in [EXPANSION_RECOVERY.md](../../EXPANSION_RECOVERY.md). Unchecked steps below remain acceptance work, not shipped claims.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Finish the existing room/rep workflows and extend Planner with explainable coverage, maps, simulated weather and reports, alongside deliberate voice control.
