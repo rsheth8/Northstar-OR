@@ -54,7 +54,7 @@ final class WorkspaceShellTests: XCTestCase {
         let save = app.buttons["settings-save"]
         var swipes = 0
         while !(save.exists && save.isHittable) && swipes < 8 {
-            app.tables.firstMatch.swipeUp()
+            (app.tables.firstMatch.exists ? app.tables.firstMatch : app.collectionViews.firstMatch).swipeUp()
             swipes += 1
         }
         XCTAssertTrue(save.isHittable, "save button reachable")
