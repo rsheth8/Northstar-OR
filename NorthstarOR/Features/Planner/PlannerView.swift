@@ -169,17 +169,10 @@ struct PlannerView: View {
                         .font(Northstar.Fonts.supporting).foregroundStyle(Northstar.Palette.inkMuted)
                 }
                 Divider()
-                section("Support options") {
-                    Text("Ranked for coordinator review · Not requested")
-                        .font(Northstar.Fonts.supporting).foregroundStyle(Northstar.Palette.inkMuted)
-                    ForEach(Array(rec.options.enumerated()), id: \.offset) { _, option in
-                        optionRow(option)
-                    }
-                    if rec.options.isEmpty { Text("No eligible options recorded.") }
-                }
+                CoveragePlanSection(procedure: procedure, options: rec.options).id(procedure.id)
                 Divider()
                 section("Recording support context") {
-                    Text("Support-plan requests and acceptance are not available in this build. This action only updates the active recording’s reduced-support label.")
+                    Text("This separate action updates the active recording’s reduced-support label. It does not request coverage or record acceptance.")
                         .font(Northstar.Fonts.body).foregroundStyle(Northstar.Palette.inkMuted)
                     if isActive {
                         NorthstarStatusLabel(model.activeSession?.reducedSupport == true ? "Reduced-support context recorded" : "Standard support context recorded", tone: .neutral)
@@ -197,6 +190,7 @@ struct PlannerView: View {
             .frame(maxWidth: 900, alignment: .leading)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
+        .accessibilityIdentifier("planner-case-detail-scroll")
         .foregroundStyle(Northstar.Palette.ink)
         .background(Northstar.Palette.bgRaised)
         .navigationTitle("Case details")

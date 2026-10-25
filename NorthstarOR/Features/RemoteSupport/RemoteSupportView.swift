@@ -3,6 +3,7 @@ import SwiftUI
 struct RemoteSupportView: View {
     @Environment(AppModel.self) private var model
     @State private var selectedQuestionID: String?
+    @State private var showingCoverage = false
     private var visibleQuestions: [SupportQuestion] {
         if model.demoPost == .rep, let origin = model.remoteSession?.origin { return model.questions.filter { $0.origin == origin } }
         if model.demoPost == .room, let session = model.activeSession { return model.questions.filter { $0.sessionID == session.identity.sessionID } }
@@ -50,6 +51,15 @@ struct RemoteSupportView: View {
                 }.padding(Northstar.Space.s6).frame(maxWidth: 1000, alignment: .leading).frame(maxWidth: .infinity)
             }.background(Northstar.Palette.bgRaised)
             .navigationTitle("Remote Support").navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    if model.demoPost == .rep {
+                        Button("Coverage requests (\(model.incomingCoveragePlans.count))") { showingCoverage = true }
+                            .accessibilityIdentifier("open-coverage-requests")
+                    }
+                }
+            }
+            .sheet(isPresented: $showingCoverage) { CoverageRequestsView() }
         }
     }
 }
