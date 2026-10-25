@@ -23,7 +23,7 @@ final class SupportOrchestrationTests: XCTestCase {
                                driveMinutes: [:], isAvailable: true, canSupportRemotely: true, workspaceID: "workspace-a",
                                statedRole: .technicalRep)
         let local = DeviceRep(id: "contact-b", name: "Fictional rep B", homeBase: "Example town", skills: ["pacemaker"],
-                              driveMinutes: ["site-a": 30], isAvailable: true, canSupportRemotely: false,
+                              driveMinutes: [:], isAvailable: true, canSupportRemotely: false,
                               workspaceID: "workspace-a", statedRole: .technicalRep)
         return WorkspaceConfiguration(id: "workspace-a", name: "Fictional workspace", sites: [site],
             contacts: contacts ?? [remote, local],
