@@ -165,7 +165,7 @@ private final class NearbyCallEngine: NSObject, URLSessionWebSocketDelegate, RTC
             let audio = RTCAudioSession.sharedInstance()
             audio.lockForConfiguration()
             defer { audio.unlockForConfiguration() }
-            try audio.setCategory(AVAudioSession.Category.playAndRecord, with: [.defaultToSpeaker, .allowBluetoothHFP])
+            try audio.setCategory(AVAudioSession.Category.playAndRecord, with: [.defaultToSpeaker, .allowBluetooth])
             try audio.setMode(.voiceChat)
             try audio.setPreferredIOBufferDuration(0.02)
             try audio.setActive(true)
