@@ -133,7 +133,7 @@ final class WorkspaceContractTests: XCTestCase {
     func testMissingUnsupportedOrMismatchedTemplateCannotCreateOrRecord() throws {
         let workspace = configuration()
         for reference in [nil, CoordinationTemplateReference(id: "unknown", version: 1),
-                          CoordinationTemplateReference(id: FictionalCoordinationTemplate.id, version: 2)] {
+                          CoordinationTemplateReference(id: FictionalCoordinationTemplate.id, version: FictionalCoordinationTemplate.version + 1)] {
             var candidate = input()
             candidate.templateReference = reference
             expect(.unsupportedTemplate) { try candidate.makeProcedure(in: workspace, existingCases: [], templates: catalog) }
@@ -147,7 +147,7 @@ final class WorkspaceContractTests: XCTestCase {
         expect(.unsupportedTemplate) { try input().makeProcedure(in: workspace, existingCases: [], templates: [empty]) }
         expect(.unsupportedTemplate) { try input().makeProcedure(in: workspace, existingCases: [], templates: catalog + catalog) }
         var created = try input().makeProcedure(in: workspace, existingCases: [], templates: catalog)
-        created.templateReference = CoordinationTemplateReference(id: FictionalCoordinationTemplate.id, version: 2)
+        created.templateReference = CoordinationTemplateReference(id: FictionalCoordinationTemplate.id, version: FictionalCoordinationTemplate.version + 1)
         XCTAssertFalse(FictionalCoordinationTemplate.supports(created))
         created.templateReference = nil
         XCTAssertFalse(FictionalCoordinationTemplate.supports(created))
