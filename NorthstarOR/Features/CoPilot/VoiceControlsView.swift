@@ -6,6 +6,7 @@ struct VoiceControlsView: View {
     @Environment(\.scenePhase) private var scenePhase
     let session: CoPilotSession
     let correctionOpen: Bool
+    var showUnresolved: () -> Void
     @State private var service = VoiceCommandService()
     @State private var router = VoiceCommandRouter()
     @State private var captured: SessionCommand?
@@ -16,13 +17,13 @@ struct VoiceControlsView: View {
         model.demoPost != .room || model.nearbyCall != nil || model.callInvitation?.state == .accepted || correctionOpen || session.isFinished
     }
     private var context: String {
-        "\(session.identity.sessionID):\(session.events.count):\(session.currentStep?.id ?? "none"):\(blocked):\(model.selectedDestination)"
+        "\(session.identity.sessionID):\(session.events.count):\(session.currentStep?.id ?? "none"):\(blocked):\(model.selectedDestination):\(String(describing: model.callInvitation)): choose-actor-\(model.workspace?.localParticipant.id ?? "none")"
     }
     var body: some View {
         VStack(alignment: .leading, spacing: Northstar.Space.s3) {
             Label(status, systemImage: service.state == .listening ? "mic.fill" : "mic.slash")
                 .font(Northstar.Fonts.bodyStrong)
-            Text("Say “record confirmation”, “defer item”, or “acknowledge deferral”. Review, then tap to record. Listening ends after eight seconds.")
+            Text("Say “record confirmation”, “defer this item”, or “acknowledge deferral”. Review, then tap to record. You can also say “open Planner”, “open Co-pilot”, “show unresolved items”, or “stop listening”. Listening ends after eight seconds.")
                 .font(Northstar.Fonts.supporting)
             if let heard = router.heard { Text("Heard: \(heard)").font(Northstar.Fonts.supporting) }
             if let pending = router.pending {
@@ -37,12 +38,9 @@ struct VoiceControlsView: View {
                 Text("No supported action recognized. Use touch or listen again.").font(Northstar.Fonts.supporting)
             }
             if let error { Text(error).font(Northstar.Fonts.supporting).foregroundStyle(Northstar.Palette.alert) }
-            HStack {
-                Button("Listen for one command") { start() }
-                    .buttonStyle(NorthstarSecondaryButtonStyle(size: .large))
-                    .disabled(blocked || service.state == .listening)
-                Button("Stop / cancel") { stop() }
-                    .buttonStyle(NorthstarSecondaryButtonStyle(size: .large))
+            ViewThatFits(in: .horizontal) {
+                HStack { listeningButtons }
+                VStack(alignment: .leading) { listeningButtons }
             }
         }
         .onChange(of: context) { _, _ in stop() }
@@ -50,6 +48,13 @@ struct VoiceControlsView: View {
         .onReceive(NotificationCenter.default.publisher(for: .northstarWillSpeak)) { _ in stop() }
         .onReceive(NotificationCenter.default.publisher(for: AVAudioSession.interruptionNotification)) { _ in stop() }
         .onDisappear { stop() }
+    }
+    @ViewBuilder private var listeningButtons: some View {
+        Button("Listen for one command") { start() }
+            .buttonStyle(NorthstarSecondaryButtonStyle(size: .large))
+            .disabled(blocked || service.state == .listening)
+        Button("Stop / cancel") { stop() }
+            .buttonStyle(NorthstarSecondaryButtonStyle(size: .large))
     }
     private var status: String {
         if blocked { return "Voice unavailable · use touch controls" }
@@ -78,7 +83,13 @@ struct VoiceControlsView: View {
             let action: SessionCommandAction = session.recordingState?.pendingAcknowledgment.map { .acknowledgeWarning(acknowledgment: $0) } ?? .recordConfirmation
             captured = session.makeCommand(action, actor: model.workspace?.localParticipant, source: .voice)
             service.onFinal = { id, transcript in
-                router.receive(id: id, transcript: transcript, isFinal: true, captured: captured)
+                switch VoiceCommand.parse(transcript) {
+                case .openPlanner: stop(); model.selectedDestination = .planner
+                case .openCoPilot: stop(); model.selectedDestination = .coPilot
+                case .showUnresolved: stop(); showUnresolved()
+                case .stopListening: stop()
+                default: router.receive(id: id, transcript: transcript, isFinal: true, captured: captured)
+                }
             }
             do { try service.start() } catch { self.error = "Voice is unavailable. Touch controls remain available."; service.stop() }
         }

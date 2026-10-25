@@ -37,7 +37,8 @@ struct SessionReviewView: View {
         case .confirmationRecorded: return "Team confirmation recorded"
         case .itemDeferred: return "Item deferred"
         case .warningAcknowledged: return "Warning acknowledged; item remains deferred"
-        case .recordCorrected: return "Record corrected; original retained"
+        case .recordCorrected(_, let status, let reason, _, _):
+            return "Corrected to \(status.rawValue); original retained" + (reason.map { " · \($0)" } ?? "")
         }
     }
 }

@@ -15,6 +15,7 @@ import Observation
         switch intent {
         case .complete: action = .recordConfirmation
         case .skip: action = .deferItem
+        case .openPlanner, .openCoPilot, .showUnresolved, .stopListening: return
         case .confirm:
             guard case .acknowledgeWarning = captured.action else { return }
             action = captured.action

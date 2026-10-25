@@ -5,15 +5,20 @@ import Observation
 
 /// Commands the team can say. Always mirrored by big on-screen buttons as a fallback.
 enum VoiceCommand: Equatable {
-    case complete, skip, confirm
+    case complete, skip, confirm, openPlanner, openCoPilot, showUnresolved, stopListening
 
     /// Maps a transcript to a command. Keep phrases short and distinct for a loud room.
     static func parse(_ transcript: String) -> VoiceCommand? {
-        let t = transcript.lowercased().split(whereSeparator: { $0.isWhitespace }).joined(separator: " ")
+        let t = transcript.trimmingCharacters(in: .whitespacesAndNewlines).trimmingCharacters(in: CharacterSet(charactersIn: ".!?"))
+            .lowercased().split(whereSeparator: { $0.isWhitespace }).joined(separator: " ")
         switch t {
         case "record confirmation": return .complete
-        case "defer item": return .skip
+        case "defer item", "defer this item": return .skip
         case "acknowledge deferral": return .confirm
+        case "open planner": return .openPlanner
+        case "open co-pilot", "open copilot": return .openCoPilot
+        case "show unresolved items": return .showUnresolved
+        case "stop listening": return .stopListening
         default: break
         }
         return nil
@@ -90,7 +95,14 @@ final class VoiceCommandService {
         timeout = Task { [weak self] in
             try? await Task.sleep(for: .seconds(8))
             guard !Task.isCancelled else { return }
-            self?.stop()
+            guard let self else { return }
+            self.state = .processing
+            if self.audioEngine.isRunning { self.audioEngine.stop() }
+            if self.hasTap { self.audioEngine.inputNode.removeTap(onBus: 0); self.hasTap = false }
+            self.request?.endAudio()
+            try? await Task.sleep(for: .seconds(2))
+            guard !Task.isCancelled, self.generation == token else { return }
+            self.stop()
         }
     }
 
