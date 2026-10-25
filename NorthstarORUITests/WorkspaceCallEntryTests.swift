@@ -21,8 +21,12 @@ final class WorkspaceCallEntryTests: XCTestCase {
         for _ in 0..<5 where !request.isHittable { app.scrollViews["copilot-current-scroll"].swipeUp() }
         XCTAssertTrue(request.isHittable)
         request.tap()
+        let requestForm = app.descendants(matching: .any).matching(identifier: "support-request-form").firstMatch
+        XCTAssertTrue(requestForm.waitForExistence(timeout: 5), "Request support must open its composer")
         let draft = app.textViews["support-question-draft"]
-        XCTAssertTrue(draft.waitForExistence(timeout: 5))
+        for _ in 0..<5 where !draft.exists || !draft.isHittable { requestForm.swipeUp() }
+        XCTAssertTrue(draft.exists)
+        XCTAssertTrue(draft.isHittable, "The question must remain editable at enlarged text")
         draft.tap(); draft.typeText("Fictional technical support question")
         // Dismiss the keyboard while preserving the saved question.
         app.buttons["Done typing"].tap()
