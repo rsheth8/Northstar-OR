@@ -17,8 +17,9 @@ struct CaseReport: Identifiable {
     let questions: [SupportQuestion]
     let notes: [SessionNote]
     let forecast: StormForecast?
+    let planningEvidence: PlanningEvidence?
 
-    init(procedure: Procedure, site: Hospital?, state: SessionRecordingState?, events: [SessionEvent], questions: [SupportQuestion], notes: [SessionNote] = [], forecast: StormForecast?, capturedAt: Date) {
+    init(procedure: Procedure, site: Hospital?, state: SessionRecordingState?, events: [SessionEvent], questions: [SupportQuestion], notes: [SessionNote] = [], forecast: StormForecast?, capturedAt: Date, planningEvidence: PlanningEvidence? = nil) {
         self.procedure = procedure; self.site = site; self.capturedAt = capturedAt
         let matching = state?.identity.caseID == procedure.id && state?.identity.workspaceID == procedure.workspaceID ? state : nil
         self.state = matching
@@ -28,7 +29,8 @@ struct CaseReport: Identifiable {
         self.questions = questions.filter { $0.caseID == procedure.id && $0.workspaceID == procedure.workspaceID && $0.sessionID == matching?.identity.sessionID }.sorted { ($0.sentAt, $0.id) < ($1.sentAt, $1.id) }
         self.notes = notes.filter { $0.caseID == procedure.id && $0.workspaceID == procedure.workspaceID && $0.sessionID == matching?.identity.sessionID }
             .sorted { ($0.sentAt, $0.id) < ($1.sentAt, $1.id) }
-        self.forecast = forecast
+        self.planningEvidence = planningEvidence?.siteID == procedure.hospitalID ? planningEvidence : nil
+        self.forecast = self.planningEvidence?.forecast ?? forecast
     }
     func date(_ value: Date) -> String {
         let formatter = DateFormatter()
@@ -59,6 +61,10 @@ struct CaseReport: Identifiable {
         lines += notes.map { "\(date($0.sentAt)) · \($0.actor.displayName) · General message: \($0.text)\nDelivery: \($0.delivery.rawValue)" }
         if notes.isEmpty { lines += ["No general support messages recorded for this session"] }
         lines += ["", "SIMULATED WEATHER", forecast?.summary ?? "No forecast recorded", "As of: \(forecast?.asOf.map(date) ?? "Unknown")", "Road closure: \(forecast?.roadClosureAt.map(date) ?? "Not recorded with an absolute time")", "", "Recorded coordination only. This report does not establish clinical readiness or outcome."]
+        if let planningEvidence {
+            lines += ["Evidence revision: \(planningEvidence.revision)", "Source: \(planningEvidence.source)", "Scenario: \(planningEvidence.scenario)",
+                      "Recorded: \(planningEvidence.recordedAt.map(date) ?? "Unknown")"]
+        }
         return lines.joined(separator: "\n")
     }
     private func eventLabel(_ payload: SessionEventPayload) -> String {

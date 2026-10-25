@@ -13,6 +13,18 @@ final class CaseReportTests: XCTestCase {
         XCTAssertTrue(report.text.contains("Unknown; UTC shown"))
         XCTAssertFalse(report.text.contains("Changed after snapshot"))
     }
+    func testReportFreezesAuthoritativeEvidenceInsteadOfLegacyForecast() {
+        let procedure = Procedure(id: "case", name: "Fictional case", deviceFamily: "Fictional", hospitalID: "site", scheduledAt: .now, durationMinutes: 10, steps: [])
+        var evidence = PlanningEvidence(siteID: "site", revision: 2, source: "Fictional editor", scenario: "Updated inputs", summary: "Current saved evidence")
+        let legacy = StormForecast(summary: "Obsolete summary", roadClosureInHours: nil, snowfallInches: 4)
+        let report = CaseReport(procedure: procedure, site: nil, state: nil, events: [], questions: [], forecast: legacy, capturedAt: .now, planningEvidence: evidence)
+        evidence.summary = "Changed later"
+        XCTAssertEqual(report.forecast?.summary, "Current saved evidence")
+        XCTAssertTrue(report.text.contains("Evidence revision: 2"))
+        XCTAssertTrue(report.text.contains("Source: Fictional editor"))
+        XCTAssertFalse(report.text.contains("Obsolete summary"))
+        XCTAssertFalse(report.text.contains("Changed later"))
+    }
     func testWrongCaseStateCannotPopulateItems() {
         let procedure = Procedure(id: "selected", name: "Selected case", deviceFamily: "Fictional", hospitalID: "site", scheduledAt: .now, durationMinutes: 10, steps: [ProcedureStep(id: "one", title: "Statement", detail: "", isRequired: true, normallyCoveredByRep: false)], workspaceID: "workspace")
         let state = SessionRecordingState(identity: SessionIdentity(workspaceID: "workspace", caseID: "other", sessionID: "other-session"), templateReference: CoordinationTemplateReference(id: "template", version: 1), startedAt: .now, version: 1, itemStatuses: ["one": .teamConfirmed], selectedItemID: "one", pendingAcknowledgment: nil)

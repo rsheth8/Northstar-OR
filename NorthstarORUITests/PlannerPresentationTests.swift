@@ -5,7 +5,7 @@ final class PlannerPresentationTests: XCTestCase {
         let app = launch()
         app.buttons["Planner"].firstMatch.tap()
         let row = app.descendants(matching: .any)["planner-case-proc-3"].firstMatch
-        XCTAssertTrue(row.waitForExistence(timeout: 10))
+        reveal(row, in: app)
         row.tap()
         XCTAssertTrue(app.staticTexts["Fictional pacemaker case B"].waitForExistence(timeout: 5))
         // Browsing proc-3 must not move the recording, which stays on proc-1.
@@ -28,10 +28,18 @@ final class PlannerPresentationTests: XCTestCase {
         let app = launch(enlarged: true)
         app.buttons["Planner"].firstMatch.tap()
         let row = app.descendants(matching: .any)["planner-case-proc-1"].firstMatch
-        XCTAssertTrue(row.waitForExistence(timeout: 10))
+        reveal(row, in: app)
         row.tap()
         XCTAssertTrue(app.staticTexts["Selected case"].waitForExistence(timeout: 5))
         capture("Planner-selected-case-accessibility5")
+    }
+
+    @MainActor private func reveal(_ row: XCUIElement, in app: XCUIApplication) {
+        let list = app.descendants(matching: .any).matching(identifier: "planner-worklist").firstMatch
+        XCTAssertTrue(list.waitForExistence(timeout: 10))
+        for _ in 0..<10 where !row.exists || !row.isHittable { list.swipeUp() }
+        XCTAssertTrue(row.exists)
+        XCTAssertTrue(row.isHittable, "A case must remain reachable below the enlarged filter controls")
     }
 
     @MainActor private func launch(enlarged: Bool = false) -> XCUIApplication {

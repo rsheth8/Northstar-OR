@@ -54,6 +54,7 @@ struct PlannerView: View {
                             ? Northstar.Palette.Workspace.selection : Northstar.Palette.bgBase)
                 }
             }
+            .accessibilityIdentifier("planner-worklist")
             .listStyle(.sidebar)
             .scrollContentBackground(.hidden)
             .background(Northstar.Palette.bgBase)
@@ -257,7 +258,7 @@ struct PlannerView: View {
             Text("Review a frozen summary of this case’s recorded items, corrections and support exchanges. Unrecorded information stays visible.")
             Button("Create report for review", systemImage: "doc.text") {
                 let session = model.session(for: procedure.id)
-                report = CaseReport(procedure: procedure, site: model.hospital(procedure.hospitalID), state: session?.recordingState, events: session?.events ?? [], questions: model.questions, notes: model.sessionNotes, forecast: model.forecasts[procedure.hospitalID], capturedAt: .now)
+                report = CaseReport(procedure: procedure, site: model.hospital(procedure.hospitalID), state: session?.recordingState, events: session?.events ?? [], questions: model.questions, notes: model.sessionNotes, forecast: model.planningEvidence(for: procedure.hospitalID)?.forecast, capturedAt: .now, planningEvidence: model.planningEvidence(for: procedure.hospitalID))
             }.buttonStyle(NorthstarPrimaryButtonStyle(tone: .standard))
             Spacer()
         }.padding(Northstar.Space.s6)
@@ -268,7 +269,11 @@ struct PlannerView: View {
             VStack(alignment: .leading, spacing: Northstar.Space.s4) {
                 Text("Simulated weather").font(Northstar.Fonts.title)
                 Text(model.hospital(procedure.hospitalID)?.name ?? "Site not recorded").font(Northstar.Fonts.bodyStrong)
-                if let forecast = model.forecasts[procedure.hospitalID] {
+                if let evidence = model.planningEvidence(for: procedure.hospitalID) {
+                    let forecast = evidence.forecast
+                    LabeledContent("Evidence revision", value: String(evidence.revision))
+                    LabeledContent("Source", value: evidence.source)
+                    LabeledContent("Scenario", value: evidence.scenario)
                     Text(forecast.summary).font(Northstar.Fonts.body)
                     LabeledContent("Snowfall summary", value: "\(forecast.snowfallInches.formatted()) in")
                     LabeledContent("Forecast as of", value: forecast.asOf.map { $0.formatted() } ?? "Unknown")
