@@ -1,0 +1,65 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "640CEE56-F686-4692-8D9B-27EB7E4B4C98",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "59B6FFFB-0540-446F-ADC4-70C0CF701D77.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "coverage-rep-inbox-empty-disconnected_0_30F8CC34-4891-4E5D-9D3D-346007800353.png",
+        "timestamp" : 1792921799.876
+      }
+    ],
+    "testIdentifier" : "CoveragePlanPresentationTests/testRepCoverageInboxHasAnHonestEmptyState()",
+    "testIdentifierURL" : "test://com.apple.xcode/NorthstarOR/NorthstarORUITests/CoveragePlanPresentationTests/testRepCoverageInboxHasAnHonestEmptyState"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "640CEE56-F686-4692-8D9B-27EB7E4B4C98",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "24B31025-822F-49C3-81D8-610272C833E4.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "coverage-replaced-default_0_E62D6C49-3A39-4FBE-AC10-2A89497C9BF2.png",
+        "timestamp" : 1792921856.464
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "640CEE56-F686-4692-8D9B-27EB7E4B4C98",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "E3DABC02-3A22-44B0-BA69-00553918FBFD.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "coverage-request-default_0_777DC544-1E02-4C6D-8D4A-F1106915FE34.png",
+        "timestamp" : 1792921835.838
+      }
+    ],
+    "testIdentifier" : "CoveragePlanPresentationTests/testRequestAndExplicitReplacement()",
+    "testIdentifierURL" : "test://com.apple.xcode/NorthstarOR/NorthstarORUITests/CoveragePlanPresentationTests/testRequestAndExplicitReplacement"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "640CEE56-F686-4692-8D9B-27EB7E4B4C98",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "5289C852-4347-43FA-BC7D-4A4500564D69.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "coverage-replaced-largest-text_0_CCC18F09-0D44-488A-BA7B-460094B66F04.png",
+        "timestamp" : 1792921939.152
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "640CEE56-F686-4692-8D9B-27EB7E4B4C98",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "608553AE-450B-4C14-8D0A-74D0B60C3A35.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "coverage-request-largest-text_0_EBC2E9E7-55B8-4D8F-87A5-6BE828D7227B.png",
+        "timestamp" : 1792921909.773
+      }
+    ],
+    "testIdentifier" : "CoveragePlanPresentationTests/testRequestAndReplacementAtLargestText()",
+    "testIdentifierURL" : "test://com.apple.xcode/NorthstarOR/NorthstarORUITests/CoveragePlanPresentationTests/testRequestAndReplacementAtLargestText"
+  }
+]
