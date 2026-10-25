@@ -41,7 +41,7 @@ struct NorthstarWorkspaceHeader: View {
         let layout = sizeClass == .compact
             ? AnyLayout(VStackLayout(alignment: .leading, spacing: Northstar.Space.s2))
             : AnyLayout(HStackLayout(spacing: Northstar.Space.s4))
-        layout { contextLabels }
+        return layout { contextLabels }
         .font(Northstar.Fonts.supporting)
         .foregroundStyle(Northstar.Palette.Workspace.onHeaderSecondary)
     }
