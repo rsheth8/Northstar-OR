@@ -27,7 +27,7 @@ bash scripts/check-repo.sh
 bash scripts/check.sh
 ```
 
-The second command generates the Xcode project, finds an installed iPad simulator, builds, and runs the unit tests without signing. Install XcodeGen with `brew install xcodegen`. To pick a specific simulator, use `SIMULATOR_ID=<udid> bash scripts/check.sh`. Results and logs are in ignored `build/`.
+The second command generates the Xcode project, selects an installed iPad runtime between the app minimum (iOS 17) and the active simulator SDK, waits for boot readiness, then builds and runs the unit/UI suites without signing. This keeps a pinned Xcode job from silently switching its baseline when a newer simulator runtime is installed. The selector’s mixed-runtime CLI tests also run in repository checks. Install XcodeGen with `brew install xcodegen`. To pick a specific simulator, use `SIMULATOR_ID=<udid> bash scripts/check.sh`. Results and logs are in ignored `build/`.
 
 Open the draft for review once ready. Explain the behavior and verification in the PR template; include a screenshot for visible changes. Review shared state, failure/disconnect paths, and product boundaries. Avoid cosmetic churn in unrelated files.
 
