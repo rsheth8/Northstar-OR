@@ -70,7 +70,7 @@ The weather clock starts when the sample is loaded:
 - **After 90 minutes** the reason changes to "simulated roads are already closed". Risk still shows as high.
 - **After 6 hours** the weather evidence counts as stale, like any old forecast.
 
-To reset a device, delete and reinstall the app, then **Load sample workspace**. A **Start over on this device** action exists in the app model and will be added to Workspace settings after the shell and forms work merges. Each device keeps only its own records.
+To reset a device, delete and reinstall the app, then **Load sample workspace**. Each device keeps only its own records. (A Start over action exists in the app model but has no button in the frozen build.)
 
 ## Demo text to use
 
@@ -85,4 +85,4 @@ The full script with lines, timing, setup and fallbacks is in [DEMO_SCRIPT.md](D
 
 ## Do not claim
 
-Live weather or road data, internet or distant connection ("works from anywhere"), travel or cost savings, device programming, verified identity, AI or image interpretation, or anything not merged by the 10 AM freeze. See [NATIVE_DEMO_STATUS.md](NATIVE_DEMO_STATUS.md).
+Planner rep requests and acceptance, the map, ending a recording (not in the frozen build), live weather or road data, internet or distant connection ("works from anywhere"), travel or cost savings, device programming, verified identity, AI or image interpretation, or anything not merged by the 10 AM freeze. See [NATIVE_DEMO_STATUS.md](NATIVE_DEMO_STATUS.md).

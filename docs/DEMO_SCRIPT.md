@@ -1,6 +1,6 @@
 # Five-minute demo script
 
-Matches the app at the 10 AM freeze and the sample in [DEMO_WORKSPACE.md](DEMO_WORKSPACE.md). Everything is fictional. Button names are in **bold**; re-check them on the frozen build because Co-pilot and Remote Support screens are still being polished.
+Checked against frozen `main` (#59, Oct 25, 10:05 AM CT); every **bold** label exists in the build. The names, case and checklist items need the demo-data PR (#58) merged. Everything is fictional.
 
 **Cast**
 - **Rahil** plays **Jordan Ellis**, the coordinator in the Grand Marais room, on the **iPad**.
@@ -10,8 +10,8 @@ The app shows the names Jordan and Ana, so say them. Don't introduce yourselves 
 
 ## Before you go on (do not show)
 
-1. Within about an hour of presenting, on **both** devices: delete and reinstall the app (or **Start over** if it has merged), then **Load sample workspace**. This starts the blizzard clock, so Planner shows the closure counting down.
-2. Pair the devices: **Connect devices → Find Northstar devices → Invite** the other device → accept. Allow Local Network and **Set up microphone** on both. Send one test message and check it arrives, then make sure the iPad shows no leftover test question. If one appears, reset and pair again.
+1. Within about an hour of presenting, on **both** devices: delete and reinstall the app, then **Load sample workspace**. This starts the blizzard clock, so Planner shows the closure counting down.
+2. Pair the devices: **Connect devices → Find Northstar devices → Invite** the other device → **Accept this device**. Allow Local Network and **Set up microphone** on both. Send one test message and check it arrives, then make sure the iPad shows no leftover test question. If one appears, reset and pair again.
 3. Headphones on the Mac. iPad volume up. The rear iPad camera points at something neutral, with no people or screens.
 4. iPad on **Planner**; Mac on **Remote Support**.
 5. Start the backup screen recording of a full rehearsal run on this same build, and keep it ready.
@@ -41,7 +41,7 @@ The app shows the names Jordan and Ana, so say them. Don't introduce yourselves 
 
 **2. Planner shows why the rep is remote (0:30).** Tap **GM-1025**.
 **Rahil:** "Here's tonight's case in Grand Marais. Northstar checks who can actually get here: Ana's drive is 110 minutes, the simulated road closes before she arrives, so no one can attend in person. It shows *why*, and it offers Ana remotely, Marcus as a backup, or rescheduling. It never picks for us. The coordinator chooses Ana."
-- If coverage requests merged by 10 AM, request Ana (remote) here, and Amartya accepts on the Mac: "Accepted." Otherwise just say "we choose Ana".
+- The Planner request/accept buttons did not make the freeze. Just say "we choose Ana"; don't tap anything to request her.
 
 **3. Start the case (0:20).** Tap **Start recording**, then go to **Co-pilot**.
 **Rahil:** "In the room, I record what the team reports at each step. Northstar doesn't run the procedure or tell the doctor anything; it keeps the record."
@@ -81,7 +81,7 @@ Say only what is in the build:
 - **WebRTC** (open source, via stasel/WebRTC 155) for two-way audio and room-camera video.
 - **Local, versioned storage on each device.** Records survive relaunch; nothing goes to a server.
 - **An explainable, rule-based coverage matcher** with no AI and no black-box score.
-- **MapKit, Speech and AVFoundation** only if the map and voice features are merged and shown.
+- Voice commands (Speech) are in the build but not in this demo; mention them only if asked. Don't mention a map.
 - XcodeGen and GitHub Actions CI on every change.
 
 **Rahil:** "The storm cuts the road. It shouldn't cut the support. Thank you."
