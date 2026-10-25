@@ -38,6 +38,7 @@ struct CoPilotView: View {
                                 focusHeading(session)
                                 workflowStrip(session)
                                 currentItem(session)
+                                VoiceControlsView(session: session, correctionOpen: correction != nil)
                                 Divider()
                                 recordedActivity(session)
                                 if !wide {
