@@ -154,7 +154,7 @@ struct SupportQuestion: Identifiable, Hashable, Codable {
 }
 
 enum SupportEnvelopeKind: String, Hashable, Codable {
-    case question, questionAcknowledgement, reply, contextUpdate, receipt, note
+    case question, questionAcknowledgement, reply, contextUpdate, receipt, note, coveragePlan, coveragePlanResponse
 }
 
 /// Exactly one payload is allowed; receipts carry only receiptForID. Decoding is not validation.
@@ -170,6 +170,8 @@ struct SupportEnvelope: Identifiable, Hashable, Codable {
     var context: SupportContextSnapshot? = nil
     var receiptForID: String? = nil
     var note: SessionNote? = nil
+    var coveragePlan: CoveragePlan? = nil
+    var coveragePlanResponse: CoveragePlan.Response? = nil
 
     static func question(_ question: SupportQuestion) -> Self {
         .init(id: question.messageID, kind: .question, sentAt: question.sentAt,
@@ -277,7 +279,8 @@ enum SupportExchange {
         let rejected = SupportApplyResult(inbox: inbox, accepted: false, receiptForID: nil)
         guard envelope.origin.isValid, !envelope.id.supportBlank, !envelope.questionID.supportBlank else { return rejected }
         let payloadCount = [envelope.question != nil, envelope.acknowledgement != nil, envelope.reply != nil,
-                            envelope.context != nil, envelope.receiptForID != nil, envelope.note != nil].filter { $0 }.count
+                            envelope.context != nil, envelope.receiptForID != nil, envelope.note != nil,
+                            envelope.coveragePlan != nil, envelope.coveragePlanResponse != nil].filter { $0 }.count
         guard payloadCount == 1 else { return rejected }
         if envelope.kind == .note {
             guard let note = envelope.note, note.isValid, note.origin == envelope.origin, note.id == envelope.questionID,
@@ -325,7 +328,7 @@ enum SupportExchange {
             guard let index = indices.first, inbox.questions[index].origin == envelope.origin else { return rejected }
             let q = inbox.questions[index]
             switch envelope.kind {
-            case .question, .note: return rejected
+            case .question, .note, .coveragePlan, .coveragePlanResponse: return rejected
             case .questionAcknowledgement:
                 guard let ack = envelope.acknowledgement, ack.id == q.acknowledgementMessageID,
                       ack.id == envelope.id, ack.questionID == q.id, ack.actor.supportValid, ack.at == envelope.sentAt,
