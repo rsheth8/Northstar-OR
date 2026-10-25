@@ -10,6 +10,7 @@ struct PlannerView: View {
     @State private var editingCase: Procedure?
     @State private var actionError: String?
     @State private var scope = PlannerScope()
+    @State private var showingScope = false
     @State private var destination: PlannerDestination = .cases
     @State private var report: CaseReport?
     private enum PlannerDestination: String, CaseIterable, Identifiable {
@@ -37,15 +38,6 @@ struct PlannerView: View {
     var body: some View {
         NavigationSplitView {
             List(selection: $selectedID) {
-                Section {
-                    Picker("Recording", selection: $scope.recording) {
-                        ForEach(PlannerScope.Recording.allCases) { Text($0.rawValue).tag($0) }
-                    }
-                    Toggle("Filter by site-local day", isOn: Binding(get: { scope.day != nil }, set: { scope.day = $0 ? Calendar.current.dateComponents([.year, .month, .day], from: .now) : nil }))
-                    if scope.day != nil {
-                        DatePicker("Scheduled day", selection: Binding(get: { scope.day.flatMap { Calendar.current.date(from: $0) } ?? .now }, set: { scope.day = Calendar.current.dateComponents([.year, .month, .day], from: $0) }), displayedComponents: .date)
-                    }
-                }
                 ForEach(visible, id: \.procedure.id) { rec in
                     caseRow(rec)
                         .tag(rec.procedure.id)
@@ -55,6 +47,13 @@ struct PlannerView: View {
                 }
             }
             .accessibilityIdentifier("planner-worklist")
+            .safeAreaInset(edge: .top) {
+                Text(scopeSummary).font(Northstar.Fonts.supporting)
+                    .foregroundStyle(Northstar.Palette.inkMuted)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(Northstar.Space.s3)
+                    .background(Northstar.Palette.bgBase)
+            }
             .listStyle(.sidebar)
             .scrollContentBackground(.hidden)
             .background(Northstar.Palette.bgBase)
@@ -70,6 +69,7 @@ struct PlannerView: View {
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Menu {
+                        Button("Recording and date filters") { showingScope = true }
                         Toggle("Coverage needs attention", isOn: $attentionOnly)
                         Button("Show all cases") { attentionOnly = false; search = ""; scope = PlannerScope() }
                     } label: {
@@ -118,6 +118,22 @@ struct PlannerView: View {
                     description: Text("Browse coverage and logistical options. Selecting a case does not change the active recording."))
                     .background(Northstar.Palette.bgRaised)
                 }
+            }
+        }
+        .sheet(isPresented: $showingScope) {
+            NavigationStack {
+                Form {
+                    Picker("Recording", selection: $scope.recording) {
+                        ForEach(PlannerScope.Recording.allCases) { Text($0.rawValue).tag($0) }
+                    }
+                    Toggle("Filter by site-local day", isOn: Binding(get: { scope.day != nil }, set: { scope.day = $0 ? Calendar.current.dateComponents([.year, .month, .day], from: .now) : nil }))
+                    if scope.day != nil {
+                        DatePicker("Scheduled day", selection: Binding(get: { scope.day.flatMap { Calendar.current.date(from: $0) } ?? .now }, set: { scope.day = Calendar.current.dateComponents([.year, .month, .day], from: $0) }), displayedComponents: .date)
+                    }
+                    Text("The chosen calendar date is evaluated in each site's time zone. Browsing does not change the active recording.")
+                }
+                .navigationTitle("Case filters").navigationBarTitleDisplayMode(.inline)
+                .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { showingScope = false } } }
             }
         }
         .sheet(item: $report) { CaseReportView(report: $0) }
@@ -247,6 +263,11 @@ struct PlannerView: View {
         .navigationBarTitleDisplayMode(.inline)
     }
 
+
+    private var scopeSummary: String {
+        let day = scope.day.flatMap { Calendar.current.date(from: $0) }.map { $0.formatted(date: .abbreviated, time: .omitted) } ?? "All dates"
+        return "\(scope.recording.rawValue) · \(day)\(attentionOnly ? " · Needs coverage attention" : "")"
+    }
 
     private func recordingLabel(_ procedure: Procedure) -> String {
         model.activeCaseID == procedure.id ? "Active recording" : model.session(for: procedure.id) != nil ? "Retained recording" : "Not started"
