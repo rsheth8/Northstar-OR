@@ -17,9 +17,15 @@ final class WorkspaceCallEntryTests: XCTestCase {
         let deferItem = app.buttons["defer-item"].firstMatch
         XCTAssertTrue(deferItem.waitForExistence(timeout: 15))
         deferItem.tap()
+        let acknowledgment = app.buttons["acknowledge-deferral"].firstMatch
+        XCTAssertTrue(acknowledgment.waitForExistence(timeout: 5), "Defer must record a deferral and pin its acknowledgment")
+        XCTAssertFalse(app.buttons["record-confirmation"].exists, "Deferral must not activate confirmation")
+        let deferred = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        deferred.name = enlarged ? "recording-deferral-largest-text" : "recording-deferral-default"
+        deferred.lifetime = .keepAlways; add(deferred)
         let request = app.buttons["request-support"].firstMatch
-        for _ in 0..<5 where !request.isHittable { app.scrollViews["copilot-current-scroll"].swipeUp() }
-        XCTAssertTrue(request.isHittable)
+        // XCTest scrolls this unique accessibility target into view before activation.
+        // Large manual swipes can skip over it in the short enlarged-text viewport.
         request.tap()
         let requestForm = app.descendants(matching: .any).matching(identifier: "support-request-form").firstMatch
         XCTAssertTrue(requestForm.waitForExistence(timeout: 5), "Request support must open its composer")
@@ -43,7 +49,6 @@ final class WorkspaceCallEntryTests: XCTestCase {
         XCTAssertTrue(app.buttons["acknowledge-deferral"].firstMatch.exists)
         XCTAssertFalse(app.buttons["record-confirmation"].exists)
         let support = app.buttons["request-support"].firstMatch
-        for _ in 0..<5 where !support.isHittable { app.scrollViews["copilot-current-scroll"].swipeUp() }
         support.tap()
         XCTAssertEqual(app.textViews["support-question-draft"].value as? String, "Fictional technical support question")
         if !enlarged {
