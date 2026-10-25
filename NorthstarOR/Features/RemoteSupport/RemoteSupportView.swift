@@ -51,8 +51,10 @@ struct RemoteSupportView: View {
             .navigationTitle("Remote Support").navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Coverage requests (\(model.incomingCoveragePlans.count))") { showingCoverage = true }
-                        .accessibilityIdentifier("open-coverage-requests")
+                    if model.demoPost == .rep {
+                        Button("Coverage requests (\(model.incomingCoveragePlans.count))") { showingCoverage = true }
+                            .accessibilityIdentifier("open-coverage-requests")
+                    }
                 }
             }
             .sheet(isPresented: $showingCoverage) { CoverageRequestsView() }

@@ -4,6 +4,27 @@ final class CoveragePlanPresentationTests: XCTestCase {
     @MainActor func testRequestAndExplicitReplacement() { verify(enlarged: false) }
     @MainActor func testRequestAndReplacementAtLargestText() { verify(enlarged: true) }
 
+    @MainActor func testRepCoverageInboxHasAnHonestEmptyState() {
+        continueAfterFailure = false
+        XCUIDevice.shared.orientation = .landscapeLeft
+        let app = XCUIApplication()
+        app.launchArguments = ["-NorthstarSampleWorkspace"]
+        app.launch()
+        XCTAssertTrue(app.buttons["Remote Support"].firstMatch.waitForExistence(timeout: 15))
+        if app.buttons["nearby-role"].exists {
+            app.buttons["nearby-role"].tap()
+            app.buttons["Rep device"].tap()
+            if app.buttons["Change role and disconnect"].waitForExistence(timeout: 2) {
+                app.buttons["Change role and disconnect"].tap()
+            }
+        } else { app.buttons["Rep"].firstMatch.tap() }
+        app.buttons["Remote Support"].firstMatch.tap()
+        let inbox = app.buttons["open-coverage-requests"]
+        XCTAssertTrue(inbox.waitForExistence(timeout: 5)); inbox.tap()
+        XCTAssertTrue(app.staticTexts["No coverage requests received"].waitForExistence(timeout: 5))
+        capture("coverage-rep-inbox-empty-disconnected")
+    }
+
     @MainActor private func verify(enlarged: Bool) {
         continueAfterFailure = false
         XCUIDevice.shared.orientation = .landscapeLeft
@@ -39,7 +60,16 @@ final class CoveragePlanPresentationTests: XCTestCase {
     }
     @MainActor private func reveal(_ element: XCUIElement, scrolling scroll: XCUIElement, up: Bool) {
         for _ in 0..<20 where !element.exists || !element.isHittable {
-            if up { scroll.swipeUp() } else { scroll.swipeDown() }
+            // The split-view scroll container's accessibility frame can include its sidebar.
+            // Drag inside the visible detail pane rather than its geometric center.
+            let start = scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.85, dy: up ? 0.85 : 0.25))
+            let end = scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.85, dy: up ? 0.25 : 0.85))
+            start.press(forDuration: 0.05, thenDragTo: end)
+        }
+        if !element.exists || !element.isHittable {
+            let debug = XCTAttachment(string: XCUIApplication().debugDescription)
+            debug.name = "Coverage controls hierarchy"; debug.lifetime = .keepAlways; add(debug)
+            capture("coverage-controls-unreachable")
         }
         XCTAssertTrue(element.exists)
         XCTAssertTrue(element.isHittable)

@@ -51,7 +51,7 @@ struct CoveragePlanSection: View {
                             if current == nil { submit(proposed) } else { replacement = proposed }
                         }
                         .buttonStyle(NorthstarSecondaryButtonStyle(size: .large))
-                        .disabled(isCurrent)
+                        .disabled(isCurrent && current?.response?.accepted != false)
                         .accessibilityIdentifier("coverage-request-\(proposed.mode.rawValue)-\(proposed.recipientID ?? "none")")
                     }
                 }
@@ -61,7 +61,6 @@ struct CoveragePlanSection: View {
             Text("Availability, plan response, message receipt and call connection are separate. Rescheduling records an intention; it changes no external booking.")
                 .font(Northstar.Fonts.supporting).foregroundStyle(Northstar.Palette.inkMuted)
         }
-        .accessibilityIdentifier("coverage-plan-section")
         .alert("Replace the current support plan?", isPresented: Binding(get: { replacement != nil }, set: { if !$0 { replacement = nil } }), presenting: replacement) { proposed in
             Button("Replace plan") { submit(proposed); replacement = nil }
             Button("Keep current plan", role: .cancel) { replacement = nil }
