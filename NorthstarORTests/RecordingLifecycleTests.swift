@@ -23,6 +23,19 @@ final class RecordingLifecycleTests: XCTestCase {
         XCTAssertEqual(session.events.count, 2)
         XCTAssertFalse(try XCTUnwrap(AppModel(store: store).activeSession).isEnded)
     }
+    func testEndingRecordingRejectsCapturedVoicePreviewWithoutAnotherEvent() throws {
+        let model = AppModel(); try model.loadSampleWorkspace()
+        let session = try model.startOrResume(caseID: XCTUnwrap(model.cases.first?.id))
+        let router = VoiceCommandRouter()
+        router.receive(id: UUID(), transcript: "record confirmation", isFinal: true,
+            captured: session.makeCommand(.recordConfirmation, source: .voice))
+        let preview = try XCTUnwrap(router.take())
+        _ = try model.record(XCTUnwrap(session.makeCommand(.endRecording)))
+        let ended = session.events
+        XCTAssertThrowsError(try model.record(preview))
+        XCTAssertEqual(session.events, ended)
+        XCTAssertTrue(session.isEnded)
+    }
     func testPendingAcknowledgmentBlocksEndWithoutChangingUnresolvedItem() throws {
         let model = AppModel(); try model.loadSampleWorkspace()
         let session = try model.startOrResume(caseID: XCTUnwrap(model.cases.first?.id))

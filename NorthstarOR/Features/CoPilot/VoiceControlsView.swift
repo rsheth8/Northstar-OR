@@ -16,7 +16,7 @@ struct VoiceControlsView: View {
     @State private var permissionRequest = UUID()
 
     private var blocked: Bool {
-        model.demoPost != .room || VoiceAudioPolicy.callOwnsAudio(invitationAccepted: model.callInvitation?.state == .accepted, status: observedCallStatus ?? model.nearbyCall?.status) || correctionOpen || session.isFinished
+        model.demoPost != .room || VoiceAudioPolicy.callOwnsAudio(invitationAccepted: model.callInvitation?.state == .accepted, status: observedCallStatus ?? model.nearbyCall?.status) || correctionOpen || session.isFinished || session.isEnded
     }
     private var context: String {
         "\(session.identity.sessionID):\(session.events.count):\(session.currentStep?.id ?? "none"):\(blocked):\(model.selectedDestination):\(String(describing: model.callInvitation)): choose-actor-\(model.workspace?.localParticipant.id ?? "none")"
