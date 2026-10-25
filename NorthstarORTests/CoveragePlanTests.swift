@@ -73,6 +73,25 @@ final class CoveragePlanTests: XCTestCase {
         XCTAssertEqual(rep.incomingCoveragePlans.count, 1)
         XCTAssertEqual(room.coveragePlan(for: item.id)?.delivery, .receivedByPeer)
     }
+    func testCoverageAndPlanningEvidenceSurviveEachOthersSavesAndRelaunch() throws {
+        let (room, _, _, _, store) = try pair()
+        let (item, contact) = try remote(room)
+        let baseline = room.planningEvidence(for: item.hospitalID)
+        let evidence = PlanningEvidence(siteID: item.hospitalID, source: "Fictional recovery test",
+            scenario: "Independent saved evidence", issuedAt: now, summary: "Fictional inputs retained",
+            closure: .noneRecorded)
+        let saved = try room.savePlanningEvidence(evidence, expectedRevision: baseline?.revision)
+        let plan = try room.requestCoverage(caseID: item.id, mode: .remote, recipientID: contact.id, expectedRevision: nil)
+        let restored = AppModel(store: store)
+        XCTAssertEqual(restored.planningEvidence(for: item.hospitalID), saved)
+        XCTAssertEqual(restored.coveragePlan(for: item.id)?.recordID, plan.recordID)
+        var edit = saved
+        edit.summary = "Edited fictional evidence"
+        _ = try restored.savePlanningEvidence(edit, expectedRevision: saved.revision)
+        let restoredAgain = AppModel(store: store)
+        XCTAssertEqual(restoredAgain.coveragePlan(for: item.id)?.recordID, plan.recordID)
+        XCTAssertEqual(restoredAgain.planningEvidence(for: item.hospitalID)?.summary, edit.summary)
+    }
     func testUnavailableContactAndOldSnapshot() throws {
         let (room, _, _, _, _) = try pair()
         let (item, _) = try remote(room)
