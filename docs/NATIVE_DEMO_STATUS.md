@@ -52,3 +52,9 @@ A focused regression reproduced loss of reduced-support context on relaunch and 
 Microphone permission follow-up: added Session and call → **Set up microphone**, which requests OS authorization without starting capture or a call. The corrected signed Mac build was restarted and the actual native screen reported **Microphone access allowed**. This verifies permission only; audio/video is still awaiting a fresh accepted call. Mac build log: `build/native-mic-setup.log`.
 
 After the permission fix, the real Mac native app visibly reached **In call** and displayed the room iPad camera feed. Audio in both directions and mute/camera-toggle/flip still need the owner’s confirmation. No room-camera screenshot is committed, to keep personal surroundings out of the repository. Both Mac and iPad permission-setup builds passed.
+
+## Owner-confirmed native call result
+
+On October 25, 2026, after the Mac audio-input entitlement and explicit permission setup fix, the owner confirmed: **both audio directions and the iPad camera video work** between the native Mac Catalyst app and the native iPad app. This supersedes the pending basic native media gate above. The Mac was also observed showing In call and received room video.
+
+Still unverified physically: mute/unmute on each device, room camera off/on and front/back switching, messaging after ending media, repeated-call recovery, and the complete five-minute rehearsal. These controls exist in code; basic audio/video confirmation does not establish those checks.
