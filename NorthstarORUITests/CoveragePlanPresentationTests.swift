@@ -11,13 +11,16 @@ final class CoveragePlanPresentationTests: XCTestCase {
         app.launchArguments = ["-NorthstarSampleWorkspace"]
         app.launch()
         XCTAssertTrue(app.buttons["Remote Support"].firstMatch.waitForExistence(timeout: 15))
-        if app.buttons["nearby-role"].exists {
-            app.buttons["nearby-role"].tap()
-            app.buttons["Rep device"].tap()
-            if app.buttons["Change role and disconnect"].waitForExistence(timeout: 2) {
-                app.buttons["Change role and disconnect"].tap()
-            }
-        } else { app.buttons["Rep"].firstMatch.tap() }
+        let role = app.buttons["nearby-role"]
+        XCTAssertTrue(role.waitForExistence(timeout: 15))
+        role.tap()
+        let rep = app.buttons["Rep device"]
+        XCTAssertTrue(rep.waitForExistence(timeout: 5))
+        rep.tap()
+        let confirm = app.buttons["Change role and disconnect"]
+        XCTAssertTrue(confirm.waitForExistence(timeout: 5))
+        confirm.tap()
+        XCTAssertTrue(role.label.contains("Rep"))
         app.buttons["Remote Support"].firstMatch.tap()
         let inbox = app.buttons["open-coverage-requests"]
         XCTAssertTrue(inbox.waitForExistence(timeout: 5)); inbox.tap()
