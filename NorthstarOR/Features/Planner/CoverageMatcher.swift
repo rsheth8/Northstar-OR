@@ -27,6 +27,7 @@ struct CoverageMatcher {
 
     /// The first rule that rules out in-person attendance, checked in declaration order.
     enum Constraint: Hashable {
+        case technicalRoleRequired
         case notQualified
         case unavailable
         case driveTimeUnknown
@@ -119,12 +120,15 @@ struct CoverageMatcher {
 
     private func assess(_ rep: DeviceRep, for procedure: Procedure,
                         minutesUntilStart: Int, closureMinutes: Int?) -> RepAssessment {
-        let qualified = rep.skills.contains(procedure.deviceFamily)
+        let technicalRole = rep.statedRole == .technicalRep
+        let qualified = technicalRole && rep.skills.contains(procedure.deviceFamily)
         let remote = qualified && rep.isAvailable && rep.canSupportRemotely
         let drive = rep.driveMinutes[procedure.hospitalID]
 
         let blocker: Constraint?
-        if !qualified {
+        if !technicalRole {
+            blocker = .technicalRoleRequired
+        } else if !qualified {
             blocker = .notQualified
         } else if !rep.isAvailable {
             blocker = .unavailable
@@ -150,6 +154,8 @@ struct CoverageMatcher {
         switch blocker {
         case nil:
             return "can attend in person (\(drive ?? 0) min simulated drive)."
+        case .technicalRoleRequired:
+            return "technical-rep role is not stated; technical coverage is not inferred."
         case .notQualified:
             return "\(procedure.deviceFamily) is not a stated skill."
         case .unavailable:
