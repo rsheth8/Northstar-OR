@@ -242,6 +242,7 @@ final class AppModel {
         }
         try persist(snapshot(sessions: nextSessions, activeCaseID: caseID))
         sessions = nextSessions
+        if activeCaseID != nil, activeCaseID != caseID, isSharingSession || nearbyCall != nil { stopNearbyLink() }
         activeCaseID = caseID
         activeSession = session
         return session
@@ -265,6 +266,7 @@ final class AppModel {
     func retrySave() throws {
         guard workspace != nil else { throw AppModelError.noWorkspace }
         try persist(snapshot())
+        publishSharedSession()
     }
 
     // MARK: - Drafts
@@ -298,7 +300,7 @@ final class AppModel {
 
     // MARK: - Contextual support (separate from checklist events)
 
-    func supportSnapshot() throws -> SupportContextSnapshot {
+    func supportSnapshot(fullHistory: Bool = false) throws -> SupportContextSnapshot {
         guard let session = activeSession, let state = session.recordingState,
               let template = session.procedure.templateReference else { throw AppModelError.noActiveSession }
         let procedure = session.procedure
@@ -313,7 +315,7 @@ final class AppModel {
             reducedSupport: session.reducedSupport, logisticalReason: recommendation(for: procedure).reasons.first,
             lines: procedure.steps.map { .init(id: $0.id, title: $0.title,
                 status: state.itemStatuses[$0.id] ?? .unrecorded, normallyCoveredByRep: $0.normallyCoveredByRep) },
-            recentEvents: session.events.suffix(8).map { event in
+            recentEvents: session.events.suffix(fullHistory ? session.events.count : 8).map { event in
                 let action: String
                 switch event.payload {
                 case .itemSelected: action = "Item selected"
@@ -351,6 +353,7 @@ final class AppModel {
             recipientContactID: recipient.id, recipientName: recipient.name, sentAt: clock(), snapshot: supportSnapshot())
         questions.append(question)
         try persist(snapshot())
+        publishSharedSession()
         try transmitSupport(.question(question))
         return questions.last { $0.id == question.id }!
     }
@@ -424,11 +427,13 @@ final class AppModel {
         questions = applied.inbox.questions
         supportContext = applied.inbox.liveContext
         do { try persist(snapshot()) } catch { return }
+        if envelope.kind != .receipt { publishSharedSession() }
         if applied.receiptForID != nil, envelope.kind != .contextUpdate, case .connected = linkState {
             try? sync.sendSupport(.receipt(for: envelope, at: clock()))
         }
     }
     private func publishSupportContext() {
+        publishSharedSession()
         guard demoPost == .room, let session = activeSession,
               let question = latestQuestion(for: session.identity.sessionID), let context = try? supportSnapshot() else { return }
         supportContext[question.origin] = context
@@ -437,7 +442,12 @@ final class AppModel {
     private func bindNearby() {
         linkState = sync.nearby.linkState
         sync.nearby.onEnvelope = { [weak self] in self?.receiveSupport($0) }
-        sync.nearby.onLinkState = { [weak self] state in self?.linkState = state; self?.refreshNearbyDiscovery() }
+        sync.nearby.onLinkState = { [weak self] state in
+            guard let self else { return }
+            self.linkState = state
+            if self.isSharingSession, state == .disconnected { self.endRepCall() }
+            self.refreshNearbyDiscovery()
+        }
         sync.nearby.onDiscoveryChange = { [weak self] in self?.refreshNearbyDiscovery() }
         refreshNearbyDiscovery()
     }
@@ -445,16 +455,40 @@ final class AppModel {
         nearbyPeers = sync.nearby.peers; nearbyInvitation = sync.nearby.invitation; nearbyError = sync.nearby.errorMessage
     }
     func installNearbyTransport(_ transport: NearbyTransport) {
+        nearbyCall?.stop()
         sync.installNearby(transport); nearbyCall = transport as? NearbyCallController; bindNearby()
     }
+    var isSharingSession: Bool { sync.nearby is SharedSessionTransport }
+    func startSharedSession(server: String) {
+        guard demoPost == .room, activeSession != nil else { return }
+        let transport = SharedSessionTransport(server: server)
+        transport.onRefresh = { [weak self] in self?.publishSharedSession() }
+        installNearbyTransport(transport)
+        transport.start()
+    }
+    private func publishSharedSession() {
+        guard demoPost == .room, let transport = sync.nearby as? SharedSessionTransport,
+              let session = activeSession, let context = try? supportSnapshot(fullHistory: true) else { return }
+        let identity = session.identity
+        let origin = SupportOrigin(workspaceID: identity.workspaceID, caseID: identity.caseID, sessionID: identity.sessionID)
+        let snapshot = SharedSessionSnapshot(origin: origin, context: context,
+            recordingSummary: session.recordingSummary, saved: saveError == nil,
+            questions: saveError == nil ? questions.filter { $0.origin == origin } : [])
+        do { try transport.publish(snapshot) } catch { nearbyError = error.localizedDescription }
+    }
+    func endRepCall() { nearbyCall?.stop() }
     func startRepCall(server: String) {
         guard demoPost == .room else { return }
         let call = NearbyCallController(signalingURL: server)
-        installNearbyTransport(call)
+        if isSharingSession {
+            nearbyCall?.stop()
+            nearbyCall = call
+            // The independent session transport owns support messages during calls.
+        } else { installNearbyTransport(call) }
         call.start()
     }
     func startNearbyLink() { installNearbyTransport(MultipeerNearbyTransport(role: demoPost)); sync.nearby.start() }
-    func stopNearbyLink() { sync.nearby.stop(); linkState = .idle; refreshNearbyDiscovery() }
+    func stopNearbyLink() { nearbyCall?.stop(); sync.nearby.stop(); linkState = .idle; refreshNearbyDiscovery() }
     func inviteNearby(_ id: String) throws { try sync.nearby.invite(id) }
     func answerNearbyInvitation(accept: Bool) { sync.nearby.respondToInvitation(accept: accept) }
 

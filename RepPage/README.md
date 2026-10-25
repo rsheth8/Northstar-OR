@@ -13,3 +13,11 @@ Use this from the integrated checkout on branch `sync/in-app-call-integrated`. I
 Only one room and one rep page may join this local server at a time. It is an unauthenticated fictional demo, not an internet calling service. Peer-to-peer media needs network reachability; there is no TURN relay. Audio is two-way, camera video is room-to-laptop only, and simulator capture omits the camera. The server introduces the peers; media and support envelopes use WebRTC. The browser keeps questions/replies in session storage for this tab; the iPad retains them in the workspace repository. Neither side records media.
 
 Focused checks: `node --test RepPage/server.test.mjs`; see `docs/evidence/nearby-support/CALL_INTEGRATION.md` for the simulator/browser journey and checks still needing hardware.
+
+## Shared case session (foundation, version 4)
+
+Run the server from the integrated worktree, restart it after server changes, and refresh the laptop page. Both devices use the same Wi-Fi. On iPad open **Call rep**, enter the laptop's `ws://<LAN-IP>:8080`, and choose **Share current case**. On the laptop open `http://localhost:8080` and choose **Join session**. This does not open either microphone or camera. The laptop receives current checklist state, all recorded session activity, and saved contextual support questions; it can acknowledge and reply before a call. Co-pilot and the native Remote tab use the same retained questions.
+
+For a call, separately choose **Join call** on laptop and **Start call** on iPad. End call releases media while the shared session remains connected. **Leave session** / **Stop sharing and end call** close both. Rejoin/reshare manually after a server or Wi-Fi interruption. The data server supports one room and one rep independently of the media pair.
+
+This foundation is not the entire approved shared-session design. Generic multi-message chat, call request/accept/decline, camera switching/off-on, alerts and refined layouts still need implementation; see `docs/CURSOR_SHARED_SESSION_HANDOFF.md`. The new native/browser Wi-Fi session has a passing build and focused automated checks but still needs a physical-device walkthrough. The preceding media-only call was reported working by the owner.

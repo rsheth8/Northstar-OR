@@ -8,6 +8,7 @@ const save = () => sessionStorage.setItem('northstar-call', JSON.stringify(recor
 const current = () => records[select.value]
 const canonical = value => JSON.stringify(value, (_, item) => item && !Array.isArray(item) && typeof item === 'object' ? Object.fromEntries(Object.keys(item).sort().map(key => [key, item[key]])) : item)
 const send = envelope => {
+  if (window.northstarSession?.ready()) { window.northstarSession.send(envelope); return }
   if (channel?.readyState !== 'open') throw Error('Call disconnected. Your message is kept; reconnect and retry.')
   channel.send(JSON.stringify(envelope))
 }
@@ -19,7 +20,10 @@ function render() {
   for (const line of record?.question.snapshot.lines.filter(line => line.status !== 'teamConfirmed') || []) {
     const item = document.createElement('li'); item.textContent = `${line.title} — ${line.status}`; $('lines').append(item)
   }
-  const open = channel?.readyState === 'open'
+  const sessionOpen = window.northstarSession?.ready()
+  const sessionOrigin = window.northstarSession?.origin?.()
+  const sameSession = !sessionOpen || canonical(sessionOrigin) === canonical(record?.envelope.origin)
+  const open = sameSession && (sessionOpen || channel?.readyState === 'open')
   $('ack').disabled = !record || !open || record.ackReceived
   $('ack').textContent = record?.ack ? (record.ackReceived ? 'Acknowledgment received by room' : 'Retry acknowledgment') : 'Acknowledge question'
   $('send').disabled = !record || !open || record.replyReceived
@@ -49,7 +53,7 @@ function receive(envelope) {
     if (existing && canonical(existing.question) !== canonical(q)) return
     records[envelope.id] ||= { question: q, envelope }
     save() // Receipt means the browser retained the question, not just bytes arrived.
-    refreshQuestions(envelope.id)
+    refreshQuestions(existing ? select.value : envelope.id)
     send({ id: envelope.id + ':receipt', kind: 'receipt', sentAt: now(), origin: envelope.origin, questionID: q.id, receiptForID: envelope.id })
   } else if (envelope.kind === 'receipt') {
     const record = Object.values(records).find(r => r.question.id === envelope.questionID && canonical(r.envelope.origin) === canonical(envelope.origin))
@@ -190,5 +194,17 @@ $('join').onclick = async () => {
     $('end').disabled = false
   } catch (error) { if (generation === run) end(`Microphone unavailable: ${error.message}`) }
 }
+window.northstarRestoreResponse = q => {
+  const record = Object.values(records).find(r => r.question.id === q.id && r.question.sessionID === q.sessionID && r.question.workspaceID === q.workspaceID && r.question.caseID === q.caseID)
+  if (!record) return
+  // The room's retained snapshot proves these responses reached the room.
+  if (q.acknowledgement) { record.ack = { id: q.acknowledgement.id, kind: 'questionAcknowledgement', origin: record.envelope.origin, questionID: q.id, sentAt: q.acknowledgement.at, acknowledgement: q.acknowledgement }; record.ackReceived = true }
+  if (q.reply) { record.reply = { id: q.reply.id, kind: 'reply', origin: record.envelope.origin, questionID: q.id, sentAt: q.reply.at, reply: q.reply }; record.replyReceived = true }
+  save(); render()
+}
+window.northstarReceiveSupport = receive
+window.addEventListener('northstar-session', render)
+window.addEventListener('northstar-session-lost', () => end('Session left or disconnected. Rejoin before the next call.'))
+window.addEventListener('northstar-session-changed', () => end('Case changed. Join the new call explicitly.'))
 window.addEventListener('pagehide', () => end())
 refreshQuestions()

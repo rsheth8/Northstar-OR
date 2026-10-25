@@ -13,6 +13,13 @@ struct RemoteSupportView: View {
                 VStack(alignment: .leading, spacing: Northstar.Space.s4) {
                     NorthstarStatusLabel(model.linkState.label, tone: .info, systemImage: "ipad.landscape")
                     Text("Messages stay with this case. Connect a nearby iPad or rep call to send messages off this device.").font(Northstar.Fonts.supporting).foregroundStyle(Northstar.Palette.inkMuted)
+                    if model.demoPost == .room, let session = model.activeSession {
+                        Text("Current room record").font(Northstar.Fonts.title)
+                        Text(session.procedure.name).font(Northstar.Fonts.bodyStrong)
+                        Text(session.recordingSummary)
+                        Text(model.isSharingSession ? "Sharing this case with the laptop session. Calls are separate from the case connection." : "Open Call rep to share this case with the laptop before calling.")
+                            .font(Northstar.Fonts.supporting)
+                    }
                     if !model.questions.isEmpty {
                         Picker("Saved requests", selection: Binding(get: { current?.id ?? "" }, set: { selectedQuestionID = $0 })) {
                             ForEach(model.questions) { q in Text("\(q.snapshot.caseReference) · \(q.sentAt.formatted(date: .omitted, time: .shortened))").tag(q.id) }

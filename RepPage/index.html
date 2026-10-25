@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Northstar rep call</title>
+  <title>Northstar remote support</title>
   <style>
     :root { color-scheme: light; }
     body { margin: 0; font: 18px/1.4 -apple-system, BlinkMacSystemFont, sans-serif; background: #F4F6F8; color: #202B38; }
@@ -22,8 +22,20 @@
 </head>
 <body>
   <main>
-    <h1>Northstar rep call</h1>
-    <p class="note">Call controls 3 · microphone and room camera</p>
+    <h1>Northstar remote support</h1>
+    <p class="note">Shared session 4 · same-Wi-Fi case feed and optional call</p>
+    <section>
+      <h2>Room session</h2>
+      <p id="session-status" role="status">Not joined</p>
+      <button id="session-join" type="button">Join session</button>
+      <button id="session-leave" class="secondary" type="button" disabled>Leave session</button>
+      <h3 id="session-context">No case received yet</h3>
+      <p id="session-summary"></p>
+      <ul id="session-lines"></ul>
+      <details><summary>Full recorded activity</summary><ol id="session-events"></ol></details>
+    </section>
+    <h2>Optional call</h2>
+    <p class="note">Join the session above for case updates and support questions. Join call separately when the room is calling.</p>
     <p id="status" class="status" role="status">Join to allow your microphone</p>
     <button id="join" type="button">Join call</button>
     <button id="end" class="secondary" type="button" disabled>End call</button>
@@ -50,6 +62,7 @@
     <p id="delivery" role="status"></p>
     <button id="send" type="button" disabled>Send reply</button>
   </main>
-  <script type="module" src="/call.js?v=call-controls-3"></script>
+  <script type="module" src="/call.js?v=session-4"></script>
+  <script type="module" src="/session.js?v=session-4"></script>
 </body>
 </html>

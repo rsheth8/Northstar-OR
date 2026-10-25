@@ -14,29 +14,36 @@ let backlogBytes = 0
 const limit = 512 * 1024
 const server = http.createServer((request, response) => {
   const name = new URL(request.url, 'http://localhost').pathname
-  const file = new Map([['/', 'index.html'], ['/call.js', 'call.js']]).get(name)
+  const file = new Map([['/', 'index.html'], ['/call.js', 'call.js'], ['/session.js', 'session.js']]).get(name)
   if (!file) { response.writeHead(404).end('Not found'); return }
   response.writeHead(200, { 'content-type': file.endsWith('.js') ? 'text/javascript; charset=utf-8' : 'text/html; charset=utf-8', 'cache-control': 'no-store' })
   fs.createReadStream(path.join(root, file)).pipe(response)
 })
 server.on('upgrade', (request, socket, head) => {
-  const role = new URL(request.url, 'http://localhost').searchParams.get('role')
+  const address = new URL(request.url, 'http://localhost')
+  const role = address.searchParams.get('role')
+  const sessionChannel = address.pathname === '/session'
+  const pairKey = role => (sessionChannel ? 'session-' : '') + role
   const key = request.headers['sec-websocket-key']
   // Rep microphone must originate on localhost; no arbitrary website may join.
   const origin = request.headers.origin
-  if (!key || !['room', 'rep'].includes(role) || (origin && origin !== `http://localhost:${server.address().port}` && origin !== `http://127.0.0.1:${server.address().port}`)) {
+  if (!['/', '/session'].includes(address.pathname) || !key || !['room', 'rep'].includes(role) || (origin && origin !== `http://localhost:${server.address().port}` && origin !== `http://127.0.0.1:${server.address().port}`)) {
     socket.end('HTTP/1.1 403 Forbidden\r\n\r\n'); return
   }
   const accept = crypto.createHash('sha1').update(key + '258EAFA5-E914-47DA-95CA-C5AB0DC85B11').digest('base64')
   socket.write(`HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: ${accept}\r\n\r\n`)
-  if (peers.has(role)) { write(socket, JSON.stringify({ type: 'busy' })); socket.end(); return }
-  const client = { socket, role, buffer: Buffer.alloc(0), fragments: [], fragmentBytes: 0 }
-  peers.set(role, client)
-  if (role === 'rep') for (const text of backlog) write(socket, text)
+  if (peers.has(pairKey(role))) { write(socket, JSON.stringify({ type: 'busy' })); socket.end(); return }
+  const client = { socket, role, sessionChannel, pairKey, buffer: Buffer.alloc(0), fragments: [], fragmentBytes: 0 }
+  peers.set(pairKey(role), client)
+  if (!sessionChannel && role === 'rep') for (const text of backlog) write(socket, text)
+  if (sessionChannel) {
+    const other = peers.get(pairKey(role === 'room' ? 'rep' : 'room'))
+    if (other) { write(other.socket, JSON.stringify({ type: 'peer-joined' })); write(socket, JSON.stringify({ type: 'peer-joined' })) }
+  }
   const remove = () => {
-    if (peers.get(role) !== client) return
-    peers.delete(role); backlog = []; backlogBytes = 0
-    const other = peers.get(role === 'room' ? 'rep' : 'room')
+    if (peers.get(pairKey(role)) !== client) return
+    peers.delete(pairKey(role)); if (!sessionChannel) { backlog = []; backlogBytes = 0 }
+    const other = peers.get(pairKey(role === 'room' ? 'rep' : 'room'))
     if (other) write(other.socket, JSON.stringify({ type: 'peer-left' }))
   }
   socket.on('data', chunk => {
@@ -90,6 +97,13 @@ function consume(client) {
 function receive(client, text) {
   let message
   try { message = JSON.parse(text) } catch { return }
+  if (client.sessionChannel) {
+    if (!['session-snapshot', 'support-envelope', 'snapshot-request'].includes(message.type)) return
+    if (message.type === 'session-snapshot' && client.role !== 'room') return
+    const other = peers.get(client.pairKey(client.role === 'room' ? 'rep' : 'room'))
+    if (other) write(other.socket, text)
+    return
+  }
   if (!['offer', 'answer', 'candidate'].includes(message.type)) return
   if (message.type === 'offer' && client.role !== 'room' || message.type === 'answer' && client.role !== 'rep') return
   if (client.role === 'room') {

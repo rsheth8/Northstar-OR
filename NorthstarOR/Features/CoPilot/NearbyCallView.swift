@@ -10,18 +10,27 @@ struct NearbyCallView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: Northstar.Space.s4) {
-                    Text("Nearby rep call").font(Northstar.Fonts.title)
+                    Text("Rep session and call").font(Northstar.Fonts.title)
                     Text("Two-way audio and the room camera connect to the Northstar rep page on your laptop. Use fictional content only; media is not saved.")
                         .font(Northstar.Fonts.body)
-                    if let call = model.nearbyCall { CallStatusControls(call: call, end: model.stopNearbyLink) }
-                    Text("Signaling server").font(Northstar.Fonts.bodyStrong)
+                    if let call = model.nearbyCall { CallStatusControls(call: call, end: model.endRepCall) }
+                    Text("Laptop server").font(Northstar.Fonts.bodyStrong)
                     TextField("ws://192.168.1.20:8080", text: $server)
                         .textInputAutocapitalization(.never).autocorrectionDisabled()
                         .keyboardType(.URL).textFieldStyle(.roundedBorder)
                         .frame(minHeight: Northstar.Target.minimum)
                         .accessibilityLabel("Signaling server").accessibilityIdentifier("call-signaling-url")
-                    Text("On the laptop, open http://localhost:8080 and join with headphones. Use the laptop’s network address here. Starting a call replaces the nearby-iPad link.")
+                    Text("On the same Wi-Fi, open http://localhost:8080 on the laptop and choose Join session. Share the case first; a call is optional. Use headphones for calls.")
                         .font(Northstar.Fonts.supporting).foregroundStyle(Northstar.Palette.inkMuted)
+                    NorthstarStatusLabel(model.isSharingSession ? model.linkState.label : "Case is not shared", tone: .info)
+                    if let error = model.nearbyError { Text(error).foregroundStyle(Northstar.Palette.alert) }
+                    Button("Share current case") {
+                        model.startSharedSession(server: server.trimmingCharacters(in: .whitespacesAndNewlines))
+                    }.buttonStyle(NorthstarSecondaryButtonStyle()).disabled(model.activeSession == nil)
+                    if model.isSharingSession {
+                        Button("Stop sharing and end call", action: model.stopNearbyLink)
+                            .buttonStyle(NorthstarSecondaryButtonStyle())
+                    }
                     Button(model.nearbyCall == nil || model.linkState == .idle ? "Start call" : "Restart call") {
                         model.startRepCall(server: server.trimmingCharacters(in: .whitespacesAndNewlines))
                     }

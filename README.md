@@ -97,6 +97,7 @@ Required by the hackathon rules. Keep this list up to date.
 - Swift, SwiftUI, Observation, AVFoundation (text-to-speech), Speech (on-device recognition), MapKit
 - Apple Multipeer Connectivity for the experimental, explicitly paired nearby two-iPad support adapter. Physical-device proof remains separately recorded in docs/evidence/nearby-support/.
 - [WebRTC](https://webrtc.googlesource.com/src), BSD-3-Clause, via [stasel/WebRTC](https://github.com/stasel/WebRTC) 155.0.0. Supplies call audio processing, Opus and video codecs. Connection flow inspired by [stasel/WebRTC-iOS](https://github.com/stasel/WebRTC-iOS), Apache-2.0. Browser RTCPeerConnection and Node.js built-in HTTP/crypto serve the laptop rep station; no paid call provider.
+- Apple Foundation URLSessionWebSocketTask, browser WebSocket and sessionStorage power the separate same-Wi-Fi shared-session feed and retained laptop support exchange; no new provider or dependency.
 - XcodeGen for project generation
 - GitHub Actions with `actions/checkout` and `actions/upload-artifact` for CI; Dependabot for action updates
 - Inter Display (SIL Open Font License) for the logo wordmark
