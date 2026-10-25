@@ -79,17 +79,9 @@ To reset a device, delete and reinstall the app, then **Load sample workspace**.
 - **Rep replies (Mac, Suggested text menu):** "Received. I can see the case brief and the deferred item." then "I can walk your team through the programmer connection screens; the physician directs any programming." Other options: "Please read me the model and serial number from the device packaging…" and "I'm supporting remotely. Please keep a team member at the programmer."
 - **Voice phrases (when the voice branch merges):** "record confirmation", "defer item", "acknowledge deferral", "open planner", "open co-pilot", "show unresolved items", "stop listening".
 
-## Suggested five-minute path
+## Five-minute path
 
-1. **iPad (room):** Planner → **GM-1025**. Read the coverage assessment: blizzard, Ana arrives after the closure, remote options, Reschedule. Show the map and weather when those views are merged.
-2. Optional: **New case** to show ordinary case creation at any site.
-3. GM-1025 → **Start recording**. In Co-pilot record items 1–2, then **Defer** item 3, Programmer and analyzer ready. The amber warning persists and the item stays pinned.
-4. **Connect devices** on both iPad and Mac (same Wi-Fi, Local Network allowed). Accept the pairing.
-5. If coverage requests are merged: request Ana (remote) from Planner and accept on the Mac.
-6. **Mac (Ana):** Remote Support shows the case, checklist and deferred item without being told anything.
-7. **iPad:** ask the team question. **Mac:** acknowledge and reply. The reply appears on the iPad.
-8. Optional: **Session and call → Request call**; accept on the other side. Use headphones.
-9. **iPad:** acknowledge the deferral (it stays deferred), review activity, then open BJ-1026 to show its record is separate.
+The full script with lines, timing, setup and fallbacks is in [DEMO_SCRIPT.md](DEMO_SCRIPT.md). In short: pair the devices beforehand → Planner, GM-1025 (why Ana can't drive in) → **Start recording** → confirm items 1–2 → defer item 3 → send the question → Ana already sees the case and acknowledges and replies → live call → **Correct record** on item 3 → confirm the rest → "All team confirmations recorded".
 
 ## Do not claim
 
