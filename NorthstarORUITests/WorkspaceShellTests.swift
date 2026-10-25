@@ -24,10 +24,13 @@ final class WorkspaceShellTests: XCTestCase {
         town.tap()
         town.typeText("Exampleville")
         let participant = app.textFields["setup-participant-name"]
+        revealSetupControl(participant, in: app)
         participant.tap()
         participant.typeText("Sample Coordinator")
+        XCTAssertEqual(participant.value as? String, "Sample Coordinator")
 
         let create = app.buttons["setup-create"]
+        revealSetupControl(create, in: app)
         create.tap()
         XCTAssertTrue(app.buttons["Planner"].firstMatch.waitForExistence(timeout: 15))
         XCTAssertTrue(app.staticTexts["Fictional Test Workspace"].firstMatch.exists)
@@ -64,6 +67,31 @@ final class WorkspaceShellTests: XCTestCase {
         app.buttons["settings-done"].tap()
         XCTAssertTrue(app.staticTexts["Renamed Fictional Workspace"].firstMatch.waitForExistence(timeout: 5))
         capture("Header renamed")
+    }
+
+    /// Reveal below-fold fields before activation. XCTest's automatic scroll during
+    /// tap can leave a field visible without focusing it when a keyboard is open.
+    @MainActor
+    private func revealSetupControl(_ control: XCUIElement, in app: XCUIApplication) {
+        let form = app.descendants(matching: .any).matching(identifier: "workspace-setup-form").firstMatch
+        XCTAssertTrue(form.waitForExistence(timeout: 5))
+        for _ in 0..<12 {
+            let window = app.windows.firstMatch.frame
+            let keyboard = app.keyboards.firstMatch
+            let bottom = keyboard.exists && keyboard.frame.height > 100
+                ? min(window.maxY, keyboard.frame.minY) : window.maxY
+            let top = max(window.minY, app.navigationBars.firstMatch.frame.maxY)
+            if control.exists && control.frame.minY >= top + 12 && control.frame.maxY < bottom - 12 {
+                XCTAssertTrue(control.isHittable)
+                return
+            }
+            // Keep the gesture inside the visible form, above the keyboard.
+            let origin = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0))
+            let start = origin.withOffset(CGVector(dx: 0, dy: top + (bottom - top) * 0.8))
+            let end = origin.withOffset(CGVector(dx: 0, dy: top + (bottom - top) * 0.3))
+            start.press(forDuration: 0.05, thenDragTo: end)
+        }
+        XCTFail("Setup control must be visible above the keyboard before activation: \(control.identifier)")
     }
 
     @MainActor
