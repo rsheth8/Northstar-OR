@@ -94,6 +94,7 @@ struct WorkspaceSetupView: View {
                     Text("Sample content is optional fictional data. You can set up your own workspace instead.")
                 }
             }
+            .accessibilityIdentifier("workspace-setup-form")
             .scrollContentBackground(.hidden)
             .background(Northstar.Palette.bgBase)
             .navigationTitle("Set up workspace")

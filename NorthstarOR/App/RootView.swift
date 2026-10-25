@@ -94,6 +94,8 @@ struct RootView: View {
             Button("Rep device") { requestRole(.rep) }
         } label: {
             Label(model.demoPost == .room ? "This device: Room" : "This device: Rep", systemImage: "ipad.landscape")
+                .frame(minHeight: Northstar.Target.minimum)
+                .contentShape(Rectangle())
         }
         .frame(minHeight: Northstar.Target.minimum)
         .accessibilityIdentifier("nearby-role")
