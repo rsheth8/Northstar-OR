@@ -74,7 +74,8 @@ struct RootView: View {
                 .sheet(isPresented: $showNearby) { NearbyLinkSheet() }
                 .sheet(isPresented: $showingSettings) {
                     if let workspace = model.workspace {
-                        WorkspaceSettingsView(workspace: workspace, onSave: { try model.updateWorkspace($0) })
+                        WorkspaceSettingsView(workspace: workspace, onSave: { try model.updateWorkspace($0) },
+                                              onStartOver: { try model.startOverOnThisDevice() })
                     }
                 }
             }

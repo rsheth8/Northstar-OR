@@ -187,7 +187,7 @@ final class AppModel {
     func loadSampleWorkspace() throws {
         guard workspace == nil else { throw AppModelError.workspaceAlreadyConfigured }
         guard loadState == .needsSetup else { throw AppModelError.notReadyForSetup }
-        let sample = Self.sampleWorkspace(asOf: clock())
+        let sample = Self.sampleWorkspace(asOf: clock(), post: demoPost)
         try sample.workspace.validate()
         let sorted = Self.sorted(sample.cases)
         try persist(WorkspaceSnapshot(workspace: sample.workspace, forecasts: sample.forecasts, cases: sorted))
@@ -196,6 +196,17 @@ final class AppModel {
         forecasts = sample.forecasts
         loadState = .ready
         selectedDestination = demoPost == .rep ? .remoteSupport : .planner
+    }
+
+    /// Clears this device's workspace and records, then returns to setup so a fresh workspace
+    /// or the sample can be loaded (e.g. before a rehearsal). Ends any nearby link and call
+    /// first. Other devices keep their own records.
+    func startOverOnThisDevice() throws {
+        guard workspace != nil else { throw AppModelError.noWorkspace }
+        stopNearbyLink()
+        supportAlert = nil
+        try persist(WorkspaceSnapshot())
+        load()
     }
 
     func updateWorkspace(_ config: WorkspaceConfiguration) throws {
@@ -932,7 +943,8 @@ final class AppModel {
     }
 
     /// Fictional sample content as ordinary workspace records. Never progress or acceptance.
-    nonisolated static func sampleWorkspace(asOf: Date) -> SampleWorkspace {
+    /// On the rep station the local participant is the sample's remote technical rep.
+    nonisolated static func sampleWorkspace(asOf: Date, post: DemoPost = .room) -> SampleWorkspace {
         let seed = SampleData.make(clock: { asOf })
         let id = "sample-workspace"
         let sites = seed.hospitals.map { site -> Hospital in
@@ -952,9 +964,13 @@ final class AppModel {
             procedure.reference = procedure.reference ?? procedure.id
             return procedure
         }
-        let config = WorkspaceConfiguration(id: id, name: "Sample fictional workspace", sites: sites, contacts: contacts,
-            localParticipant: LocalParticipant(id: "sample-participant", workspaceID: id,
-                                               displayName: "Sample coordinator", statedRole: .coordinator))
+        let participant = post == .rep
+            ? LocalParticipant(id: "sample-rep-participant", workspaceID: id,
+                               displayName: contacts.first?.name ?? "Fictional technical rep", statedRole: .technicalRep)
+            : LocalParticipant(id: "sample-participant", workspaceID: id,
+                               displayName: "Jordan Ellis", statedRole: .coordinator)
+        let config = WorkspaceConfiguration(id: id, name: "Arrowhead Cardiac Coverage (fictional)", sites: sites,
+                                            contacts: contacts, localParticipant: participant)
         return SampleWorkspace(workspace: config, cases: cases, forecasts: seed.forecasts)
     }
 }

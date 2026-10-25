@@ -66,18 +66,18 @@ enum SampleData {
                       isAvailable: false, canSupportRemotely: true, statedRole: .technicalRep, travelAsOf: asOf),
         ]
         let forecasts = [
-            northShore: StormForecast(summary: "Simulated blizzard warning, 14 in of snow", roadClosureInHours: 1.5, snowfallInches: 14, asOf: asOf),
-            lakes: StormForecast(summary: "Simulated light snow", roadClosureInHours: nil, snowfallInches: 2, asOf: asOf),
-            prairie: StormForecast(summary: "Simulated ice storm watch", roadClosureInHours: 18, snowfallInches: 1, asOf: asOf),
+            northShore: StormForecast(summary: "Simulated blizzard warning for the North Shore: 14 in of snow and whiteout gusts. Simulated shoreline highway closure expected.", roadClosureInHours: 1.5, snowfallInches: 14, asOf: asOf),
+            lakes: StormForecast(summary: "Simulated light snow near Bemidji: 2 in, roads open.", roadClosureInHours: nil, snowfallInches: 2, asOf: asOf),
+            prairie: StormForecast(summary: "Simulated ice storm watch for southwest Minnesota. Simulated road closure possible tomorrow.", roadClosureInHours: 18, snowfallInches: 1, asOf: asOf),
         ]
         let procedures = [
-            FictionalCoordinationTemplate.makeProcedure(id: id(.northShoreCase), name: "Fictional pacemaker case A", hospitalID: northShore,
-                scheduledAt: asOf.addingTimeInterval(8 * 3600), durationMinutes: 90),
+            FictionalCoordinationTemplate.makeProcedure(id: id(.northShoreCase), name: "Fictional pacemaker case · blizzard coverage", hospitalID: northShore,
+                scheduledAt: asOf.addingTimeInterval(8 * 3600), durationMinutes: 90, reference: "GM-1025"),
             // No reviewed ICD coordination content exists. Never reuse pacemaker items.
             Procedure(id: id(.unsupportedCase), name: "Fictional ICD case — recording unavailable", deviceFamily: "icd", hospitalID: prairie,
-                scheduledAt: asOf.addingTimeInterval(26 * 3600), durationMinutes: 60, steps: []),
-            FictionalCoordinationTemplate.makeProcedure(id: id(.lakesCase), name: "Fictional pacemaker case B", hospitalID: lakes,
-                scheduledAt: asOf.addingTimeInterval(30 * 3600), durationMinutes: 90),
+                scheduledAt: asOf.addingTimeInterval(26 * 3600), durationMinutes: 60, steps: [], reference: "WO-1026"),
+            FictionalCoordinationTemplate.makeProcedure(id: id(.lakesCase), name: "Fictional pacemaker case · routine coverage", hospitalID: lakes,
+                scheduledAt: asOf.addingTimeInterval(30 * 3600), durationMinutes: 90, reference: "BJ-1026"),
         ]
         return Seed(asOf: asOf, hospitals: hospitals, reps: reps, forecasts: forecasts, procedures: procedures)
     }
