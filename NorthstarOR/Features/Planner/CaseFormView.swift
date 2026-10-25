@@ -12,6 +12,7 @@ struct CaseFormView: View {
     @State private var draft: CaseFormDraft
     @State private var showIssues = false
     @State private var saveFailure: String?
+    @State private var failureCount = 0
 
     init(workspace: WorkspaceConfiguration, existingCases: [Procedure], editing: Procedure? = nil,
          onSave: @escaping (CaseInput) throws -> Void) {
@@ -37,12 +38,14 @@ struct CaseFormView: View {
 
     var body: some View {
         NavigationStack {
+            ScrollViewReader { proxy in
             Form {
                 if let saveFailure {
                     Section {
                         NorthstarBanner(tone: .failure, title: "Case not saved", message: saveFailure)
                             .accessibilityIdentifier("case-form-save-error")
                     }
+                    .id("case-form-failure")
                 }
                 Section("Case") {
                     field("Reference", prompt: "e.g. NS-104", text: $draft.input.reference, for: .reference)
@@ -80,6 +83,15 @@ struct CaseFormView: View {
             }
             .scrollContentBackground(.hidden)
             .background(Northstar.Palette.bgBase)
+            .onChange(of: draft.input.siteID) { old, new in
+                draft.changeSite(from: old, to: new, in: workspace)
+            }
+            .onChange(of: failureCount) { _, _ in
+                guard let failure = saveFailure else { return }
+                withAnimation { proxy.scrollTo("case-form-failure", anchor: .top) }
+                UIAccessibility.post(notification: .announcement, argument: "Case not saved. \(failure)")
+            }
+            }
             .navigationTitle(editing == nil ? "New case" : "Edit case")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -124,7 +136,7 @@ struct CaseFormView: View {
         saveFailure = nil
         if let issue {
             showIssues = true
-            if issue.field == nil { saveFailure = issue.message }
+            if issue.field == nil { saveFailure = issue.message; failureCount += 1 }
             return
         }
         do {
@@ -132,6 +144,7 @@ struct CaseFormView: View {
             dismiss()
         } catch {
             saveFailure = CaseFormDraft.issue(for: error).message
+            failureCount += 1
         }
     }
 }

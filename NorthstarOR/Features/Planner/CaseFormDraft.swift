@@ -22,24 +22,34 @@ struct CaseFormDraft: Equatable {
         let template = FictionalCoordinationTemplate.template
         return CaseFormDraft(input: CaseInput(
             id: id, workspaceID: workspace.id, reference: "", title: "",
-            siteID: workspace.sites.first?.id ?? "", scheduledAt: now, durationMinutes: 60,
+            siteID: workspace.sites.first?.id ?? "",
+            scheduledAt: Date(timeIntervalSinceReferenceDate: (now.timeIntervalSinceReferenceDate / 60).rounded(.down) * 60), durationMinutes: 60,
             deviceFamily: template.deviceFamily, templateReference: template.reference))
     }
 
     /// Edit draft: keeps the existing id, template and device family.
     static func editing(_ procedure: Procedure, in workspace: WorkspaceConfiguration) -> CaseFormDraft {
-        CaseFormDraft(input: CaseInput(
+        // A legacy case without a pinned template is treated as the supported template
+        // when its device family matches; otherwise it stays nil and shows a template message.
+        let supported = FictionalCoordinationTemplate.template
+        let reference = procedure.templateReference
+            ?? (procedure.deviceFamily == supported.deviceFamily ? supported.reference : nil)
+        return CaseFormDraft(input: CaseInput(
             id: procedure.id, workspaceID: procedure.workspaceID ?? workspace.id,
             reference: procedure.reference ?? "", title: procedure.name, siteID: procedure.hospitalID,
             scheduledAt: procedure.scheduledAt, durationMinutes: procedure.durationMinutes,
-            deviceFamily: procedure.deviceFamily, templateReference: procedure.templateReference))
+            deviceFamily: procedure.deviceFamily, templateReference: reference))
     }
 
     /// Returns nil when the input is acceptable to the model, otherwise the first issue.
     func validate(in workspace: WorkspaceConfiguration, existingCases: [Procedure],
                   editing previous: Procedure?) -> Issue? {
         do {
-            if let previous {
+            if let previous, previous.templateReference == nil {
+                // Legacy case with no pinned template: validate as a fresh case excluding itself.
+                let others = existingCases.filter { !($0.id == previous.id && $0.workspaceID == previous.workspaceID) }
+                _ = try input.makeProcedure(in: workspace, existingCases: others, templates: Self.templates)
+            } else if let previous {
                 _ = try input.updating(previous, in: workspace, existingCases: existingCases,
                                        templates: Self.templates)
             } else {
@@ -54,6 +64,9 @@ struct CaseFormDraft: Equatable {
 
     static func issue(for error: Error) -> Issue {
         guard let error = error as? WorkspaceContractError else {
+            if let text = (error as? LocalizedError)?.errorDescription, !text.isEmpty {
+                return Issue(field: nil, message: text)
+            }
             return Issue(field: nil, message: "The case could not be saved. Your entries are still here.")
         }
         switch error {
@@ -82,6 +95,23 @@ struct CaseFormDraft: Equatable {
         default:
             return Issue(field: nil, message: "Workspace setup needs attention. Check Workspace settings.")
         }
+    }
+
+    /// Changes the site, keeping the entered wall-clock date and time (not the instant).
+    /// A time that does not exist in the new zone (DST gap) moves to the next valid time.
+    mutating func changeSite(from oldID: String, to newID: String, in workspace: WorkspaceConfiguration) {
+        func zone(_ id: String) -> TimeZone? {
+            workspace.sites.first { $0.id == id }?.timeZoneIdentifier.flatMap(TimeZone.init(identifier:))
+        }
+        guard let old = zone(oldID), let new = zone(newID), old != new else { return }
+        var oldCal = Calendar(identifier: .gregorian); oldCal.timeZone = old
+        var newCal = Calendar(identifier: .gregorian); newCal.timeZone = new
+        let c = oldCal.dateComponents([.year, .month, .day, .hour, .minute], from: input.scheduledAt)
+        guard let dayStart = newCal.date(from: DateComponents(year: c.year, month: c.month, day: c.day)),
+              let resolved = newCal.nextDate(after: dayStart.addingTimeInterval(-1),
+                                             matching: DateComponents(hour: c.hour, minute: c.minute),
+                                             matchingPolicy: .nextTime) else { return }
+        input.scheduledAt = resolved
     }
 
     /// Short label for durations, e.g. "1 h 30 min".
