@@ -248,6 +248,11 @@ enum SupportExchange {
                 guard current == nil || current == q.origin else { return rejected }
                 next.questions.append(q.brief)
             }
+            // Context is shared by origin: a later brief establishes a floor for every question in that run.
+            if let cached = next.liveContext[q.origin],
+               next.questions.contains(where: { $0.origin == q.origin && $0.snapshot.recordingRevision > cached.recordingRevision }) {
+                next.liveContext[q.origin] = nil
+            }
         } else {
             guard let index = indices.first, inbox.questions[index].origin == envelope.origin else { return rejected }
             let q = inbox.questions[index]
@@ -278,10 +283,12 @@ enum SupportExchange {
                       context.caseReference == q.snapshot.caseReference,
                       context.templateID == q.snapshot.templateID, context.templateVersion == q.snapshot.templateVersion,
                       context.lines.map(\.id) == q.snapshot.lines.map(\.id) else { return rejected }
+                let retainedSnapshots = inbox.questions.filter { $0.origin == q.origin }.map(\.snapshot)
+                guard retainedSnapshots.allSatisfy({
+                    context.recordingRevision > $0.recordingRevision || context == $0
+                }) else { return rejected }
                 if let previous = inbox.liveContext[q.origin] {
                     guard context.recordingRevision > previous.recordingRevision || context == previous else { return rejected }
-                } else {
-                    guard context.recordingRevision > q.snapshot.recordingRevision || context == q.snapshot else { return rejected }
                 }
                 next.liveContext[q.origin] = context
             case .receipt:

@@ -137,4 +137,47 @@ final class SupportExchangeTests: XCTestCase {
         XCTAssertFalse(SupportExchange.apply(conflict.replyEnvelope!, to: replay.inbox, current: nil).accepted)
     }
 
+    func testNewerQuestionPreventsDelayedContextFromRollingBackTheOrigin() throws {
+        let first = try SupportExchange.reply(question(), text: "Retained fictional reply", from: rep, at: time)
+        var revisionTwo = snapshot
+        revisionTwo.recordingRevision = 2
+        revisionTwo.acknowledgmentIDs = ["ack-at-two"]
+        let delayed = SupportEnvelope.context(revisionTwo, for: first)
+        let cached = SupportExchange.apply(delayed, to: SupportInbox(questions: [first]), current: nil)
+        XCTAssertTrue(cached.accepted)
+
+        var revisionFive = snapshot
+        revisionFive.recordingRevision = 5
+        revisionFive.acknowledgmentIDs = ["ack-at-five"]
+        let second = try SupportQuestion.make(id: "q2", workspaceID: "origin", caseID: "case", sessionID: "run",
+                                             text: "Later fictional question?", sender: actor, recipientContactID: "contact",
+                                             recipientName: "Fictional Rep", sentAt: time, snapshot: revisionFive)
+        let newer = SupportExchange.apply(.question(second), to: cached.inbox, current: nil)
+        XCTAssertTrue(newer.accepted)
+        XCTAssertEqual(newer.receiptForID, second.messageID)
+        XCTAssertNil(newer.inbox.liveContext[first.origin])
+        XCTAssertEqual(newer.inbox.questions[0], first)
+        XCTAssertEqual(newer.inbox.questions[1].snapshot.recordingRevision, 5)
+
+        // No cache is necessary for the newest retained brief to establish a revision floor.
+        let retained = SupportInbox(questions: [first, second])
+        for inbox in [retained, newer.inbox] {
+            let rejected = SupportExchange.apply(delayed, to: inbox, current: nil)
+            XCTAssertFalse(rejected.accepted)
+            XCTAssertNil(rejected.receiptForID)
+            XCTAssertEqual(rejected.inbox, inbox)
+        }
+        var revisionSix = revisionFive
+        revisionSix.recordingRevision = 6
+        let currentUpdate = SupportEnvelope.context(revisionSix, for: first)
+        let advanced = SupportExchange.apply(currentUpdate, to: newer.inbox, current: nil)
+        XCTAssertTrue(advanced.accepted)
+        XCTAssertEqual(advanced.receiptForID, currentUpdate.id)
+        XCTAssertEqual(advanced.inbox.liveContext[first.origin]?.recordingRevision, 6)
+        let duplicate = SupportExchange.apply(.question(second), to: advanced.inbox, current: nil)
+        XCTAssertTrue(duplicate.accepted)
+        XCTAssertEqual(duplicate.inbox, advanced.inbox)
+        XCTAssertEqual(advanced.inbox.questions[0].replyText, "Retained fictional reply")
+    }
+
 }
