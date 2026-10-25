@@ -6,6 +6,9 @@ struct PlannerView: View {
     @State private var selectedID: Procedure.ID?
     @State private var search = ""
     @State private var attentionOnly = false
+    @State private var showingNewCase = false
+    @State private var editingCase: Procedure?
+    @State private var actionError: String?
 
     private var recommendations: [CoverageMatcher.Recommendation] {
         model.cases.sorted { ($0.scheduledAt, $0.id) < ($1.scheduledAt, $1.id) }
@@ -42,6 +45,12 @@ struct PlannerView: View {
             .navigationSplitViewColumnWidth(min: 280, ideal: 340, max: 420)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
+                    if model.demoPost == .room {
+                        Button("New case", systemImage: "plus") { showingNewCase = true }
+                            .frame(minHeight: Northstar.Target.minimum).accessibilityIdentifier("planner-new-case")
+                    }
+                }
+                ToolbarItem(placement: .topBarTrailing) {
                     Menu {
                         Toggle("Coverage needs attention", isOn: $attentionOnly)
                         Button("Show all cases") { attentionOnly = false; search = "" }
@@ -72,6 +81,18 @@ struct PlannerView: View {
                 ContentUnavailableView("Select a case", systemImage: "calendar",
                     description: Text("Browse coverage and logistical options. Selecting a case does not change the active recording."))
                     .background(Northstar.Palette.bgRaised)
+            }
+        }
+        .sheet(isPresented: $showingNewCase) {
+            if let workspace = model.workspace {
+                CaseFormView(workspace: workspace, existingCases: model.cases) { input in
+                    let saved = try model.saveCase(input); selectedID = saved.id
+                }
+            }
+        }
+        .sheet(item: $editingCase) { procedure in
+            if let workspace = model.workspace {
+                CaseFormView(workspace: workspace, existingCases: model.cases, editing: procedure) { input in _ = try model.saveCase(input) }
             }
         }
         .tint(Northstar.Palette.ice)
@@ -123,6 +144,21 @@ struct PlannerView: View {
                     LabeledContent("Recording", value: isActive ? "Active on this device" : "Not active on this device")
                 }
                 .font(Northstar.Fonts.body)
+                if model.demoPost == .room {
+                    Button(isActive ? "Open Co-pilot" : model.session(for: procedure.id) == nil ? "Start recording" : "Resume recording") {
+                        do {
+                            _ = try model.startOrResume(caseID: procedure.id)
+                            model.selectedDestination = .coPilot
+                            actionError = nil
+                        } catch { actionError = error.localizedDescription }
+                    }
+                    .buttonStyle(NorthstarPrimaryButtonStyle(tone: .standard))
+                    .disabled(!FictionalCoordinationTemplate.template.supports(procedure))
+                    .accessibilityIdentifier("planner-start-recording")
+                    Button("Edit case") { editingCase = procedure }
+                        .buttonStyle(NorthstarSecondaryButtonStyle())
+                    if let actionError { NorthstarBanner(tone: .failure, title: "Recording not opened", message: actionError) }
+                }
                 Divider()
                 section("Coverage assessment") {
                     NorthstarStatusLabel("\(rec.risk.rawValue.capitalized) logistical risk", tone: riskTone(rec.risk))

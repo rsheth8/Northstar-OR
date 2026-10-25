@@ -1,5 +1,7 @@
 # Task board
 
+- [~] (Rahil / Codex) **Shared Wi-Fi support-session design:** owner selected extending the working local connection; document independent session joining, late-join recap, live thread and essential call controls. Documentation only on `sync/shared-session-design`; reserves `docs/superpowers/specs/2026-10-25-shared-support-session-design.md` and this row. Product implementation awaits design review. The owner reports the preceding real-device call works on the same Wi-Fi; this is user-reported evidence, not a new automated check.
+
 Claim a task by changing `[ ]` to `[~] (your name)`. Mark `[x]` when it's merged.
 One task per branch and PR. Lanes keep people and agents out of each other's files.
 
@@ -136,3 +138,9 @@ Owner-approved implementation following the native iPad concept; the shared shel
 - [x] (Amartya / Codex + Claude; merged PR #37, evidence in `docs/evidence/native-copilot/`) **Co-pilot native visual slice:** reserves `Features/CoPilot/CoPilotView.swift` and new `CoPilotCorrectionSheet.swift`, this claim and `docs/evidence/native-copilot/`. F09 layout plus F10 correction UI uses merged F05 commands; no session/domain edits or invented support requests.
 - [x] (Amartya / Codex + Claude; merged PR #36, evidence in `docs/evidence/native-support/`) **Remote Support native visual slice:** reserves `Features/RemoteSupport/RemoteSupportView.swift`, this claim and `docs/evidence/native-support/`. Live local context, unresolved-first brief and reachable draft; no immutable request, acceptance or question acknowledgment claim until F07/F12.
 - [x] (Amartya / Codex + Claude; merged PR #35, evidence in `docs/evidence/native-planner/`) **Planner native visual slice:** reserves only `Features/Planner/PlannerView.swift`, this claim and `docs/evidence/native-planner/`. Implements the approved list/detail styling against merged matcher/session APIs. No plan/request/create/start contracts are invented; F11/F27/F28 remain pending.
+
+- [~] (Rahil / Codex) **In-app call integration:** integrate Cursor’s WebRTC iPad/laptop call into the Focus Co-pilot and saved support envelope path. Reserves call service/view, RepPage, AppModel/RootView adapters, project.yml, call tests and evidence in isolated `sync/in-app-call-integrated`. Keep local; physical media proof remains separate.
+
+- [~] (Rahil / Codex) **Shared Wi-Fi session foundation:** implement plan task 1 on `sync/shared-session-design`, reserving `SharedSessionTransport.swift`, AppModel/SyncService integration, NearbyCallView, RemoteSupportView, RepPage server/browser files and focused relay test. No primary-checkout edits; generic chat/invitation/camera extensions remain separate follow-ups with Cursor handoff.
+
+- [~] (Rahil / Codex) Native Mac Catalyst rep + iPad shared session, call lifecycle and retained-message recovery. Reserves AppModel/SyncService, nearby transports/call engine, support/call views, PlannerView start/resume/form entry bridge, persisted reduced-support context adapter, RootView, project.yml and focused tests in the isolated sync/shared-session-foundation checkout. Primary dirty checkout preserved.

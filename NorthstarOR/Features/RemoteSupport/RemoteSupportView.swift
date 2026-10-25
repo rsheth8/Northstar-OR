@@ -1,217 +1,75 @@
 import SwiftUI
 
-/// Live local context until the immutable request/receipt contracts land.
 struct RemoteSupportView: View {
     @Environment(AppModel.self) private var model
-    @Environment(\.dynamicTypeSize) private var typeSize
-    @State private var drafts: [String: String] = [:]
-    @State private var senderID: String?
-    @State private var sendError: String?
-
-    private var senders: [DeviceRep] { model.reps.filter { $0.statedRole == .technicalRep } }
-    private var sender: DeviceRep? {
-        if let senderID { return senders.first { $0.id == senderID } }
-        return senders.first
+    @State private var selectedQuestionID: String?
+    private var visibleQuestions: [SupportQuestion] {
+        if model.demoPost == .rep, let origin = model.remoteSession?.origin { return model.questions.filter { $0.origin == origin } }
+        if model.demoPost == .room, let session = model.activeSession { return model.questions.filter { $0.sessionID == session.identity.sessionID } }
+        return model.questions
     }
-    private var draft: Binding<String> {
-        let id = model.activeSession?.identity.sessionID ?? ""
-        return Binding(get: { drafts[id, default: ""] }, set: { drafts[id] = $0 })
+    private var current: SupportQuestion? {
+        if let id = selectedQuestionID, let q = visibleQuestions.first(where: { $0.id == id }) { return q }
+        return visibleQuestions.last
     }
-
     var body: some View {
-        if let session = model.activeSession {
-            workspace(session)
-        } else {
-            NavigationStack {
-                ContentUnavailableView("No active case", systemImage: "headphones",
-                    description: Text("Start or resume a case in Planner."))
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(Northstar.Palette.bgRaised)
-                    .navigationTitle("Remote Support")
-                    .navigationBarTitleDisplayMode(.inline)
-            }
-        }
-    }
-
-    private func workspace(_ session: CoPilotSession) -> some View {
         NavigationStack {
-            GeometryReader { proxy in
-                if proxy.size.width >= 1000 && !typeSize.isAccessibilitySize {
-                    HStack(spacing: 0) {
-                        ScrollView { brief(session).padding(Northstar.Space.s6) }
-                            .frame(maxWidth: .infinity)
-                            .background(Northstar.Palette.bgRaised)
+            ScrollView {
+                VStack(alignment: .leading, spacing: Northstar.Space.s4) {
+                    NorthstarStatusLabel(model.linkState.label, tone: .info, systemImage: "ipad.landscape")
+                    Text("Messages stay with this case. Connect Northstar on the room iPad and the rep’s Mac to exchange updates.").font(Northstar.Fonts.supporting).foregroundStyle(Northstar.Palette.inkMuted)
+                    if model.demoPost == .room, let session = model.activeSession {
+                        Text("Current room record").font(Northstar.Fonts.title)
+                        Text(session.procedure.name).font(Northstar.Fonts.bodyStrong)
+                        Text(session.recordingSummary)
+                        Text(model.isSharingSession ? "Sharing this case with the laptop session. Calls are separate from the case connection." : "Choose Connect devices on both devices before calling.")
+                            .font(Northstar.Fonts.supporting)
+                    }
+                    if model.demoPost == .rep {
+                        Toggle("Spoken support alerts", isOn: Binding(get: { model.supportAlertsEnabled }, set: { model.supportAlertsEnabled = $0 }))
+                        if let alert = model.supportAlert { NorthstarBanner(tone: .attention, title: "Room update", message: alert) }
+                    }
+                    if model.demoPost == .rep, let shared = model.remoteSession {
+                        NativeSessionBrief(snapshot: shared, current: model.remoteSessionCurrent)
+                    }
+                    if !visibleQuestions.isEmpty {
+                        Picker("Saved requests", selection: Binding(get: { current?.id ?? "" }, set: { selectedQuestionID = $0 })) {
+                            ForEach(visibleQuestions) { q in Text("\(q.snapshot.caseReference) · \(q.sentAt.formatted(date: .omitted, time: .shortened))").tag(q.id) }
+                        }.frame(minHeight: Northstar.Target.minimum)
+                    }
+                    if let current { SupportBriefView(question: current).id(current.id) }
+                    else { ContentUnavailableView("No question from the team yet", systemImage: "headphones", description: Text(model.demoPost == .rep ? "The connected room must start or resume a recording in Planner. Its live recap appears here; a question is optional." : "Request support from the current Co-pilot item, including while an acknowledgment is pending.")) }
+                    if let sessionID = (model.demoPost == .rep ? model.remoteSession?.origin.sessionID : nil) ?? current?.sessionID ?? (model.demoPost == .room ? model.activeSession?.identity.sessionID : nil) {
                         Divider()
-                        VStack(spacing: 0) {
-                            // Keep the newest message in view when the keyboard shortens this pane.
-                            ScrollView { conversation(session).padding(Northstar.Space.s4) }
-                                .defaultScrollAnchor(.bottom)
-                            composer
-                        }
-                        .frame(width: 360)
-                        .background(Northstar.Palette.bgBase)
+                        SupportThreadView(entries: model.supportThread(sessionID: sessionID))
+                        SessionNoteComposer()
                     }
-                } else {
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: Northstar.Space.s6) {
-                            brief(session)
-                            Divider()
-                            conversation(session)
-                        }
-                        .padding(Northstar.Space.s6)
-                    }
-                    .safeAreaInset(edge: .bottom, spacing: 0) { composer }
-                }
-            }
-            .background(Northstar.Palette.bgRaised)
-            .foregroundStyle(Northstar.Palette.ink)
-            .navigationTitle("Remote Support")
-            .navigationBarTitleDisplayMode(.inline)
+                }.padding(Northstar.Space.s6).frame(maxWidth: 1000, alignment: .leading).frame(maxWidth: .infinity)
+            }.background(Northstar.Palette.bgRaised)
+            .navigationTitle("Remote Support").navigationBarTitleDisplayMode(.inline)
         }
     }
+}
 
-    private func brief(_ session: CoPilotSession) -> some View {
-        VStack(alignment: .leading, spacing: Northstar.Space.s6) {
-            VStack(alignment: .leading, spacing: Northstar.Space.s2) {
-                Text("Team question").font(Northstar.Fonts.label).foregroundStyle(Northstar.Palette.inkMuted)
-                Text("No team question recorded").font(Northstar.Fonts.title)
-                    .accessibilityAddTraits(.isHeader)
-                Text("This build shares the current recording on this device. Contextual requests and question acknowledgment are not available yet.")
-                    .font(Northstar.Fonts.body).foregroundStyle(Northstar.Palette.inkMuted)
-            }
-            Divider()
-            section("Current case context") {
-                Text(session.procedure.reference ?? session.procedure.id).font(Northstar.Fonts.display)
-                Text(session.procedure.name).font(Northstar.Fonts.body)
-                Text(model.hospital(session.procedure.hospitalID)?.name ?? "Site not recorded")
-                    .font(Northstar.Fonts.body).foregroundStyle(Northstar.Palette.inkMuted)
-                NorthstarStatusLabel("Live local context · Not a request snapshot", tone: .info, systemImage: "ipad.landscape")
-            }
-            Divider()
-            section("Unresolved items") {
-                let items = session.procedure.steps.filter { session.recordingState?.itemStatuses[$0.id] != .teamConfirmed }
-                if items.isEmpty { Text("No unresolved items recorded.").font(Northstar.Fonts.body) }
-                ForEach(items) { step in
-                    itemRow(step, status: session.recordingState?.itemStatuses[step.id] ?? .unrecorded)
-                }
-            }
-            Divider()
-            section("Recorded confirmations") {
-                let items = session.procedure.steps.filter { session.recordingState?.itemStatuses[$0.id] == .teamConfirmed }
-                if items.isEmpty { Text("No team confirmations recorded.").font(Northstar.Fonts.body).foregroundStyle(Northstar.Palette.inkMuted) }
-                ForEach(items) { step in itemRow(step, status: .teamConfirmed) }
-            }
-            Divider()
-            section("Support context") {
-                NorthstarStatusLabel(session.reducedSupport ? "Reduced-support context recorded" : "Standard support context recorded", tone: .neutral)
-                Text("A support context label is not a request, acceptance or connection.")
-                    .font(Northstar.Fonts.supporting).foregroundStyle(Northstar.Palette.inkMuted)
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    private func conversation(_ session: CoPilotSession) -> some View {
-        let messages = session.log.filter { $0.kind == .remoteMessage }
-        return section("Conversation") {
-            Text("Messages on this device").font(Northstar.Fonts.supporting).foregroundStyle(Northstar.Palette.inkMuted)
-            if messages.isEmpty {
-                Text("No local messages yet").font(Northstar.Fonts.body).foregroundStyle(Northstar.Palette.inkMuted)
-                    .padding(.vertical, Northstar.Space.s6)
-            }
-            ForEach(messages) { entry in
-                VStack(alignment: .leading, spacing: Northstar.Space.s2) {
-                    Text(entry.message).font(Northstar.Fonts.body).textSelection(.enabled)
-                    Text(entry.timestamp.formatted(date: .omitted, time: .shortened))
-                        .font(Northstar.Fonts.supporting).monospacedDigit().foregroundStyle(Northstar.Palette.inkMuted)
-                }
-                .padding(.vertical, Northstar.Space.s2)
-                Divider()
-            }
-        }
-    }
-
-    private var composer: some View {
+private struct NativeSessionBrief: View {
+    let snapshot: SharedSessionSnapshot
+    let current: Bool
+    var body: some View {
         VStack(alignment: .leading, spacing: Northstar.Space.s3) {
-            if let sendError {
-                Text(sendError).font(Northstar.Fonts.body).foregroundStyle(Northstar.Palette.alert)
-                    .accessibilityIdentifier("support-send-error")
+            Text(snapshot.context.caseName).font(Northstar.Fonts.title)
+            Text("\(snapshot.context.caseReference) · \(snapshot.context.siteName)")
+            NorthstarStatusLabel(current ? "Live room record" : "Disconnected · last saved copy", tone: current ? .info : .attention)
+            Text(snapshot.recordingSummary)
+            if !snapshot.saved { NorthstarBanner(tone: .attention, title: "Room has unsaved changes", message: "This update is not yet saved on the room device.") }
+            ForEach(snapshot.context.lines) { line in
+                Label("\(line.title) · \(line.status == .teamConfirmed ? "Team-confirmed" : line.status == .deferred ? "Deferred" : "Unrecorded")",
+                      systemImage: line.status == .teamConfirmed ? "checkmark.circle" : line.status == .deferred ? "exclamationmark.triangle" : "circle")
             }
-            Menu {
-                ForEach(senders) { rep in
-                    Button(rep.name) { senderID = rep.id }
-                }
-            } label: {
-                Label(sender.map { "Local sender: \($0.name)" } ?? "No technical rep configured", systemImage: "person.crop.circle")
-                    .font(Northstar.Fonts.supporting)
-                    .frame(minHeight: Northstar.Target.minimum)
+            DisclosureGroup("Recorded activity") {
+                ForEach(Array(snapshot.context.recentEvents.enumerated()), id: \.offset) { _, event in Text(event) }
             }
-            .disabled(senders.isEmpty)
-            TextField("Write a local technical-support message", text: draft, axis: .vertical)
-                .font(Northstar.Fonts.body)
-                .lineLimit(1...4)
-                .padding(Northstar.Space.s3)
-                .frame(minHeight: Northstar.Target.minimum)
-                .background(Northstar.Palette.bgRaised, in: RoundedRectangle(cornerRadius: Northstar.Radius.sm))
-                .overlay { RoundedRectangle(cornerRadius: Northstar.Radius.sm).strokeBorder(Northstar.Palette.indicator) }
-                .accessibilityIdentifier("support-draft")
-            ViewThatFits(in: .horizontal) {
-                HStack(spacing: Northstar.Space.s3) { composerActions }
-                VStack(alignment: .leading, spacing: Northstar.Space.s3) { composerActions }
-            }
+            Text("Checklist changes are recorded by the room team. Messages and calls leave deferred items unresolved.")
+                .font(Northstar.Fonts.supporting)
         }
-        .padding(Northstar.Space.s4)
-        .background(Northstar.Palette.bgBase)
-    }
-
-    @ViewBuilder private var composerActions: some View {
-        Menu("Suggested text") {
-            ForEach(FictionalCoordinationTemplate.technicalSupportReplies, id: \.self) { prompt in
-                Button(prompt) { draft.wrappedValue = prompt }
-            }
-        }
-        .buttonStyle(NorthstarSecondaryButtonStyle())
-        Button("Send locally", action: send)
-            .buttonStyle(NorthstarPrimaryButtonStyle(tone: .standard))
-            .disabled(sender == nil || draft.wrappedValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-            .accessibilityIdentifier("support-send")
-    }
-
-    private func send() {
-        guard let session = model.activeSession else { return }
-        let text = draft.wrappedValue.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard let sender, !text.isEmpty else { return }
-        let previousIDs = Set(session.log.map(\.id))
-        model.sync.send(.remoteMessage(procedureID: session.procedure.id, from: sender.name, text: text))
-        // SyncService currently returns no receipt. Confirm only the observable
-        // synchronous local effect; retain the draft if routing did not occur.
-        if session.log.contains(where: { !previousIDs.contains($0.id) && $0.kind == .remoteMessage }) {
-            drafts[session.identity.sessionID] = ""
-            sendError = nil
-        } else {
-            sendError = "Message not added on this device. Your draft is kept; try again."
-        }
-    }
-
-    private func itemRow(_ step: ProcedureStep, status: RecordedItemStatus) -> some View {
-        HStack(alignment: .top, spacing: Northstar.Space.s3) {
-            Image(systemName: status == .teamConfirmed ? "checkmark.circle.fill" : status == .deferred ? "exclamationmark.triangle.fill" : "circle")
-                .foregroundStyle(status == .teamConfirmed ? Northstar.Palette.aurora : status == .deferred ? Northstar.Palette.amber : Northstar.Palette.indicator)
-                .accessibilityHidden(true)
-            VStack(alignment: .leading, spacing: Northstar.Space.s1) {
-                Text(step.title).font(Northstar.Fonts.body)
-                Text(status == .teamConfirmed ? "Team-confirmed" : status == .deferred ? "Deferred" : "Unrecorded")
-                    .font(Northstar.Fonts.supporting).foregroundStyle(Northstar.Palette.inkMuted)
-            }
-        }
-        .accessibilityElement(children: .combine)
-    }
-
-    private func section<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
-        VStack(alignment: .leading, spacing: Northstar.Space.s3) {
-            Text(title).font(Northstar.Fonts.bodyStrong).accessibilityAddTraits(.isHeader)
-            content()
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }

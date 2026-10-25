@@ -15,6 +15,7 @@ struct NorthstarORApp: App {
         .onChange(of: scenePhase) { _, phase in
             // Coalesced draft saves are written before the app leaves the foreground.
             if phase != .active { model.flushPendingSave() }
+            if phase == .background { model.stopNearbyLink() }
         }
     }
 }

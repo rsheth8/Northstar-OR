@@ -93,7 +93,7 @@ The detail order is: case reference and template/procedure label with Edit case;
 
 ### Co-pilot and recipient layout
 
-At wide sizes Co-pilot uses a compact workflow rail, dominant current-item area and secondary activity inspector. Move/collapse activity first as space narrows; preserve the 360 pt current-work minimum above. Show item title/context, recorded state, pending acknowledgment, permitted recording/correction actions and Request support. Replace the screen-wide amber border with a persistent warning beside the affected item. Acknowledgment leaves the pinned item deferred; support, read-only review and permitted correction remain available.
+Owner-selected Focus layout: at wide sizes Co-pilot uses a horizontal workflow strip above the dominant current-item area and a persistent contextual support panel on the right. Recorded activity sits below the current work. Stack support below current work at narrow or enlarged-text sizes; preserve the 360 pt current-work minimum above. The full workflow remains available for review. Show item title/context, recorded state, pending acknowledgment, permitted recording/correction actions and Request support. Use a persistent warning beside the affected item. Acknowledgment leaves the pinned item deferred; support, read-only review and permitted correction remain available.
 
 Remote Support places question acknowledgment beside the exact question, sender and time. Conversation and reply entry sit alongside or below the request brief; the draft and Send remain above the keyboard. Request acceptance, question acknowledgment, delivery and connection each retain their own supported state.
 

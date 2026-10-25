@@ -14,6 +14,9 @@ protocol SyncService: AnyObject {
     func send(_ event: SyncEvent)
     /// Returns a token; keep it alive for as long as you want events.
     func subscribe(_ handler: @escaping (SyncEvent) -> Void) -> SyncSubscription
+    @MainActor var nearby: NearbyTransport { get }
+    @MainActor func installNearby(_ transport: NearbyTransport)
+    @MainActor func sendSupport(_ envelope: SupportEnvelope) throws
 }
 
 final class SyncSubscription {
@@ -25,6 +28,23 @@ final class SyncSubscription {
 /// In-process implementation for previews, tests, and single-device demos.
 final class LocalSyncService: SyncService {
     private var handlers: [UUID: (SyncEvent) -> Void] = [:]
+    @MainActor private var transport: NearbyTransport?
+    init() {}
+    @MainActor init(nearby: NearbyTransport) { transport = nearby }
+    @MainActor var nearby: NearbyTransport {
+        if let transport { return transport }
+        let idle = IdleNearbyTransport()
+        transport = idle
+        return idle
+    }
+    @MainActor func installNearby(_ transport: NearbyTransport) {
+        self.transport?.onEnvelope = nil
+        self.transport?.onLinkState = nil
+        self.transport?.onDiscoveryChange = nil
+        self.transport?.stop()
+        self.transport = transport
+    }
+    @MainActor func sendSupport(_ envelope: SupportEnvelope) throws { try nearby.send(envelope) }
 
     func send(_ event: SyncEvent) {
         for handler in handlers.values { handler(event) }
