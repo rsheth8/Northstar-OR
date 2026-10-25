@@ -1,5 +1,7 @@
 # Task board
 
+- [~] (Rahil / Codex) **Product expansion plan:** inventory current features and plan UX completion, richer Planner coverage/maps/weather/reports, guarded voice control and later assistance. Documentation only on `pitch/product-expansion-plan`; reserves `docs/superpowers/specs/2026-10-25-product-expansion-design.md`, `docs/superpowers/plans/2026-10-25-product-expansion.md`, and this row. No implementation tasks claimed.
+
 - [~] (Rahil / Codex) **Shared Wi-Fi support-session design:** owner selected extending the working local connection; document independent session joining, late-join recap, live thread and essential call controls. Documentation only on `sync/shared-session-design`; reserves `docs/superpowers/specs/2026-10-25-shared-support-session-design.md` and this row. Product implementation awaits design review. The owner reports the preceding real-device call works on the same Wi-Fi; this is user-reported evidence, not a new automated check.
 
 Claim a task by changing `[ ]` to `[~] (your name)`. Mark `[x]` when it's merged.
