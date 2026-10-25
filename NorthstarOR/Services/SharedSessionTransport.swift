@@ -1,7 +1,7 @@
 import Foundation
 
 /// Read-only projection of the room record; this never grants recording authority.
-struct SharedSessionSnapshot: Codable {
+struct SharedSessionSnapshot: Codable, Hashable {
     let origin: SupportOrigin
     let context: SupportContextSnapshot
     let recordingSummary: String
@@ -45,6 +45,7 @@ private struct SharedSessionFrame: Codable {
 /// Same-Wi-Fi data channel, independent of the WebRTC microphone/camera lifetime.
 @MainActor
 final class SharedSessionTransport: NearbyTransport {
+    var supportsSession: Bool { true }
     private(set) var linkState: NearbyLinkState = .idle
     private(set) var errorMessage: String?
     var onEnvelope: ((SupportEnvelope) -> Void)?

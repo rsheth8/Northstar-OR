@@ -13,7 +13,7 @@ struct NearbyCallCameraPreview: UIViewRepresentable {
         return view
     }
     func updateUIView(_ view: RTCMTLVideoView, context: Context) {
-        context.coordinator.attach(call.localVideoTrack, to: view)
+        context.coordinator.attach(call.remoteVideoTrack ?? call.localVideoTrack, to: view)
     }
     static func dismantleUIView(_ view: RTCMTLVideoView, coordinator: Coordinator) {
         coordinator.attach(nil, to: view)

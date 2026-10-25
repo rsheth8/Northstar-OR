@@ -17,6 +17,10 @@ final class MultipeerNearbyTransport: NSObject, NearbyTransport {
     private(set) var peers: [NearbyPeer] = []
     private(set) var invitation: NearbyPeer?
     private(set) var errorMessage: String?
+    var supportsSession: Bool { true }
+    var onSnapshot: ((SharedSessionSnapshot) -> Void)?
+    var onInvitation: ((CallInvitation) -> Void)?
+    var onCallSignal: ((NativeCallSignal) -> Void)?
     var onEnvelope: ((SupportEnvelope) -> Void)?
     var onLinkState: ((NearbyLinkState) -> Void)?
     var onDiscoveryChange: (() -> Void)?
@@ -29,7 +33,7 @@ final class MultipeerNearbyTransport: NSObject, NearbyTransport {
         self.session = session; session.delegate = self
         let browser = MCNearbyServiceBrowser(peer: peer, serviceType: Self.service)
         let advertiser = MCNearbyServiceAdvertiser(peer: peer,
-            discoveryInfo: ["role": role.rawValue, "version": "1"], serviceType: Self.service)
+            discoveryInfo: ["role": role.rawValue, "version": "2"], serviceType: Self.service)
         self.browser = browser; self.advertiser = advertiser
         browser.delegate = self; advertiser.delegate = self
         update(.looking); browser.startBrowsingForPeers(); advertiser.startAdvertisingPeer()
@@ -58,9 +62,13 @@ final class MultipeerNearbyTransport: NSObject, NearbyTransport {
         } else { callback?(false, nil) }
         invitation = nil; onDiscoveryChange?()
     }
-    func send(_ envelope: SupportEnvelope) throws {
+    func send(_ envelope: SupportEnvelope) throws { try sendFrame(.init(envelope: envelope)) }
+    func publish(_ snapshot: SharedSessionSnapshot) throws { try sendFrame(.init(snapshot: snapshot)) }
+    func sendInvitation(_ invitation: CallInvitation) throws { try sendFrame(.init(invitation: invitation)) }
+    func sendCallSignal(_ signal: NativeCallSignal) throws { try sendFrame(.init(signal: signal)) }
+    private func sendFrame(_ frame: NearbySessionFrame) throws {
         guard let session, let selected, session.connectedPeers == [selected] else { throw NearbyTransportError.notConnected }
-        let data = try JSONEncoder().encode(envelope)
+        let data = try JSONEncoder().encode(frame)
         guard data.count <= 512_000 else { throw NearbyTransportError.notConnected }
         try session.send(data, toPeers: [selected], with: .reliable)
     }
@@ -73,7 +81,7 @@ final class MultipeerNearbyTransport: NSObject, NearbyTransport {
 extension MultipeerNearbyTransport: MCNearbyServiceBrowserDelegate {
     nonisolated func browser(_ browser: MCNearbyServiceBrowser, foundPeer peerID: MCPeerID, withDiscoveryInfo info: [String: String]?) {
         Task { @MainActor [weak self] in
-            guard let self, self.browser === browser, info?["version"] == "1",
+            guard let self, self.browser === browser, info?["version"] == "2",
                   let otherRole = info?["role"], otherRole != self.role.rawValue,
                   DemoPost(rawValue: otherRole) != nil else { return }
             self.discovered[peerID.displayName] = peerID
@@ -129,11 +137,14 @@ extension MultipeerNearbyTransport: MCSessionDelegate {
         }
     }
     nonisolated func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
-        guard data.count <= 512_000, let envelope = try? JSONDecoder().decode(SupportEnvelope.self, from: data) else { return }
+        guard data.count <= 512_000, let frame = try? JSONDecoder().decode(NearbySessionFrame.self, from: data) else { return }
         Task { @MainActor [weak self] in
             guard let self, self.session === session, self.selected == peerID,
                   session.connectedPeers.contains(peerID) else { return }
-            self.onEnvelope?(envelope)
+            if let value = frame.snapshot { self.onSnapshot?(value) }
+            if let value = frame.envelope { self.onEnvelope?(value) }
+            if let value = frame.invitation { self.onInvitation?(value) }
+            if let value = frame.signal { self.onCallSignal?(value) }
         }
     }
     nonisolated func session(_ session: MCSession, didReceive stream: InputStream, withName streamName: String, fromPeer peerID: MCPeerID) { stream.close() }

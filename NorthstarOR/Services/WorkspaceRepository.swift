@@ -39,6 +39,7 @@ struct WorkspaceSnapshot: Hashable, Codable {
     var supportQuestions: [SupportQuestion] = []
     /// Plain session messages. Questions stay in `supportQuestions`.
     var sessionNotes: [SessionNote] = []
+    var remoteSession: SharedSessionSnapshot? = nil
 
     static let empty = WorkspaceSnapshot()
 
@@ -123,7 +124,7 @@ struct WorkspaceSnapshot: Hashable, Codable {
 
 extension WorkspaceSnapshot {
     private enum CodingKeys: String, CodingKey {
-        case formatVersion, workspace, forecasts, cases, sessions, drafts, activeCaseID, supportQuestions, sessionNotes
+        case formatVersion, workspace, forecasts, cases, sessions, drafts, activeCaseID, supportQuestions, sessionNotes, remoteSession
     }
 
     /// Synthesized decoding ignores property defaults, so additive fields must be decoded
@@ -139,6 +140,7 @@ extension WorkspaceSnapshot {
         activeCaseID = try values.decodeIfPresent(String.self, forKey: .activeCaseID)
         supportQuestions = try values.decodeIfPresent([SupportQuestion].self, forKey: .supportQuestions) ?? []
         sessionNotes = try values.decodeIfPresent([SessionNote].self, forKey: .sessionNotes) ?? []
+        remoteSession = try values.decodeIfPresent(SharedSessionSnapshot.self, forKey: .remoteSession)
     }
 }
 

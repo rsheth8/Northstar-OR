@@ -41,6 +41,7 @@
         <textarea id="session-note"></textarea>
       </label>
       <button id="session-note-send" type="button">Send message</button>
+      <button id="session-note-retry" class="secondary" type="button" disabled>Retry pending messages</button>
       <p id="session-note-status" class="note" role="status"></p>
     </section>
     <h2>Optional call</h2>
@@ -51,7 +52,7 @@
     <button id="invitation-cancel" class="secondary" type="button" hidden>Cancel request</button>
     <p class="note">Joining the session does not use the microphone or camera. A call starts only after someone accepts a request.</p>
     <p id="status" class="status" role="status">Join to allow your microphone</p>
-    <button id="join" type="button">Join call</button>
+    <button id="join" type="button" hidden>Join call</button>
     <button id="end" class="secondary" type="button" disabled>End call</button>
     <button id="mute" class="secondary" type="button" disabled aria-pressed="false">Mute microphone</button>
     <p id="mic-status" role="status">Laptop microphone: off</p>

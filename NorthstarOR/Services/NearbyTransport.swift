@@ -27,6 +27,13 @@ protocol NearbyTransport: AnyObject {
     var onEnvelope: ((SupportEnvelope) -> Void)? { get set }
     var onLinkState: ((NearbyLinkState) -> Void)? { get set }
     var onDiscoveryChange: (() -> Void)? { get set }
+    var supportsSession: Bool { get }
+    var onSnapshot: ((SharedSessionSnapshot) -> Void)? { get set }
+    var onInvitation: ((CallInvitation) -> Void)? { get set }
+    var onCallSignal: ((NativeCallSignal) -> Void)? { get set }
+    func publish(_ snapshot: SharedSessionSnapshot) throws
+    func sendInvitation(_ invitation: CallInvitation) throws
+    func sendCallSignal(_ signal: NativeCallSignal) throws
     func start()
     func stop()
     func send(_ envelope: SupportEnvelope) throws
@@ -35,6 +42,13 @@ protocol NearbyTransport: AnyObject {
 }
 
 extension NearbyTransport {
+    var supportsSession: Bool { false }
+    var onSnapshot: ((SharedSessionSnapshot) -> Void)? { get { nil } set {} }
+    var onInvitation: ((CallInvitation) -> Void)? { get { nil } set {} }
+    var onCallSignal: ((NativeCallSignal) -> Void)? { get { nil } set {} }
+    func publish(_ snapshot: SharedSessionSnapshot) throws { throw NearbyTransportError.notConnected }
+    func sendInvitation(_ invitation: CallInvitation) throws { throw NearbyTransportError.notConnected }
+    func sendCallSignal(_ signal: NativeCallSignal) throws { throw NearbyTransportError.notConnected }
     var peers: [NearbyPeer] { [] }
     var invitation: NearbyPeer? { nil }
     var errorMessage: String? { nil }
@@ -62,4 +76,17 @@ extension SupportDelivery {
         case .failed: "Not sent. This message is kept."
         }
     }
+}
+
+struct NativeCallSignal: Codable {
+    let callID: String
+    let origin: SupportOrigin
+    let payload: String
+}
+
+struct NearbySessionFrame: Codable {
+    var snapshot: SharedSessionSnapshot? = nil
+    var envelope: SupportEnvelope? = nil
+    var invitation: CallInvitation? = nil
+    var signal: NativeCallSignal? = nil
 }

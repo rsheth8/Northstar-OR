@@ -108,6 +108,9 @@ $('mute').onclick = () => {
 }
 $('play').onclick = () => roomAudio.play().then(() => { $('play').hidden = true }).catch(() => { status.textContent = 'Room audio could not play. Check the laptop output.' })
 async function join() {
+  if (!window.northstarSession?.canStartMedia?.()) {
+    status.textContent = 'Accept a current case call request before opening the microphone.'; return
+  }
   end(); const generation = run
   if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
     status.textContent = 'Open http://localhost:8080 on the server laptop to allow the microphone.'; return
@@ -115,7 +118,7 @@ async function join() {
   $('join').disabled = true; status.textContent = 'Allow microphone access'
   try {
     const media = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true }, video: false })
-    if (run !== generation) { media.getTracks().forEach(track => track.stop()); return }
+    if (run !== generation || !window.northstarSession?.canStartMedia?.()) { media.getTracks().forEach(track => track.stop()); return }
     stream = media
     $('mute').disabled = false
     $('mic-status').textContent = 'Laptop microphone: on for this call'

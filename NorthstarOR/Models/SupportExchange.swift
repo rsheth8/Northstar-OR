@@ -411,3 +411,12 @@ private extension String {
 private extension LocalParticipant {
     var supportValid: Bool { !id.supportBlank && !workspaceID.supportBlank && !displayName.supportBlank }
 }
+
+extension SupportExchange {
+    static func mergingSnapshot(_ room: SupportQuestion, local: SupportQuestion) -> SupportQuestion {
+        var result = room
+        result.acknowledgement = local.acknowledgement ?? room.acknowledgement
+        result.reply = local.reply ?? room.reply
+        return result
+    }
+}

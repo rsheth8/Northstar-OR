@@ -22,7 +22,7 @@ Read [the product brief](docs/PRODUCT.md) for the agreed experience, boundaries,
 
 [The presentation delivery plan](docs/DEMO_READINESS.md) narrows that backlog to the must-work demonstration, a timed script, alternate-path tests, rehearsal evidence, fallback and submission checks. Implementation starts with the fictional fixture and shared state contracts; presentation drafting starts before final integration.
 
-**Revised product target:** a configurable fictional workspace with editable support contacts, normal case creation, explicit start/resume and retained records/drafts. [The product foundation](docs/PRODUCT_FOUNDATION.md) defines those core capabilities; optional samples use the same workflows. The owner-confirmed presentation is **five minutes**, including setup and repeatability proof. [The institutional interface study](docs/DESIGN_REFERENCES.md) explains the worklist/context/task direction using public medical-software references. These setup/storage features are planned, not implemented by this documentation change.
+**Revised product target:** a configurable fictional workspace with editable support contacts, normal case creation, explicit start/resume and retained records/drafts. [The product foundation](docs/PRODUCT_FOUNDATION.md) defines those core capabilities; optional samples use the same workflows. The owner-confirmed presentation is **five minutes**, including setup and repeatability proof. [The institutional interface study](docs/DESIGN_REFERENCES.md) explains the worklist/context/task direction using public medical-software references. Setup, contacts, case forms and local storage now exist in this integrated candidate; see the feature audit below for verification and remaining gaps.
 
 **Core journey:** coverage disruption → a human accepts support → the team records progress → a team member requests help → the expert receives context → the team reviews the session record.
 
@@ -32,21 +32,18 @@ The approved design uses neutral typography, flat controls, quiet navy surfaces,
 
 ## What works today
 
-This repository contains a starter app, not the full experience described above.
+The current local candidate supports native Northstar on the room iPad and rep Mac (Mac Catalyst). [The native demo guide and feature audit](docs/NATIVE_DEMO_STATUS.md) distinguishes implemented, verified and unfinished features.
 
-| Capability | Current implementation | Next intended behavior |
+| Capability | Current implementation | Remaining limit |
 | --- | --- | --- |
-| Planner | Fictional forecasts, rule-based coverage options, reasons, and a reduced-support flag | One explicit named-rep or reschedule plan, visible backups, and actual recipient acceptance |
-| Co-pilot | Touch checklist, skip acknowledgment, spoken skip alert, timestamped in-memory log | Connected voice controls, deferred/unrecorded states, corrections, and prominent support messages |
-| Voice input | Command parser and recognition service exist; the view does not use them | Explicit complete / skip / confirm commands with listening status and touch fallback |
-| Remote support | Context package and text prompts between tabs in one app instance | Requests at any time, recipient acknowledgment, and communication across devices |
-| Sync | `LocalSyncService` distributes events within one process | Separate-device transport with honest delivery/connection status |
-| Camera / computer vision | Not implemented | Narrow observations of fictional labels or training materials, shown for human confirmation |
-| Conversational AI | Not implemented; spoken alerts use text-to-speech | Session-grounded questions and reviewable handoff drafts |
-| Setup and case management | Fixed SampleData initialization; no setup or new-case form | Blank workspace/settings, contact directory, validated new/edit case and isolated start/resume |
-| Session record | In-memory log; no durable export | Core versioned local workspace/case/session/draft storage and review; export separately scoped |
-
-Known scaffold gaps: the ICD generator-change sample reuses pacemaker implant steps; some sample copy sounds like clinical instruction; the completion screen says "Procedure complete" although it only tracks checklist progress. These are explicit follow-up tasks, not validated procedure workflows.
+| Workspace and cases | Blank/sample setup, editable settings/contacts, validated new/edit case, explicit start/resume, local persistence | Fictional data only; physical full-journey rehearsal remains required |
+| Planner | Rule-based logistical options/reasons and reduced-support context | Named-rep plan requests/acceptance/rescheduling are not implemented |
+| Co-pilot | Explicit confirmation/defer/acknowledgment/correction and retained recording history | Touch is the working input; voice commands remain unwired |
+| Native Remote Support | Same-Wi-Fi paired Mac/iPad case recap, live progress, contextual questions, acknowledgment/reply and case messages | Physical delivery proof is recorded separately; no internet or closed-app notifications |
+| Call | Native invitation/acceptance, two-way audio, room-only video, mute/end and room camera off/on/flip | Builds pass; native-to-native media requires physical verification |
+| Voice alerts | Short spoken recording alerts; optional rep alerts outside calls | Not conversational AI or hands-free commands |
+| Camera interpretation / AI | Not implemented | Sharing video and displaying recorded recap do not interpret images or generate AI answers |
+| Session records | Versioned local workspace/case/session/draft/message persistence | No institutional export, authentication or clinical validation |
 
 ## Run it
 
@@ -88,15 +85,15 @@ docs/               PRODUCT.md (scope), DESIGN.md (UI/UX rules), IMPLEMENTATION_
 
 ## In-app rep call
 
-The local integrated call uses the laptop rep page and the same retained support exchange as Co-pilot. Setup and limits: [RepPage instructions](RepPage/README.md). Simulator/browser evidence is in [call integration](docs/evidence/nearby-support/CALL_INTEGRATION.md); physical camera/audio proof is still required.
+The demo uses **Northstar on both devices**: iPad Room and Mac Catalyst Rep, paired through Connect devices. Follow [native demo setup and evidence](docs/NATIVE_DEMO_STATUS.md). `RepPage/` remains an experimental browser harness and is not the native demo station.
 
 ## Tools, libraries, and AI credits
 
 Required by the hackathon rules. Keep this list up to date.
 
 - Swift, SwiftUI, Observation, AVFoundation (text-to-speech), Speech (on-device recognition), MapKit
-- Apple Multipeer Connectivity for the experimental, explicitly paired nearby two-iPad support adapter. Physical-device proof remains separately recorded in docs/evidence/nearby-support/.
-- [WebRTC](https://webrtc.googlesource.com/src), BSD-3-Clause, via [stasel/WebRTC](https://github.com/stasel/WebRTC) 155.0.0. Supplies call audio processing, Opus and video codecs. Connection flow inspired by [stasel/WebRTC-iOS](https://github.com/stasel/WebRTC-iOS), Apache-2.0. Browser RTCPeerConnection and Node.js built-in HTTP/crypto serve the laptop rep station; no paid call provider.
+- Apple Multipeer Connectivity for encrypted, explicitly paired native iPad/Mac session snapshots, support envelopes and WebRTC signaling; Apple Mac Catalyst runs the shared SwiftUI app on Mac. Physical-device proof remains separately recorded in docs/evidence/nearby-support/.
+- [WebRTC](https://webrtc.googlesource.com/src), BSD-3-Clause, via [stasel/WebRTC](https://github.com/stasel/WebRTC) 155.0.0. Supplies call audio processing, Opus and video codecs. Connection flow inspired by [stasel/WebRTC-iOS](https://github.com/stasel/WebRTC-iOS), Apache-2.0. The native iPad/Mac call uses the same framework through Mac Catalyst. Browser RTCPeerConnection and Node.js built-in HTTP/crypto remain an experimental harness; no paid call provider.
 - Apple Foundation URLSessionWebSocketTask, browser WebSocket and sessionStorage power the separate same-Wi-Fi shared-session feed and retained laptop support exchange; no new provider or dependency.
 - XcodeGen for project generation
 - GitHub Actions with `actions/checkout` and `actions/upload-artifact` for CI; Dependabot for action updates

@@ -31,15 +31,15 @@ struct RootView: View {
                         workspaceName: model.workspace?.name,
                         onOpenSettings: model.workspace == nil ? nil : { showingSettings = true })
                     HStack {
-                        Picker("This iPad", selection: $model.demoPost) {
+                        Picker("This device", selection: $model.demoPost) {
                             Text("Room").tag(DemoPost.room); Text("Rep").tag(DemoPost.rep)
                         }.pickerStyle(.segmented).frame(maxWidth: 240).accessibilityIdentifier("nearby-role")
                         Spacer()
-                        if model.demoPost == .room {
-                            Button(model.nearbyCall?.status == "In call" ? "Call controls" : "Call rep") { showCall = true }
+                        if model.demoPost == .room || model.remoteSession != nil {
+                            Button(model.nearbyCall?.status == "In call" ? "Call controls" : "Session and call") { showCall = true }
                                 .frame(minHeight: Northstar.Target.minimum).accessibilityIdentifier("open-call")
                         }
-                        Button("Nearby iPad") { showNearby = true }.frame(minHeight: Northstar.Target.minimum)
+                        Button("Connect devices") { showNearby = true }.frame(minHeight: Northstar.Target.minimum)
                     }.padding(.horizontal, Northstar.Space.s6)
                     Text("Fictional coordination record. Support links nearby demo devices. This app does not decide whether a procedure proceeds.")
                         .font(Northstar.Fonts.supporting).padding(.horizontal, Northstar.Space.s6)
@@ -51,7 +51,7 @@ struct RootView: View {
                         }
                     }
                     TabView(selection: $model.selectedDestination) {
-                        CoPilotView()
+                        Group { if model.demoPost == .room { CoPilotView() } else { RemoteSupportView() } }
                             .tabItem { Label("Co-pilot", systemImage: "list.bullet.rectangle") }
                             .tag(AppModel.Destination.coPilot)
                         PlannerView()
@@ -61,6 +61,12 @@ struct RootView: View {
                             .tabItem { Label("Remote Support", systemImage: "headphones") }
                             .tag(AppModel.Destination.remoteSupport)
                     }
+                }
+                .onChange(of: model.callInvitation?.id) { _, _ in
+                    if model.callInvitation?.state == .requested, model.callInvitation?.from.rawValue != model.demoPost.rawValue { showCall = true }
+                }
+                .onChange(of: model.demoPost) { _, role in
+                    model.selectedDestination = role == .rep ? .remoteSupport : .coPilot
                 }
                 .sheet(isPresented: $showCall) { NearbyCallView() }
                 .sheet(isPresented: $showNearby) { NearbyLinkSheet() }

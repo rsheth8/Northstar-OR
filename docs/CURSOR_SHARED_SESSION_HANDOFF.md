@@ -67,3 +67,11 @@ Physical walkthrough on Rahil's iPad and the laptop, on the same Wi-Fi. This has
 - Generated project/local signing is not committed. No push or merge performed. Locate the implementation commit with `git log -1` (this handoff is included in it).
 
 Suggested Cursor prompt: Read this handoff, the approved design and implementation plan. Work in the integrated checkout and preserve the dirty primary checkout. First verify the independent session on the real iPad/laptop, then implement durable multi-message chat, invitations and camera off/on/front-back switching. Keep focused checks and local commits; do not claim full hands-free voice or push notifications.
+
+## Superseding native demo continuation
+
+The owner now requires Northstar itself on BOTH devices. See `docs/NATIVE_DEMO_STATUS.md`; it supersedes browser setup as the demo path. Native Mac Catalyst support is enabled in project.yml. Multipeer v2 carries full snapshots, support envelopes, invitations and scoped WebRTC signaling; no Node/browser is needed. The native engine supports room/rep roles, incoming video and camera lifecycle guards. Rep projection is persisted with backward-compatible decoding, pending messages survive snapshots/reconnects, and accepted calls do not replace the data connection.
+
+A physical walkthrough exposed an additional core gap: sample setup had no active recording and Planner lacked start/resume/form entry controls. These are now connected, and starting a case publishes the first recap. Normal-launch UI regression passes. Case selection is scoped to the connected room. Save retry finalizes withheld rep snapshots/receipts. Camera-off hides the frozen remote frame.
+
+Current native launch products are in the usual DerivedData `Build/Products/Debug-maccatalyst/NorthstarOR.app` and `Debug-iphoneos/NorthstarOR.app`; signed builds passed. The owner is actively checking devices. Record their actual results; do not claim native media works solely from compilation or earlier browser-call confirmation. Feature audit explicitly excludes unwired voice, AI/vision, named-rep Planner acceptance, internet/push/background calls and export. Continue in this integrated checkout, preserve the primary dirty checkout, and do not push/merge without authorization.

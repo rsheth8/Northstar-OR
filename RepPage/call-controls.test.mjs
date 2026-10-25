@@ -25,7 +25,7 @@ test('laptop mute changes its outgoing track and video cannot replace room audio
   }
   class Socket { static OPEN = 1; close() {} }
   const context = { document: { getElementById: node, createElement: () => ({}) },
-    window: { isSecureContext: true, addEventListener() {} },
+    window: { isSecureContext: true, addEventListener() {}, northstarSession: { canStartMedia: () => true, ready: () => false } },
     navigator: { mediaDevices: { getUserMedia: async () => new Stream([microphone]) } },
     sessionStorage: { getItem: () => null, setItem() {} }, location: { host: 'localhost:8080' },
     MediaStream: Stream, RTCPeerConnection: Peer, WebSocket: Socket,

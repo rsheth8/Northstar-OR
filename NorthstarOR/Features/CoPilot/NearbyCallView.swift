@@ -3,7 +3,6 @@ import SwiftUI
 /// Controls only. AppModel selects the call transport through SyncService.
 struct NearbyCallView: View {
     @Environment(AppModel.self) private var model
-    @AppStorage("northstar-rep-signaling-url") private var server = "ws://"
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -11,37 +10,20 @@ struct NearbyCallView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: Northstar.Space.s4) {
                     Text("Rep session and call").font(Northstar.Fonts.title)
-                    Text("Two-way audio and the room camera connect to the Northstar rep page on your laptop. Use fictional content only; media is not saved.")
+                    Text("Connect the room iPad and rep’s Mac running Northstar on the same Wi-Fi. Use headphones for calls. Fictional content only; media is not saved.")
                         .font(Northstar.Fonts.body)
+                    NorthstarStatusLabel(model.linkState.label, tone: .info)
                     if let call = model.nearbyCall { CallStatusControls(call: call, end: model.endRepCall) }
-                    Text("Laptop server").font(Northstar.Fonts.bodyStrong)
-                    TextField("ws://192.168.1.20:8080", text: $server)
-                        .textInputAutocapitalization(.never).autocorrectionDisabled()
-                        .keyboardType(.URL).textFieldStyle(.roundedBorder)
-                        .frame(minHeight: Northstar.Target.minimum)
-                        .accessibilityLabel("Signaling server").accessibilityIdentifier("call-signaling-url")
-                    Text("On the same Wi-Fi, open http://localhost:8080 on the laptop and choose Join session. Share the case first; a call is optional. Use headphones for calls.")
-                        .font(Northstar.Fonts.supporting).foregroundStyle(Northstar.Palette.inkMuted)
-                    NorthstarStatusLabel(model.isSharingSession ? model.linkState.label : "Case is not shared", tone: .info)
                     if let error = model.nearbyError { Text(error).foregroundStyle(Northstar.Palette.alert) }
-                    Button("Share current case") {
-                        model.startSharedSession(server: server.trimmingCharacters(in: .whitespacesAndNewlines))
-                    }.buttonStyle(NorthstarSecondaryButtonStyle()).disabled(model.activeSession == nil)
-                    if model.isSharingSession {
-                        Button("Stop sharing and end call", action: model.stopNearbyLink)
-                            .buttonStyle(NorthstarSecondaryButtonStyle())
-                    }
-                    if model.isSharingSession {
-                        invitationControls
-                    } else {
-                        Button(model.nearbyCall == nil || model.linkState == .idle ? "Start call" : "Restart call") {
-                            model.startRepCall(server: server.trimmingCharacters(in: .whitespacesAndNewlines))
-                        }
-                        .buttonStyle(NorthstarPrimaryButtonStyle(tone: .standard)).accessibilityIdentifier("start-call")
-                    }
+                    NavigationLink("Connect another Northstar device") { NearbyLinkSheet() }
+                        .buttonStyle(NorthstarSecondaryButtonStyle())
+                    invitationControls
                     Divider()
-                    if let session = model.activeSession {
+                    if model.demoPost == .room, let session = model.activeSession {
                         CoPilotSupportPanel(session: session)
+                    } else if model.demoPost == .rep, let origin = model.remoteSession?.origin {
+                        SupportThreadView(entries: model.supportThread(sessionID: origin.sessionID))
+                        SessionNoteComposer()
                     } else {
                         Text("Start or resume a case in Planner to send a saved question with its checklist context.")
                             .font(Northstar.Fonts.body)
@@ -51,13 +33,13 @@ struct NearbyCallView: View {
             }
             .accessibilityIdentifier("rep-call-content")
             .background(Northstar.Palette.bgBase)
-            .navigationTitle("Call rep").navigationBarTitleDisplayMode(.inline)
+            .navigationTitle("Session and call").navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
         }
     }
 }
 
-private struct CallStatusControls: View {
+struct CallStatusControls: View {
     @ObservedObject var call: NearbyCallController
     let end: () -> Void
     var body: some View {
@@ -69,7 +51,7 @@ private struct CallStatusControls: View {
                 .font(Northstar.Fonts.bodyStrong)
             ZStack {
                 Northstar.Palette.bgSunken
-                if call.localVideoTrack != nil {
+                if (call.localVideoTrack != nil || call.remoteVideoTrack != nil) && !call.cameraStatus.contains("camera off") {
                     NearbyCallCameraPreview(call: call)
                 } else {
                     ContentUnavailableView("Camera preview", systemImage: "video.slash",
@@ -91,6 +73,7 @@ private struct CallStatusControls: View {
                 .accessibilityIdentifier("call-mute")
                 Button("End call", action: end).buttonStyle(NorthstarSecondaryButtonStyle())
             }
+            if call.localVideoTrack != nil || call.cameraEnabled || call.canSwitchCamera {
             HStack(spacing: Northstar.Space.s3) {
                 Button(call.cameraEnabled ? "Turn camera off" : "Turn camera on") { call.setCameraEnabled(!call.cameraEnabled) }
                     .buttonStyle(NorthstarSecondaryButtonStyle())
@@ -101,6 +84,7 @@ private struct CallStatusControls: View {
                     .disabled(!call.canSwitchCamera || !call.cameraEnabled)
                     .accessibilityIdentifier("call-camera-flip")
             }
+            }
         }
     }
 }
@@ -108,9 +92,9 @@ private struct CallStatusControls: View {
 private extension NearbyCallView {
     @ViewBuilder var invitationControls: some View {
         let invitation = model.callInvitation
-        let ended = model.activeSession?.isFinished == true
+        let ended = model.supportRecordingEnded
         Text(invitationLabel).font(Northstar.Fonts.bodyStrong)
-        if invitation?.state == .requested, invitation?.from == .rep {
+        if invitation?.state == .requested, invitation?.from.rawValue != model.demoPost.rawValue {
             Button("Accept call") { model.acceptInvitation() }
                 .buttonStyle(NorthstarPrimaryButtonStyle(tone: .standard))
                 .disabled(ended)
@@ -122,7 +106,7 @@ private extension NearbyCallView {
         } else {
             Button("Request call") { model.requestCall() }
                 .buttonStyle(NorthstarPrimaryButtonStyle(tone: .standard))
-                .disabled(ended)
+                .disabled(ended || !isConnected || invitation?.state == .accepted)
                 .accessibilityIdentifier("request-call")
         }
         if ended {
@@ -130,10 +114,11 @@ private extension NearbyCallView {
                 .font(Northstar.Fonts.supporting).foregroundStyle(Northstar.Palette.inkMuted)
         }
     }
+    var isConnected: Bool { if case .connected = model.linkState { return true }; return false }
     var invitationLabel: String {
         switch model.callInvitation?.state {
-        case .requested where model.callInvitation?.from == .rep: "Incoming call from the rep"
-        case .requested: "Calling the rep"
+        case .requested where model.callInvitation?.from.rawValue != model.demoPost.rawValue: "Incoming call"
+        case .requested: "Waiting for call acceptance"
         case .accepted: "Call accepted"
         case .declined: "Call declined"
         case .canceled: "Call canceled"
