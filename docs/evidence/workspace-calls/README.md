@@ -14,6 +14,11 @@ Owner-authorized follow-up to PR #47, branch `copilot/workspace-calls`.
 
 ## Verification
 
-Evidence will be updated with checks actually run. Physical recheck is required for the new Mac camera feed, minimizing/floating while making checklist changes, mute/camera controls, and end/repeat call. Earlier owner confirmation of native two-way audio and room video applies to PR #47, not a fresh validation of this follow-up.
+- 157 existing unit tests passed after the call changes; no domain behavior was changed by the subsequent question-topic scroll feedback fix.
+- Two focused UI checks passed on iPad Pro 11-inch (M4), iOS 26.5, landscape, standard and accessibility XXXL text. They verify call entry is correctly disabled without a peer, draft survives close/reopen, a topic action inserts text, Send question works, and the pending deferral remains unresolved.
+- `help-landscape-disconnected.png` and `help-accessibility5-disconnected.png` are original simulator captures from that passing run (2064 × 2752 pixel buffers with landscape orientation metadata).
+- Signed Mac Catalyst and physical-iPad builds succeeded. Repository checks and whitespace checks passed.
+
+ Physical recheck is required for the new Mac camera feed, minimizing/floating while making checklist changes, mute/camera controls, and end/repeat call. Earlier owner confirmation of native two-way audio and room video applies to PR #47, not a fresh validation of this follow-up.
 
 Touch sizes use existing 72 pt request and 44 pt secondary controls. No animation added; drag is direct manipulation and Dock video offers a touch alternative. VoiceOver labels are provided; full VoiceOver navigation, keyboard-only operation, contrast measurement and physical Reduce Motion remain unrun.

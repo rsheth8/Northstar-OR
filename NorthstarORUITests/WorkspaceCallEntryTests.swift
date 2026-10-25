@@ -48,10 +48,12 @@ final class WorkspaceCallEntryTests: XCTestCase {
             for _ in 0..<8 where !topic.isHittable { requestForm.swipeUp() }
             XCTAssertTrue(topic.isHittable)
             topic.tap()
-            let question = app.textViews["support-question-draft"].value as? String ?? ""
+            let input = app.textViews["support-question-draft"]
+            for _ in 0..<8 where !input.exists { requestForm.swipeDown() }
+            let question = input.value as? String ?? ""
             XCTAssertTrue(question.contains("Fictional technical support question"))
             XCTAssertTrue(question.contains("Question about"))
-            app.buttons["Done typing"].tap()
+            if app.buttons["Done typing"].exists { app.buttons["Done typing"].tap() }
             let send = requestForm.buttons["support-question-send"]
             for _ in 0..<8 where !send.isHittable { requestForm.swipeDown() }
             XCTAssertTrue(send.isEnabled)

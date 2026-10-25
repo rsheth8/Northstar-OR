@@ -72,6 +72,7 @@ struct WorkspaceCallMedia: View {
             Button(videoVisible ? "Minimize video" : "Show video") { videoVisible.toggle() }
                 .frame(minHeight: 44)
                 .accessibilityIdentifier("call-video-size")
+                .accessibilityHint("Hides only the preview. Your microphone and shared camera keep their current settings.")
             if videoVisible {
             ZStack(alignment: .bottomTrailing) {
                 ZStack {
@@ -163,7 +164,8 @@ struct CallWorkspace<Content: View>: View {
                     }
                 }
                 if visible && wide && floating {
-                    panel(wide: true).frame(width: panelWidth, height: panelHeight)
+                    panel(wide: true, bounds: CGSize(width: geometry.size.width - panelWidth, height: geometry.size.height - panelHeight))
+                        .frame(width: panelWidth, height: panelHeight)
                         .clipShape(RoundedRectangle(cornerRadius: Northstar.Radius.sm))
                         .overlay(RoundedRectangle(cornerRadius: Northstar.Radius.sm).stroke(Northstar.Palette.indicator))
                         .offset(x: min(0, max(-(geometry.size.width - panelWidth), offset.width + drag.width)),
@@ -172,7 +174,7 @@ struct CallWorkspace<Content: View>: View {
             }
         }
     }
-    private func panel(wide: Bool) -> some View {
+    private func panel(wide: Bool, bounds: CGSize = .zero) -> some View {
         VStack(spacing: 0) {
             if !wide {
                 Button(expanded ? "Compact call panel" : "Expand call panel") { expanded.toggle() }
@@ -185,7 +187,10 @@ struct CallWorkspace<Content: View>: View {
                             .frame(maxWidth: .infinity, minHeight: 44)
                             .contentShape(Rectangle())
                             .gesture(DragGesture().updating($drag) { value, state, _ in state = value.translation }
-                                .onEnded { value in offset.width += value.translation.width; offset.height += value.translation.height })
+                                .onEnded { value in
+                                    offset.width = min(0, max(-bounds.width, offset.width + value.translation.width))
+                                    offset.height = max(0, min(bounds.height, offset.height + value.translation.height))
+                                })
                             .accessibilityHidden(true)
                     }
                     Button(floating ? "Dock video" : "Float video") { floating.toggle(); offset = .zero }
