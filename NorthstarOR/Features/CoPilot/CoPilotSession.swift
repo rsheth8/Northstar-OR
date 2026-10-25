@@ -19,7 +19,8 @@ enum RecordingCommandError: Error, Equatable {
 /// Support/log adapters remain local-only until F07; they cannot mutate recording selection/state.
 @Observable
 final class CoPilotSession {
-    let procedure: Procedure
+    /// Case details may be refreshed by a planning edit; identity, template and items never change.
+    private(set) var procedure: Procedure
     let identity: SessionIdentity
     let startedAt: Date
     private(set) var events: [SessionEvent] = []
@@ -67,6 +68,17 @@ final class CoPilotSession {
         }
         guard session.recordingState == state else { throw SessionRestoreError.stateMismatch }
         return session
+    }
+
+    /// Applies a planning edit's title/schedule/site to this run. Refused unless the case's
+    /// identity, template pin and items are unchanged, so recorded state stays valid.
+    @discardableResult
+    func refreshCaseDetails(_ updated: Procedure) -> Bool {
+        guard updated.id == procedure.id, updated.workspaceID == procedure.workspaceID,
+              updated.templateReference == procedure.templateReference, updated.steps == procedure.steps,
+              updated.deviceFamily == procedure.deviceFamily else { return false }
+        procedure = updated
+        return true
     }
 
     /// The persisted form of this run, or nil when recording is unsupported.

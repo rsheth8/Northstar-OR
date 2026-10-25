@@ -185,6 +185,27 @@ final class FileWorkspaceStore: WorkspaceStore {
     }
 }
 
+/// Resolves the real store on first use. If it cannot be created (e.g. Application Support
+/// is unavailable), reads fail as transient I/O errors and writes fail, so the app shows a
+/// retryable state instead of silently using a throwaway store. Each call retries resolution.
+final class DeferredWorkspaceStore: WorkspaceStore {
+    private let make: () throws -> WorkspaceStore
+    private var resolved: WorkspaceStore?
+
+    init(_ make: @escaping () throws -> WorkspaceStore) { self.make = make }
+
+    private func store() throws -> WorkspaceStore {
+        if let resolved { return resolved }
+        let store = try make()
+        resolved = store
+        return store
+    }
+
+    func read() throws -> Data? { try store().read() }
+    func write(_ data: Data) throws { try store().write(data) }
+    func setAside(label: String) throws { try store().setAside(label: label) }
+}
+
 /// For tests and previews. `failWrites` simulates a full disk or permission error.
 final class InMemoryWorkspaceStore: WorkspaceStore {
     var data: Data?
@@ -245,7 +266,8 @@ final class WorkspaceRepository {
     /// Validates, then writes. A receipt means the write completed; any throw means nothing changed.
     @discardableResult
     func save(_ snapshot: WorkspaceSnapshot) throws -> SaveReceipt {
-        if access == .unchecked || access == .unavailable { _ = load() }
+        // After a transient read failure, saving waits for an explicit successful load().
+        if access == .unchecked { _ = load() }
         switch access {
         case .writable: break
         case .unavailable, .unchecked: throw RepositoryError.storageUnavailable
