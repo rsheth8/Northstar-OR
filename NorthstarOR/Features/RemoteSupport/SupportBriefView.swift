@@ -31,6 +31,8 @@ struct SupportBriefView: View {
             }
             Text("\(question.snapshot.lines.filter { $0.status != .teamConfirmed }.count) unresolved items in the request").font(Northstar.Fonts.bodyStrong)
             replySection
+            if let error { NorthstarBanner(tone: .failure, title: "Action not sent", message: error) }
+            DisclosureGroup("Original request context") {
             Divider()
             Group {
                 LabeledContent("Case", value: question.snapshot.caseReference)
@@ -61,8 +63,7 @@ struct SupportBriefView: View {
                     ForEach(Array(question.snapshot.recentEvents.enumerated()), id: \.offset) { _, text in Text(text).font(Northstar.Fonts.supporting) }
                 }
             }
-            Divider()
-            if let error { NorthstarBanner(tone: .failure, title: "Action not sent", message: error) }
+            }
             Text("A reply does not confirm a checklist item. A local role is not verified identity.").font(Northstar.Fonts.supporting).foregroundStyle(Northstar.Palette.inkMuted)
         }.foregroundStyle(Northstar.Palette.ink)
     }

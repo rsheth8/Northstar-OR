@@ -32,18 +32,18 @@ struct CoPilotSupportPanel: View {
                 Text("TEAM’S QUESTION").font(Northstar.Fonts.label).foregroundStyle(Northstar.Palette.inkMuted)
                 Text(question.text).font(Northstar.Fonts.bodyStrong)
                 Text(question.sentAt.formatted(date: .omitted, time: .shortened)).font(Northstar.Fonts.supporting)
-                DisclosureGroup("Request snapshot") {
-                    Text("\(question.snapshot.caseReference) · \(question.snapshot.siteName)")
-                    ForEach(question.snapshot.lines.filter { $0.status != .teamConfirmed }) { line in
-                        Label(line.title, systemImage: line.status == .deferred ? "exclamationmark.triangle" : "circle")
-                    }
-                }.font(Northstar.Fonts.supporting)
                 if let acknowledgment = question.acknowledgement {
                     NorthstarStatusLabel("Question acknowledged by \(acknowledgment.by)", tone: .success)
                 } else { Text("Question not acknowledged").font(Northstar.Fonts.supporting) }
                 if let reply = question.reply {
                     NorthstarBanner(tone: .info, title: "Reply from \(reply.from)", message: reply.text)
                 } else { Text("Awaiting a reply").font(Northstar.Fonts.supporting) }
+                DisclosureGroup("Request snapshot") {
+                    Text("\(question.snapshot.caseReference) · \(question.snapshot.siteName)")
+                    ForEach(question.snapshot.lines.filter { $0.status != .teamConfirmed }) { line in
+                        Label(line.title, systemImage: line.status == .deferred ? "exclamationmark.triangle" : "circle")
+                    }
+                }.font(Northstar.Fonts.supporting)
                 if model.demoPost == .room, model.linkState != .idle, question.delivery != .receivedByPeer {
                     Button("Send this saved question") {
                         do { try model.retrySupportMessage(question.messageID); error = nil }
@@ -91,7 +91,7 @@ struct CoPilotSupportPanel: View {
             if let error { NorthstarBanner(tone: .failure, title: "Question kept", message: error) }
             Divider()
             SupportThreadView(entries: model.supportThread(sessionID: session.identity.sessionID))
-            if model.demoPost == .room { SessionNoteComposer() }
+            if model.demoPost == .room { DisclosureGroup("Send a general case message") { SessionNoteComposer() } }
             Text("A reply does not confirm a checklist item.").font(Northstar.Fonts.supporting).foregroundStyle(Northstar.Palette.inkMuted)
         }
         .foregroundStyle(Northstar.Palette.ink)
