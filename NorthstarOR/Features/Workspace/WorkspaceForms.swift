@@ -46,7 +46,7 @@ enum WorkspaceForms {
         case .foreignWorkspace: return "An entry belongs to a different workspace."
         case .invalidTimeZone: return "Choose a valid time zone for each site."
         case .invalidRooms: return "Room labels must be unique and not blank."
-        case .invalidCoordinates: return "Coordinates are out of range."
+        case .invalidCoordinates: return "Enter both latitude (−90 to 90) and longitude (−180 to 180), or leave both blank. Use decimal degrees."
         case .invalidContactRole: return "Contacts must be a technical rep or a clinical specialist."
         case .invalidTravel: return "Drive minutes must be whole numbers of zero or more for sites in this workspace."
         case .unknownSite: return "That site is not part of this workspace."
@@ -78,6 +78,8 @@ struct SiteDraft: Identifiable, Hashable {
     var name: String
     var town: String
     var timeZoneIdentifier: String
+    var latitudeText = ""
+    var longitudeText = ""
 
     init(id: String = WorkspaceForms.newID("site"), name: String = "", town: String = "",
          timeZoneIdentifier: String = WorkspaceForms.defaultTimeZone) {
@@ -87,15 +89,30 @@ struct SiteDraft: Identifiable, Hashable {
     init(_ site: Hospital) {
         self.init(id: site.id, name: site.name, town: site.town,
                   timeZoneIdentifier: site.timeZoneIdentifier ?? WorkspaceForms.defaultTimeZone)
+        latitudeText = site.latitude.map { String($0) } ?? ""
+        longitudeText = site.longitude.map { String($0) } ?? ""
     }
 
-    /// Keeps fields the form does not edit (coordinates, rooms) from the previous value.
-    func hospital(workspaceID: String, previous: Hospital?) -> Hospital {
+    /// Keeps fields the form does not edit (such as rooms) from the previous value.
+    func hospital(workspaceID: String, previous: Hospital?) throws -> Hospital {
         var site = previous ?? Hospital(id: id, name: "", town: "")
         site.name = WorkspaceForms.trimmed(name)
         site.town = WorkspaceForms.trimmed(town)
         site.workspaceID = workspaceID
         site.timeZoneIdentifier = timeZoneIdentifier
+        let latitude = WorkspaceForms.trimmed(latitudeText)
+        let longitude = WorkspaceForms.trimmed(longitudeText)
+        if latitude.isEmpty && longitude.isEmpty {
+            site.latitude = nil
+            site.longitude = nil
+        } else {
+            guard let lat = Double(latitude), let lon = Double(longitude),
+                  lat.isFinite, lon.isFinite, (-90...90).contains(lat), (-180...180).contains(lon) else {
+                throw WorkspaceContractError.invalidCoordinates
+            }
+            site.latitude = lat
+            site.longitude = lon
+        }
         return site
     }
 }
@@ -114,7 +131,7 @@ struct WorkspaceSetupDraft: Equatable {
         let config = WorkspaceConfiguration(
             id: workspaceID,
             name: WorkspaceForms.trimmed(workspaceName),
-            sites: [site.hospital(workspaceID: workspaceID, previous: nil)],
+            sites: [try site.hospital(workspaceID: workspaceID, previous: nil)],
             contacts: [],
             localParticipant: LocalParticipant(id: newID("participant"), workspaceID: workspaceID,
                                                displayName: WorkspaceForms.trimmed(participantName),
@@ -144,7 +161,7 @@ struct WorkspaceSettingsDraft: Equatable {
         var result = workspace
         result.name = WorkspaceForms.trimmed(name)
         let previous = Dictionary(uniqueKeysWithValues: workspace.sites.map { ($0.id, $0) })
-        result.sites = sites.map { $0.hospital(workspaceID: workspace.id, previous: previous[$0.id]) }
+        result.sites = try sites.map { try $0.hospital(workspaceID: workspace.id, previous: previous[$0.id]) }
         let kept = Set(result.sites.map(\.id))
         result.contacts = workspace.contacts.map { contact in
             var c = contact
