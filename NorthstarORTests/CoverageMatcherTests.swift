@@ -40,7 +40,7 @@ final class CoverageMatcherTests: XCTestCase {
     // MARK: - Starter behavior kept
 
     func testBlizzardBeforeCaseIsHighRiskWithRemoteAndReschedule() {
-        let forecast = StormForecast(summary: "Blizzard", roadClosureInHours: 1, snowfallInches: 14)
+        let forecast = StormForecast(summary: "Blizzard", roadClosureInHours: 1, snowfallInches: 14, asOf: now)
         let rec = CoverageMatcher().recommend(for: procedure(inHours: 8), reps: SampleData.reps, forecast: forecast, now: now)
         XCTAssertEqual(rec.risk, .high)
         XCTAssertTrue(rec.reducedSupport)
@@ -141,10 +141,10 @@ final class CoverageMatcherTests: XCTestCase {
         XCTAssertTrue(rec.reasons.contains("No forecast recorded; road closure unknown."))
     }
 
-    func testLegacyForecastWithoutAsOfCountsFromNow() {
+    func testLegacyForecastWithoutAsOfStaysUnknown() {
         let legacy = StormForecast(summary: "Legacy", roadClosureInHours: 1, snowfallInches: 3)
         let rec = CoverageMatcher().recommend(for: procedure(inHours: 8), reps: [rep("a", "Avery")], forecast: legacy, now: now)
-        XCTAssertEqual(rec.roadClosureMinutes, 60)
+        XCTAssertNil(rec.roadClosureMinutes)
     }
 
     func testClosureDuringCaseWindowIsElevatedWhenRepCanStillArrive() {
