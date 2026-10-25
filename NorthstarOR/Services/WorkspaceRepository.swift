@@ -41,6 +41,7 @@ struct WorkspaceSnapshot: Hashable, Codable {
     /// Plain session messages. Questions stay in `supportQuestions`.
     var sessionNotes: [SessionNote] = []
     var remoteSession: SharedSessionSnapshot? = nil
+    var coveragePlans: [CoveragePlan] = []
 
     static let empty = WorkspaceSnapshot()
 
@@ -48,7 +49,7 @@ struct WorkspaceSnapshot: Hashable, Codable {
     func validate() throws {
         guard formatVersion == Self.supportedFormatVersion else { throw invalid("unsupported format version \(formatVersion)") }
         guard let workspace else {
-            guard forecasts.isEmpty, cases.isEmpty, sessions.isEmpty, drafts.isEmpty, supportQuestions.isEmpty, sessionNotes.isEmpty, activeCaseID == nil else {
+            guard forecasts.isEmpty, cases.isEmpty, sessions.isEmpty, drafts.isEmpty, supportQuestions.isEmpty, sessionNotes.isEmpty, coveragePlans.isEmpty, activeCaseID == nil else {
                 throw invalid("records exist without a workspace")
             }
             return
@@ -58,6 +59,11 @@ struct WorkspaceSnapshot: Hashable, Codable {
         let siteIDs = Set(workspace.sites.map(\.id))
         for siteID in forecasts.keys where !siteIDs.contains(siteID) { throw invalid("forecast for unknown site \(siteID)") }
 
+        var planRevisions = Set<String>()
+        for plan in coveragePlans {
+            do { try plan.validate() } catch { throw invalid("coverage plan: \(error.localizedDescription)") }
+            guard planRevisions.insert("\(plan.workspaceID):\(plan.recordID)").inserted else { throw invalid("duplicate coverage plan revision") }
+        }
         var caseIDs = Set<String>()
         for item in cases {
             guard caseIDs.insert(item.id).inserted else { throw invalid("duplicate case \(item.id)") }
@@ -125,7 +131,7 @@ struct WorkspaceSnapshot: Hashable, Codable {
 
 extension WorkspaceSnapshot {
     private enum CodingKeys: String, CodingKey {
-        case formatVersion, workspace, forecasts, cases, sessions, drafts, activeCaseID, supportQuestions, sessionNotes, remoteSession
+        case formatVersion, workspace, forecasts, cases, sessions, drafts, activeCaseID, supportQuestions, sessionNotes, remoteSession, coveragePlans
     }
 
     /// Synthesized decoding ignores property defaults, so additive fields must be decoded
@@ -142,6 +148,7 @@ extension WorkspaceSnapshot {
         supportQuestions = try values.decodeIfPresent([SupportQuestion].self, forKey: .supportQuestions) ?? []
         sessionNotes = try values.decodeIfPresent([SessionNote].self, forKey: .sessionNotes) ?? []
         remoteSession = try values.decodeIfPresent(SharedSessionSnapshot.self, forKey: .remoteSession)
+        coveragePlans = try values.decodeIfPresent([CoveragePlan].self, forKey: .coveragePlans) ?? []
     }
 }
 
