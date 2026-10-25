@@ -18,9 +18,11 @@ struct CaseReport: Identifiable {
     let notes: [SessionNote]
     let forecast: StormForecast?
     let planningEvidence: PlanningEvidence?
+    let coveragePlan: CoveragePlan?
 
-    init(procedure: Procedure, site: Hospital?, state: SessionRecordingState?, events: [SessionEvent], questions: [SupportQuestion], notes: [SessionNote] = [], forecast: StormForecast?, capturedAt: Date, planningEvidence: PlanningEvidence? = nil) {
+    init(procedure: Procedure, site: Hospital?, state: SessionRecordingState?, events: [SessionEvent], questions: [SupportQuestion], notes: [SessionNote] = [], forecast: StormForecast?, capturedAt: Date, planningEvidence: PlanningEvidence? = nil, coveragePlan: CoveragePlan? = nil) {
         self.procedure = procedure; self.site = site; self.capturedAt = capturedAt
+        self.coveragePlan = coveragePlan?.caseID == procedure.id && coveragePlan?.workspaceID == procedure.workspaceID ? coveragePlan : nil
         let matching = state?.identity.caseID == procedure.id && state?.identity.workspaceID == procedure.workspaceID ? state : nil
         self.state = matching
         self.items = procedure.steps.map { Item(id: $0.id, title: $0.title, status: matching?.itemStatuses[$0.id] ?? .unrecorded) }
@@ -46,7 +48,18 @@ struct CaseReport: Identifiable {
                      "Site: \(site?.name ?? "Not recorded")", "Scheduled: \(date(procedure.scheduledAt))", "Snapshot: \(date(capturedAt))",
                      "Time zone: \(site?.timeZoneIdentifier ?? "Unknown; UTC shown")", "Session: \(state?.identity.sessionID ?? "No recording")",
                      "Template: \(procedure.templateReference.map { "\($0.id) v\($0.version)" } ?? "Not recorded")",
-                     "Support plan: No retained plan available", "", "RECORDED ITEMS · UNRESOLVED FIRST"]
+                     "Support plan: \(coveragePlan.map { "\($0.modeLabel) · Revision \($0.revision) · \($0.statusLabel)" } ?? "Not recorded")"]
+        if let coveragePlan {
+            lines += ["Requested contact: \(coveragePlan.recipient?.name ?? "None; reschedule intention")",
+                      "Requested by: \(coveragePlan.requester.displayName) at \(date(coveragePlan.requestedAt))",
+                      "Plan request delivery: \(coveragePlan.delivery.label)"]
+            if let response = coveragePlan.response {
+                lines += ["Responding device participant: \(response.actor.displayName) at \(date(response.at))",
+                          "Plan response delivery: \(response.delivery.label)"]
+            }
+            lines += ["Call connection is separate and is not captured in this report.", ""]
+        }
+        lines += ["", "RECORDED ITEMS · UNRESOLVED FIRST"]
         lines += items.map { "\(Self.status($0.status)): \($0.title)" }
         lines += ["", "RECORDING HISTORY · ACTOR / SOURCE / TIME"]
         lines += events.map { "\(date($0.occurredAt)) · \($0.actor.displayName) · \($0.source.label) · \($0.targetItemID): \(eventLabel($0.payload))" }

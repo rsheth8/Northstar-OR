@@ -25,6 +25,20 @@ final class CaseReportTests: XCTestCase {
         XCTAssertFalse(report.text.contains("Obsolete summary"))
         XCTAssertFalse(report.text.contains("Changed later"))
     }
+    @MainActor func testReportFreezesCoverageRevisionAndRejectsAnotherCasesPlan() throws {
+        let model = AppModel(); try model.loadSampleWorkspace()
+        let procedure = try XCTUnwrap(model.cases.first)
+        let plan = try model.requestCoverage(caseID: procedure.id, mode: .reschedule, recipientID: nil, expectedRevision: nil)
+        let report = CaseReport(procedure: procedure, site: nil, state: nil, events: [], questions: [], forecast: nil, capturedAt: .now, coveragePlan: plan)
+        _ = try model.requestCoverage(caseID: procedure.id, mode: .reschedule, recipientID: nil, expectedRevision: plan.revision)
+        XCTAssertEqual(report.coveragePlan?.revision, 1)
+        XCTAssertTrue(report.text.contains("Reschedule intention · Revision 1"))
+        XCTAssertTrue(report.text.contains("Plan request delivery: On this device"))
+        let other = try XCTUnwrap(model.cases.first { $0.id != procedure.id })
+        let isolated = CaseReport(procedure: other, site: nil, state: nil, events: [], questions: [], forecast: nil, capturedAt: .now, coveragePlan: plan)
+        XCTAssertNil(isolated.coveragePlan)
+        XCTAssertTrue(isolated.text.contains("Support plan: Not recorded"))
+    }
     func testWrongCaseStateCannotPopulateItems() {
         let procedure = Procedure(id: "selected", name: "Selected case", deviceFamily: "Fictional", hospitalID: "site", scheduledAt: .now, durationMinutes: 10, steps: [ProcedureStep(id: "one", title: "Statement", detail: "", isRequired: true, normallyCoveredByRep: false)], workspaceID: "workspace")
         let state = SessionRecordingState(identity: SessionIdentity(workspaceID: "workspace", caseID: "other", sessionID: "other-session"), templateReference: CoordinationTemplateReference(id: "template", version: 1), startedAt: .now, version: 1, itemStatuses: ["one": .teamConfirmed], selectedItemID: "one", pendingAcknowledgment: nil)
