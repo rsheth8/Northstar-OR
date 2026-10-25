@@ -50,7 +50,15 @@ final class WorkspaceShellTests: XCTestCase {
         name.tap()
         name.clearAndTypeText("Renamed Fictional Workspace")
         capture("Settings edited")
-        app.buttons["settings-save"].tap()
+        if app.keyboards.buttons["Return"].exists { app.keyboards.buttons["Return"].tap() }
+        let save = app.buttons["settings-save"]
+        var swipes = 0
+        while !(save.exists && save.isHittable) && swipes < 8 {
+            app.tables.firstMatch.swipeUp()
+            swipes += 1
+        }
+        XCTAssertTrue(save.isHittable, "save button reachable")
+        save.tap()
         XCTAssertTrue(app.staticTexts["settings-saved"].waitForExistence(timeout: 5))
         capture("Settings saved")
         app.buttons["settings-done"].tap()
