@@ -17,6 +17,27 @@ final class NativeSessionIntegrationTests: XCTestCase {
         return (room, rep, roomLink, repLink, store)
     }
 
+    func testConnectedRoomWithoutRecordingExplainsTheMissingCase() throws {
+        let link = SessionPair()
+        let room = AppModel(sync: LocalSyncService(nearby: link))
+        try room.loadSampleWorkspace()
+        link.connect()
+        room.requestCall()
+        XCTAssertEqual(room.nearbyError, "Start or resume a case in Planner before requesting a call.")
+        XCTAssertNil(room.callInvitation)
+        XCTAssertEqual(room.linkState, .connected(peerName: "Fictional peer"))
+    }
+
+    func testConnectedRepWithoutCurrentRoomRecordingExplainsTheMissingContext() throws {
+        let link = SessionPair()
+        let rep = AppModel(sync: LocalSyncService(nearby: link), post: .rep)
+        try rep.loadSampleWorkspace()
+        link.connect()
+        rep.requestCall()
+        XCTAssertEqual(rep.nearbyError, "The room device must start or resume a case before you can request a call.")
+        XCTAssertNil(rep.callInvitation)
+    }
+
     func testLateJoinWithoutQuestionLiveUpdatesMessagesAndRelaunch() throws {
         let (room, rep, _, _, store) = try pair()
         XCTAssertTrue(rep.remoteSessionCurrent)

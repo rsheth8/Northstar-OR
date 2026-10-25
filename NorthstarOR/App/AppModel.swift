@@ -656,12 +656,22 @@ final class AppModel {
         transport.start()
     }
     private var localCallSide: CallInvitation.Side { demoPost == .room ? .room : .rep }
-    func requestCall() {
-        guard let origin = supportOrigin, isSharingSession, case .connected = linkState else {
-            nearbyError = "Connect to the other Northstar device before requesting a call."; return
+    var callUnavailableReason: String? {
+        guard isSharingSession, case .connected = linkState else {
+            return "Connect to the other Northstar device before requesting a call."
         }
-        guard !supportRecordingEnded else { nearbyError = "This recording has ended. A call cannot start."; return }
-        guard demoPost == .room || remoteSessionCurrent else { return }
+        if demoPost == .room, activeSession == nil {
+            return "Start or resume a case in Planner before requesting a call."
+        }
+        if demoPost == .rep, supportOrigin == nil || !remoteSessionCurrent {
+            return "The room device must start or resume a case before you can request a call."
+        }
+        if supportRecordingEnded { return "This recording has ended. A call cannot start." }
+        return nil
+    }
+    func requestCall() {
+        if let reason = callUnavailableReason { nearbyError = reason; return }
+        guard let origin = supportOrigin else { return }
         guard callInvitation?.state != .requested, callInvitation?.state != .accepted else { return }
         let invitation = CallInvitation(id: UUID().uuidString, origin: origin, from: localCallSide, state: .requested, sentAt: clock())
         do { try sync.nearby.sendInvitation(invitation) } catch { nearbyError = "Call request was not sent. Reconnect and retry."; return }
