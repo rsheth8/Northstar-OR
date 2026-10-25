@@ -60,14 +60,25 @@ struct WorkspaceCallPanel: View {
 
 struct WorkspaceCallMedia: View {
     @Environment(AppModel.self) private var model
+    @Environment(\.dynamicTypeSize) private var typeSize
     @ObservedObject var call: NearbyCallController
     let compact: Bool
     let end: () -> Void
     @State private var videoVisible = true
     var body: some View {
-        VStack(alignment: .leading, spacing: Northstar.Space.s3) {
+        if typeSize.isAccessibilitySize {
             ScrollView {
+                VStack(alignment: .leading, spacing: Northstar.Space.s3) { media; controls }
+            }
+        } else {
             VStack(alignment: .leading, spacing: Northstar.Space.s3) {
+                ScrollView { media }
+                controls
+            }
+        }
+    }
+    private var media: some View {
+        VStack(alignment: .leading, spacing: Northstar.Space.s3) {
             NorthstarStatusLabel(call.status, tone: .info)
             Button(videoVisible ? "Minimize video" : "Show video") { videoVisible.toggle() }
                 .frame(minHeight: 44)
@@ -108,8 +119,10 @@ struct WorkspaceCallMedia: View {
             }
             Text("Video is live and is not saved. Messages and checklist stay available.")
                 .font(Northstar.Fonts.supporting)
-            }
-            }
+        }
+    }
+    private var controls: some View {
+        VStack(alignment: .leading, spacing: Northstar.Space.s3) {
             ViewThatFits(in: .horizontal) {
                 HStack { mute; camera }
                 VStack { mute; camera }
