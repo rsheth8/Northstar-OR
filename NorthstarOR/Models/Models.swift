@@ -47,6 +47,8 @@ struct StormForecast: Hashable, Codable {
     var roadClosureInHours: Double?
     var snowfallInches: Double
     var asOf: Date? = nil
+    /// Additive optional flag; nil retains legacy semantics.
+    var closureIsUnknown: Bool? = nil
 
     var roadClosureAt: Date? {
         guard let asOf, let hours = roadClosureInHours, hours.isFinite else { return nil }
