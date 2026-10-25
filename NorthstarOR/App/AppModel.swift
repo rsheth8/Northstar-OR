@@ -13,6 +13,7 @@ enum AppModelError: Error, Equatable, LocalizedError {
     case noActiveSession
     case invalidDraft
     case siteInUse(String)
+    case notReadyForSetup
     case saveFailed(String)
 
     var errorDescription: String? {
@@ -27,6 +28,7 @@ enum AppModelError: Error, Equatable, LocalizedError {
         case .noActiveSession: "No active case. Start or resume a case in Planner."
         case .invalidDraft: "This draft does not belong to a saved case or session."
         case .siteInUse: "A saved case uses this site. Move or remove that case first."
+        case .notReadyForSetup: "Saved data on this device isn't available right now. Nothing was changed."
         case .saveFailed(let message): message
         }
     }
@@ -65,6 +67,9 @@ final class AppModel {
     /// True when stored data is unreadable or from a newer format and can be set aside.
     /// False for a transient read failure, which is retried with `load()` instead.
     var canSetAsideStoredData: Bool { repository.isSavingBlocked }
+    /// True after a transient read failure (including storage unavailable at launch);
+    /// `load()` then re-reads the real store.
+    private(set) var canRetryLoad = false
 
     static let templates = [FictionalCoordinationTemplate.template]
     static let sampleWorkspaceID = "sample-workspace"
@@ -110,13 +115,9 @@ final class AppModel {
             return model
         }
         if arguments.contains("-NorthstarResetStore") { return AppModel() }
-        do {
-            return AppModel(store: try FileWorkspaceStore.applicationSupport())
-        } catch {
-            let model = AppModel()
-            model.loadState = .blocked("Storage on this device is unavailable, so nothing can be saved. Restart the app to try again.")
-            return model
-        }
+        // Never fall back to a throwaway store: if Application Support is unavailable the
+        // load is a retryable read failure and nothing can be saved until a retry succeeds.
+        return AppModel(store: DeferredWorkspaceStore { try FileWorkspaceStore.applicationSupport() })
     }
 
     // MARK: - Loading
@@ -124,6 +125,7 @@ final class AppModel {
     /// Reads the stored snapshot. Sample content is never loaded implicitly.
     func load() {
         resetState()
+        canRetryLoad = false
         switch repository.load() {
         case .empty:
             loadState = .needsSetup
@@ -135,6 +137,7 @@ final class AppModel {
         case .unreadable:
             loadState = .blocked("Saved data on this device could not be read. It has not been changed. You can set it aside and start fresh; the file is kept on this device.")
         case .readFailed:
+            canRetryLoad = true
             loadState = .blocked("Saved data on this device could not be opened right now. Nothing was changed. Try again.")
         }
     }
@@ -151,6 +154,7 @@ final class AppModel {
 
     func createWorkspace(_ config: WorkspaceConfiguration) throws {
         guard workspace == nil else { throw AppModelError.workspaceAlreadyConfigured }
+        guard loadState == .needsSetup else { throw AppModelError.notReadyForSetup }
         try config.validate()
         try persist(WorkspaceSnapshot(workspace: config))
         workspace = config
@@ -161,6 +165,7 @@ final class AppModel {
     /// Explicitly loads the fictional sample workspace. Only allowed before setup.
     func loadSampleWorkspace() throws {
         guard workspace == nil else { throw AppModelError.workspaceAlreadyConfigured }
+        guard loadState == .needsSetup else { throw AppModelError.notReadyForSetup }
         let sample = Self.sampleWorkspace(asOf: clock())
         try sample.workspace.validate()
         let sorted = Self.sorted(sample.cases)
@@ -193,8 +198,8 @@ final class AppModel {
 
     // MARK: - Cases
 
-    /// Creates a case, or edits the case with the same ID. Existing sessions keep the case
-    /// snapshot they were started with until the next launch.
+    /// Creates a case, or edits the case with the same ID. A live session of an edited case
+    /// shows the new title/schedule/site; its identity, template and items are unchanged.
     @discardableResult
     func saveCase(_ input: CaseInput) throws -> Procedure {
         guard let workspace else { throw AppModelError.noWorkspace }
@@ -207,6 +212,7 @@ final class AppModel {
         let nextCases = Self.sorted(cases.filter { $0.id != procedure.id } + [procedure])
         try persist(snapshot(cases: nextCases))
         cases = nextCases
+        sessions[procedure.id]?.refreshCaseDetails(procedure)
         return procedure
     }
 
@@ -551,6 +557,7 @@ final class AppModel {
         // The latest run per case is live; anything else is retained unchanged.
         for stored in snapshot.sessions.sorted(by: Self.sessionOrder) {
             let caseID = stored.state.identity.caseID
+            // Note: restore requires the case's items to match the session's history.
             guard let procedure = cases.first(where: { $0.id == caseID }),
                   let session = try? CoPilotSession.restore(procedure: procedure, from: stored) else {
                 retainedSessions.append(stored)

@@ -6,7 +6,7 @@ import XCTest
 final class AppModelTests: XCTestCase {
     private let time = Date(timeIntervalSince1970: 1_800_000_000)
 
-    private func model(_ store: InMemoryWorkspaceStore) -> AppModel {
+    private func model(_ store: WorkspaceStore) -> AppModel {
         AppModel(store: store, clock: { self.time }, draftSaveDelay: .seconds(600))
     }
 
@@ -331,6 +331,57 @@ final class AppModelTests: XCTestCase {
         }
         XCTAssertEqual(model.saveError, "Couldn't save on this device. Your changes are still here.")
         XCTAssertEqual(WorkspaceContractError.required("case.title").localizedDescription, "Case title is required.")
+    }
+
+    func testSetupIsRefusedAfterTransientReadFailureAndDataIsKept() throws {
+        let store = InMemoryWorkspaceStore()
+        _ = try configured(store)
+        let saved = store.data
+        store.failReads = true
+        let blocked = model(store)
+        XCTAssertTrue(blocked.canRetryLoad)
+        store.failReads = false // storage recovers, but no explicit retry yet
+        XCTAssertThrowsError(try blocked.createWorkspace(configuration(name: "Other"))) {
+            XCTAssertEqual($0 as? AppModelError, .notReadyForSetup)
+        }
+        XCTAssertThrowsError(try blocked.loadSampleWorkspace()) { XCTAssertEqual($0 as? AppModelError, .notReadyForSetup) }
+        XCTAssertEqual(store.data, saved)
+        blocked.load()
+        XCTAssertFalse(blocked.canRetryLoad)
+        XCTAssertEqual(blocked.workspace?.name, "Fictional workspace")
+    }
+
+    func testUnavailableStorageAtLaunchIsRetryableNotThrowaway() throws {
+        let real = InMemoryWorkspaceStore()
+        var available = false
+        let model = model(DeferredWorkspaceStore {
+            guard available else { throw CocoaError(.fileReadNoPermission) }
+            return real
+        })
+        guard case .blocked = model.loadState else { return XCTFail("expected blocked") }
+        XCTAssertTrue(model.canRetryLoad)
+        XCTAssertFalse(model.canSetAsideStoredData)
+        XCTAssertThrowsError(try model.createWorkspace(configuration()))
+        XCTAssertNil(real.data)
+        available = true
+        model.load()
+        XCTAssertEqual(model.loadState, .needsSetup)
+        try model.createWorkspace(configuration())
+        XCTAssertNotNil(real.data)
+    }
+
+    func testEditingACaseRefreshesItsLiveSessionDetails() throws {
+        let store = InMemoryWorkspaceStore()
+        let model = try configured(store)
+        let session = try model.startOrResume(caseID: "case-a")
+        try record(model, .recordConfirmation)
+        var edit = caseInput("case-a", title: "Retitled fictional case", hoursFromNow: 3)
+        edit.reference = "REF-case-a"
+        try model.saveCase(edit)
+        XCTAssertTrue(model.activeSession === session)
+        XCTAssertEqual(session.procedure.name, "Retitled fictional case")
+        XCTAssertEqual(session.events.count, 1)
+        XCTAssertEqual(self.model(store).activeSession?.procedure.name, "Retitled fictional case")
     }
 
     func testSelectedDestinationIsSettable() throws {
