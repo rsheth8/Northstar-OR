@@ -296,7 +296,8 @@ struct PlannerView: View {
                     LabeledContent("Source", value: evidence.source)
                     LabeledContent("Scenario", value: evidence.scenario)
                     Text(forecast.summary).font(Northstar.Fonts.body)
-                    LabeledContent("Snowfall summary", value: "\(forecast.snowfallInches.formatted()) in")
+                    let snowfall = evidence.samples.isEmpty ? evidence.summarySnowfallInches : evidence.samples.reduce(0) { $0 + $1.snowfallInches }
+                    LabeledContent("Snowfall summary", value: snowfall.map { "\($0.formatted()) in" } ?? "Not recorded")
                     LabeledContent("Forecast as of", value: forecast.asOf.map { $0.formatted() } ?? "Unknown")
                     LabeledContent("Explicit road closure", value: forecast.roadClosureAt.map { $0.formatted() } ?? "Unknown absolute time")
                 } else {
