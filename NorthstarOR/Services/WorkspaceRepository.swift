@@ -34,6 +34,8 @@ struct WorkspaceSnapshot: Hashable, Codable {
     var cases: [Procedure] = []
     var sessions: [StoredSession] = []
     var drafts: [DraftRecord] = []
+    /// The case whose session was active when last saved. Must have a stored session.
+    var activeCaseID: String? = nil
 
     static let empty = WorkspaceSnapshot()
 
@@ -41,7 +43,7 @@ struct WorkspaceSnapshot: Hashable, Codable {
     func validate() throws {
         guard formatVersion == Self.supportedFormatVersion else { throw invalid("unsupported format version \(formatVersion)") }
         guard let workspace else {
-            guard forecasts.isEmpty, cases.isEmpty, sessions.isEmpty, drafts.isEmpty else {
+            guard forecasts.isEmpty, cases.isEmpty, sessions.isEmpty, drafts.isEmpty, activeCaseID == nil else {
                 throw invalid("records exist without a workspace")
             }
             return
@@ -74,6 +76,10 @@ struct WorkspaceSnapshot: Hashable, Codable {
             }
         }
 
+        if let activeCaseID, !sessionCases.values.contains(activeCaseID) {
+            throw invalid("active case \(activeCaseID) has no stored session")
+        }
+
         var draftKeys = Set<DraftKey>()
         for draft in drafts {
             let key = draft.key
@@ -91,6 +97,25 @@ struct WorkspaceSnapshot: Hashable, Codable {
     private func invalid(_ reason: String) -> RepositoryError { .invalidSnapshot(reason) }
 }
 
+extension WorkspaceSnapshot {
+    private enum CodingKeys: String, CodingKey {
+        case formatVersion, workspace, forecasts, cases, sessions, drafts, activeCaseID
+    }
+
+    /// Synthesized decoding ignores property defaults, so additive fields must be decoded
+    /// explicitly with a default. Unknown extra keys are ignored.
+    init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        formatVersion = try values.decode(Int.self, forKey: .formatVersion)
+        workspace = try values.decodeIfPresent(WorkspaceConfiguration.self, forKey: .workspace)
+        forecasts = try values.decodeIfPresent([String: StormForecast].self, forKey: .forecasts) ?? [:]
+        cases = try values.decodeIfPresent([Procedure].self, forKey: .cases) ?? []
+        sessions = try values.decodeIfPresent([StoredSession].self, forKey: .sessions) ?? []
+        drafts = try values.decodeIfPresent([DraftRecord].self, forKey: .drafts) ?? []
+        activeCaseID = try values.decodeIfPresent(String.self, forKey: .activeCaseID)
+    }
+}
+
 enum WorkspaceLoadResult: Equatable {
     /// Nothing stored yet. Sample content is never loaded implicitly.
     case empty
@@ -99,6 +124,8 @@ enum WorkspaceLoadResult: Equatable {
     case unsupportedVersion(Int)
     /// Damaged or invalid; saving is blocked until the data is explicitly set aside.
     case unreadable(String)
+    /// The store could not be read right now (I/O). Retry; nothing is set aside or overwritten.
+    case readFailed(String)
 }
 
 struct SaveReceipt: Equatable {
@@ -112,6 +139,8 @@ enum RepositoryError: Error, Equatable {
     /// Nothing was saved. Callers keep their unsaved state and offer retry.
     case writeFailed(String)
     case nothingToSetAside
+    /// The last read failed transiently; load again before saving.
+    case storageUnavailable
 }
 
 /// Raw byte storage, injectable so tests can simulate failures.
@@ -160,15 +189,22 @@ final class FileWorkspaceStore: WorkspaceStore {
 final class InMemoryWorkspaceStore: WorkspaceStore {
     var data: Data?
     var failWrites = false
+    /// Simulates a transient read failure, e.g. protected data not yet available.
+    var failReads = false
     private(set) var setAside: [String: Data] = [:]
+    private(set) var writeCount = 0
 
     init(data: Data? = nil) { self.data = data }
 
-    func read() throws -> Data? { data }
+    func read() throws -> Data? {
+        if failReads { throw CocoaError(.fileReadUnknown) }
+        return data
+    }
 
     func write(_ data: Data) throws {
         if failWrites { throw CocoaError(.fileWriteOutOfSpace) }
         self.data = data
+        writeCount += 1
     }
 
     func setAside(label: String) throws {
@@ -179,8 +215,10 @@ final class InMemoryWorkspaceStore: WorkspaceStore {
 }
 
 /// Loads and saves the workspace snapshot. Refuses to overwrite data it could not read.
+/// Main-actor isolated so saves are serialized; callers always save the latest full snapshot.
+@MainActor
 final class WorkspaceRepository {
-    private enum Access { case unchecked, writable, blocked }
+    private enum Access { case unchecked, writable, blocked, unavailable }
 
     private let store: WorkspaceStore
     private let clock: () -> Date
@@ -199,6 +237,7 @@ final class WorkspaceRepository {
         switch result {
         case .empty, .loaded: access = .writable
         case .unsupportedVersion, .unreadable: access = .blocked
+        case .readFailed: access = .unavailable
         }
         return result
     }
@@ -206,8 +245,12 @@ final class WorkspaceRepository {
     /// Validates, then writes. A receipt means the write completed; any throw means nothing changed.
     @discardableResult
     func save(_ snapshot: WorkspaceSnapshot) throws -> SaveReceipt {
-        if access == .unchecked { _ = load() }
-        guard access == .writable else { throw RepositoryError.blockedByUnreadableData }
+        if access == .unchecked || access == .unavailable { _ = load() }
+        switch access {
+        case .writable: break
+        case .unavailable, .unchecked: throw RepositoryError.storageUnavailable
+        case .blocked: throw RepositoryError.blockedByUnreadableData
+        }
         try snapshot.validate()
         let data: Data
         do { data = try Self.encoder.encode(snapshot) } catch { throw RepositoryError.writeFailed("\(error)") }
@@ -219,14 +262,16 @@ final class WorkspaceRepository {
     func setAsideUnreadableData() throws {
         if access == .unchecked { _ = load() }
         guard access == .blocked else { throw RepositoryError.nothingToSetAside }
-        let label = String(Int(clock().timeIntervalSince1970))
+        // Milliseconds plus a random suffix so two set-asides never collide.
+        let millis = Int((clock().timeIntervalSince1970 * 1000).rounded())
+        let label = "\(millis)-\(UUID().uuidString.prefix(8).lowercased())"
         do { try store.setAside(label: label) } catch { throw RepositoryError.writeFailed("\(error)") }
         access = .writable
     }
 
     private func readSnapshot() -> WorkspaceLoadResult {
         let data: Data?
-        do { data = try store.read() } catch { return .unreadable("read failed: \(error)") }
+        do { data = try store.read() } catch { return .readFailed("\(error)") }
         guard let data else { return .empty }
 
         struct Header: Decodable { let formatVersion: Int }

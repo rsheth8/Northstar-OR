@@ -14,22 +14,37 @@ struct RemoteSupportView: View {
         return senders.first
     }
     private var draft: Binding<String> {
-        let id = model.activeSession.identity.sessionID
+        let id = model.activeSession?.identity.sessionID ?? ""
         return Binding(get: { drafts[id, default: ""] }, set: { drafts[id] = $0 })
     }
 
     var body: some View {
+        if let session = model.activeSession {
+            workspace(session)
+        } else {
+            NavigationStack {
+                ContentUnavailableView("No active case", systemImage: "headphones",
+                    description: Text("No active case — start or resume a case in Planner."))
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(Northstar.Palette.bgRaised)
+                    .navigationTitle("Remote Support")
+                    .navigationBarTitleDisplayMode(.inline)
+            }
+        }
+    }
+
+    private func workspace(_ session: CoPilotSession) -> some View {
         NavigationStack {
             GeometryReader { proxy in
                 if proxy.size.width >= 1000 && !typeSize.isAccessibilitySize {
                     HStack(spacing: 0) {
-                        ScrollView { brief.padding(Northstar.Space.s6) }
+                        ScrollView { brief(session).padding(Northstar.Space.s6) }
                             .frame(maxWidth: .infinity)
                             .background(Northstar.Palette.bgRaised)
                         Divider()
                         VStack(spacing: 0) {
                             // Keep the newest message in view when the keyboard shortens this pane.
-                            ScrollView { conversation.padding(Northstar.Space.s4) }
+                            ScrollView { conversation(session).padding(Northstar.Space.s4) }
                                 .defaultScrollAnchor(.bottom)
                             composer
                         }
@@ -39,9 +54,9 @@ struct RemoteSupportView: View {
                 } else {
                     ScrollView {
                         VStack(alignment: .leading, spacing: Northstar.Space.s6) {
-                            brief
+                            brief(session)
                             Divider()
-                            conversation
+                            conversation(session)
                         }
                         .padding(Northstar.Space.s6)
                     }
@@ -55,9 +70,8 @@ struct RemoteSupportView: View {
         }
     }
 
-    private var brief: some View {
-        let session = model.activeSession
-        return VStack(alignment: .leading, spacing: Northstar.Space.s6) {
+    private func brief(_ session: CoPilotSession) -> some View {
+        VStack(alignment: .leading, spacing: Northstar.Space.s6) {
             VStack(alignment: .leading, spacing: Northstar.Space.s2) {
                 Text("Team question").font(Northstar.Fonts.label).foregroundStyle(Northstar.Palette.inkMuted)
                 Text("No team question recorded").font(Northstar.Fonts.title)
@@ -97,8 +111,8 @@ struct RemoteSupportView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private var conversation: some View {
-        let messages = model.activeSession.log.filter { $0.kind == .remoteMessage }
+    private func conversation(_ session: CoPilotSession) -> some View {
+        let messages = session.log.filter { $0.kind == .remoteMessage }
         return section("Conversation") {
             Text("Messages on this device").font(Northstar.Fonts.supporting).foregroundStyle(Northstar.Palette.inkMuted)
             if messages.isEmpty {
@@ -164,7 +178,7 @@ struct RemoteSupportView: View {
     }
 
     private func send() {
-        let session = model.activeSession
+        guard let session = model.activeSession else { return }
         let text = draft.wrappedValue.trimmingCharacters(in: .whitespacesAndNewlines)
         guard let sender, !text.isEmpty else { return }
         let previousIDs = Set(session.log.map(\.id))

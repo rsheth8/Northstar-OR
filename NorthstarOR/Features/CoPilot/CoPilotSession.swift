@@ -1,6 +1,15 @@
 import Foundation
 import Observation
 
+/// A stored session that cannot be rebuilt into the same live state. Its data is kept, not repaired.
+enum SessionRestoreError: Error, Equatable {
+    case caseMismatch
+    case unsupportedRecording
+    case itemsDoNotMatchCase
+    case historyMismatch(eventID: String)
+    case stateMismatch
+}
+
 enum RecordingCommandError: Error, Equatable {
     case unsupportedRecording, wrongSession, staleVersion, unknownItem, targetNotSelected
     case acknowledgmentPending, acknowledgmentMismatch, intentConflict, correctionNotCurrent, alreadyRecorded
@@ -34,6 +43,35 @@ final class CoPilotSession {
             itemStatuses = Dictionary(uniqueKeysWithValues: procedure.steps.map { ($0.id, .unrecorded) })
             selectedItemID = procedure.steps.first?.id
         }
+    }
+
+    /// Rebuilds a saved run by replaying its accepted events through `apply`, so a restored
+    /// session behaves exactly like the live one: same state, log, version and duplicate-intent
+    /// guards (an identical retry returns the original event; a conflicting reuse is rejected).
+    /// Any disagreement with the stored state throws instead of repairing or crashing.
+    static func restore(procedure: Procedure, from stored: StoredSession) throws -> CoPilotSession {
+        let state = stored.state
+        let identity = state.identity
+        guard identity.caseID == procedure.id, identity.workspaceID == procedure.workspaceID,
+              state.templateReference == procedure.templateReference else { throw SessionRestoreError.caseMismatch }
+        guard Set(state.itemStatuses.keys) == Set(procedure.steps.map(\.id)),
+              procedure.steps.count == state.itemStatuses.count else { throw SessionRestoreError.itemsDoNotMatchCase }
+        let session = CoPilotSession(procedure: procedure, now: state.startedAt, sessionID: identity.sessionID)
+        guard session.isRecordingSupported, session.identity == identity else { throw SessionRestoreError.unsupportedRecording }
+        for event in stored.events {
+            let replayed: SessionEvent
+            do { replayed = try session.apply(event.replayCommand) } catch {
+                throw SessionRestoreError.historyMismatch(eventID: event.id)
+            }
+            guard replayed == event else { throw SessionRestoreError.historyMismatch(eventID: event.id) }
+        }
+        guard session.recordingState == state else { throw SessionRestoreError.stateMismatch }
+        return session
+    }
+
+    /// The persisted form of this run, or nil when recording is unsupported.
+    var storedSession: StoredSession? {
+        recordingState.map { StoredSession(state: $0, events: events) }
     }
 
     var isRecordingSupported: Bool { !itemStatuses.isEmpty }
@@ -183,6 +221,21 @@ final class CoPilotSession {
 }
 
 private extension SessionEvent {
+    /// The exact command that produced this event, used to replay saved history.
+    var replayCommand: SessionCommand {
+        let action: SessionCommandAction
+        switch payload {
+        case .itemSelected: action = .selectItem
+        case .confirmationRecorded: action = .recordConfirmation
+        case .itemDeferred: action = .deferItem
+        case .warningAcknowledged(let acknowledgment): action = .acknowledgeWarning(acknowledgment: acknowledgment)
+        case .recordCorrected(let originalEventID, let newStatus, let reason, _, _):
+            action = .correctRecord(originalEventID: originalEventID, newStatus: newStatus, reason: reason)
+        }
+        return SessionCommand(id: intentID, identity: identity, actor: actor, source: source, issuedAt: occurredAt,
+                              expectedVersion: acceptedVersion - 1, targetItemID: targetItemID, action: action)
+    }
+
     var recordsItemStatus: Bool {
         switch payload {
         case .confirmationRecorded, .itemDeferred, .recordCorrected: true

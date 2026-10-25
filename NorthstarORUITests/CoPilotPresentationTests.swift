@@ -5,6 +5,7 @@ final class CoPilotPresentationTests: XCTestCase {
         continueAfterFailure = false
         XCUIDevice.shared.orientation = .landscapeLeft
         let app = XCUIApplication()
+        app.launchArguments += ["-NorthstarSampleWorkspace"]
         app.launch()
         let deferButton = app.buttons["defer-item"].firstMatch
         XCTAssertTrue(deferButton.waitForExistence(timeout: 15))
@@ -27,6 +28,7 @@ final class CoPilotPresentationTests: XCTestCase {
         continueAfterFailure = false
         XCUIDevice.shared.orientation = .portrait
         let app = XCUIApplication()
+        app.launchArguments += ["-NorthstarSampleWorkspace"]
         app.launch()
         XCTAssertTrue(app.buttons["record-confirmation"].waitForExistence(timeout: 15))
         capture("Co-pilot-portrait")
@@ -36,6 +38,7 @@ final class CoPilotPresentationTests: XCTestCase {
         continueAfterFailure = false
         XCUIDevice.shared.orientation = .landscapeLeft
         let app = XCUIApplication()
+        app.launchArguments += ["-NorthstarSampleWorkspace"]
         app.launchArguments += ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
         app.launch()
         XCTAssertTrue(app.buttons["record-confirmation"].waitForExistence(timeout: 15))

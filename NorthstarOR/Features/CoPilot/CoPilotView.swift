@@ -11,7 +11,21 @@ struct CoPilotView: View {
     @State private var commandError: String?
 
     var body: some View {
-        let session = model.activeSession
+        if let session = model.activeSession {
+            workspace(session)
+        } else {
+            NavigationStack {
+                ContentUnavailableView("No active case", systemImage: "list.bullet.rectangle",
+                    description: Text("No active case — start or resume a case in Planner."))
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(Northstar.Palette.bgRaised)
+                    .navigationTitle("Co-pilot")
+                    .navigationBarTitleDisplayMode(.inline)
+            }
+        }
+    }
+
+    private func workspace(_ session: CoPilotSession) -> some View {
         NavigationStack {
             VStack(spacing: 0) {
                 context(session)
@@ -83,7 +97,7 @@ struct CoPilotView: View {
                 }
             }
             .sheet(item: $correction) { request in
-                CoPilotCorrectionSheet(session: session, request: request)
+                CoPilotCorrectionSheet(request: request)
             }
         }
     }
@@ -121,7 +135,7 @@ struct CoPilotView: View {
                 ForEach(Array(session.procedure.steps.enumerated()), id: \.element.id) { index, step in
                     let status = session.recordingState?.itemStatuses[step.id] ?? .unrecorded
                     let selected = session.currentStep?.id == step.id
-                    let activation = session.makeCommand(.selectItem, targetItemID: step.id).map(RecordingCommandActivation.init)
+                    let activation = command(session, .selectItem, targetItemID: step.id).map(RecordingCommandActivation.init)
                     Button {
                         if apply(activation, to: session) { showWorkflow = false }
                     } label: {
@@ -171,13 +185,13 @@ struct CoPilotView: View {
                 if let acknowledgment = session.recordingState?.pendingAcknowledgment {
                     NorthstarBanner(tone: .attention, title: "Deferred · Acknowledgment required",
                         message: "Acknowledgment leaves this item deferred. Review and correction remain available.")
-                    let activation = session.makeCommand(.acknowledgeWarning(acknowledgment: acknowledgment)).map(RecordingCommandActivation.init)
+                    let activation = command(session, .acknowledgeWarning(acknowledgment: acknowledgment)).map(RecordingCommandActivation.init)
                     Button("Acknowledge deferral") { _ = apply(activation, to: session) }
                         .buttonStyle(NorthstarPrimaryButtonStyle(tone: .standard))
                         .accessibilityIdentifier("acknowledge-deferral")
                 } else if status == .unrecorded {
-                    let confirm = session.makeCommand(.recordConfirmation).map(RecordingCommandActivation.init)
-                    let deferItem = session.makeCommand(.deferItem).map(RecordingCommandActivation.init)
+                    let confirm = command(session, .recordConfirmation).map(RecordingCommandActivation.init)
+                    let deferItem = command(session, .deferItem).map(RecordingCommandActivation.init)
                     ViewThatFits(in: .horizontal) {
                         HStack(spacing: Northstar.Target.spacing) { recordingActions(session, step: step, confirm: confirm, deferItem: deferItem) }
                         VStack(alignment: .leading, spacing: Northstar.Target.spacing) { recordingActions(session, step: step, confirm: confirm, deferItem: deferItem) }
@@ -242,13 +256,18 @@ struct CoPilotView: View {
     private func apply(_ activation: RecordingCommandActivation?, to session: CoPilotSession) -> Bool {
         guard let activation else { return false }
         do {
-            try session.apply(activation.command(at: .now))
+            try model.record(activation.command(at: .now))
             commandError = nil
             return true
         } catch {
             commandError = "The recording changed or this action is unavailable. Review the current item and try again."
             return false
         }
+    }
+
+    /// Commands carry the configured local participant as a stated actor, not verified identity.
+    private func command(_ session: CoPilotSession, _ action: SessionCommandAction, targetItemID: String? = nil) -> SessionCommand? {
+        session.makeCommand(action, targetItemID: targetItemID, actor: model.workspace?.localParticipant)
     }
 
     private func correctionRequest(_ session: CoPilotSession, step: ProcedureStep) -> CoPilotCorrectionRequest? {
@@ -260,9 +279,9 @@ struct CoPilotView: View {
             }
         }
         guard let original,
-              let command = session.makeCommand(.correctRecord(originalEventID: original.id, newStatus: .unrecorded, reason: nil), targetItemID: step.id)
+              let base = command(session, .correctRecord(originalEventID: original.id, newStatus: .unrecorded, reason: nil), targetItemID: step.id)
         else { return nil }
-        return CoPilotCorrectionRequest(title: step.title, base: command, originalEventID: original.id)
+        return CoPilotCorrectionRequest(title: step.title, base: base, originalEventID: original.id)
     }
 
     private func label(_ status: RecordedItemStatus) -> String {

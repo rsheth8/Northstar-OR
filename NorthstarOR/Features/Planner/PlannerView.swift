@@ -8,7 +8,7 @@ struct PlannerView: View {
     @State private var attentionOnly = false
 
     private var recommendations: [CoverageMatcher.Recommendation] {
-        model.procedures.sorted { ($0.scheduledAt, $0.id) < ($1.scheduledAt, $1.id) }
+        model.cases.sorted { ($0.scheduledAt, $0.id) < ($1.scheduledAt, $1.id) }
             .map { model.recommendation(for: $0) }
     }
 
@@ -56,9 +56,9 @@ struct PlannerView: View {
                     ContentUnavailableView {
                         Label("No matching cases", systemImage: "calendar")
                     } description: {
-                        Text(model.procedures.isEmpty ? "No fictional cases are available in this workspace." : "Try another search or show all cases.")
+                        Text(model.cases.isEmpty ? "No fictional cases are available in this workspace." : "Try another search or show all cases.")
                     } actions: {
-                        if !model.procedures.isEmpty {
+                        if !model.cases.isEmpty {
                             Button("Show all cases") { search = ""; attentionOnly = false }
                                 .buttonStyle(NorthstarSecondaryButtonStyle())
                         }
@@ -107,7 +107,7 @@ struct PlannerView: View {
 
     private func detail(_ rec: CoverageMatcher.Recommendation) -> some View {
         let procedure = rec.procedure
-        let isActive = model.activeSession.procedure.id == procedure.id
+        let isActive = model.activeSession?.procedure.id == procedure.id
         return ScrollView {
             VStack(alignment: .leading, spacing: Northstar.Space.s6) {
                 VStack(alignment: .leading, spacing: Northstar.Space.s2) {
@@ -146,7 +146,7 @@ struct PlannerView: View {
                     Text("Support-plan requests and acceptance are not available in this build. This action only updates the active recording’s reduced-support label.")
                         .font(Northstar.Fonts.body).foregroundStyle(Northstar.Palette.inkMuted)
                     if isActive {
-                        NorthstarStatusLabel(model.activeSession.reducedSupport ? "Reduced-support context recorded" : "Standard support context recorded", tone: .neutral)
+                        NorthstarStatusLabel(model.activeSession?.reducedSupport == true ? "Reduced-support context recorded" : "Standard support context recorded", tone: .neutral)
                         Button(rec.reducedSupport ? "Record reduced-support context" : "Record standard support context") {
                             model.sync.send(.reducedSupportChanged(procedureID: procedure.id, on: rec.reducedSupport))
                         }

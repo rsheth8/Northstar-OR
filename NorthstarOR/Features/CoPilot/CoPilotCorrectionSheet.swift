@@ -9,7 +9,7 @@ struct CoPilotCorrectionRequest: Identifiable {
 }
 
 struct CoPilotCorrectionSheet: View {
-    let session: CoPilotSession
+    @Environment(AppModel.self) private var model
     let request: CoPilotCorrectionRequest
     @Environment(\.dismiss) private var dismiss
     @State private var status: RecordedItemStatus = .unrecorded
@@ -54,7 +54,7 @@ struct CoPilotCorrectionSheet: View {
             issuedAt: .now, expectedVersion: base.expectedVersion, targetItemID: base.targetItemID,
             action: .correctRecord(originalEventID: request.originalEventID, newStatus: status, reason: trimmed.isEmpty ? nil : trimmed))
         do {
-            try session.apply(command)
+            try model.record(command)
             dismiss()
         } catch {
             self.error = "The record changed. Your edits are kept here; cancel and reopen the current record to try again."
