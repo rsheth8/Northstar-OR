@@ -4,6 +4,7 @@ import SwiftUI
 struct NearbyCallView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
+    @State private var microphonePermission: String?
 
     var body: some View {
         NavigationStack {
@@ -13,6 +14,17 @@ struct NearbyCallView: View {
                     Text("Connect the room iPad and rep’s Mac running Northstar on the same Wi-Fi. Use headphones for calls. Fictional content only; media is not saved.")
                         .font(Northstar.Fonts.body)
                     NorthstarStatusLabel(model.linkState.label, tone: .info)
+                    if model.nearbyCall?.status != "In call" {
+                        Button("Set up microphone") {
+                            Task {
+                                let allowed = await NearbyCallController.requestMicrophoneAccess()
+                                microphonePermission = allowed ? "Microphone access allowed. Reconnect and accept a call when ready." : "Microphone access is off. On Mac, open System Settings → Privacy & Security → Microphone and enable Northstar OR. On iPad, enable Microphone in Northstar’s Settings."
+                            }
+                        }
+                        .buttonStyle(NorthstarSecondaryButtonStyle())
+                        .accessibilityIdentifier("setup-call-microphone")
+                        if let microphonePermission { Text(microphonePermission).font(Northstar.Fonts.supporting) }
+                    }
                     if let call = model.nearbyCall { CallStatusControls(call: call, end: model.endRepCall) }
                     if let error = model.nearbyError { Text(error).foregroundStyle(Northstar.Palette.alert) }
                     NavigationLink("Connect another Northstar device") { NearbyLinkSheet() }

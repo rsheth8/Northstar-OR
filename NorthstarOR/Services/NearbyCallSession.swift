@@ -40,6 +40,10 @@ final class NearbyCallController: ObservableObject, NearbyTransport {
         else if pendingSignals.count < 128 { pendingSignals.append(text) }
     }
 
+    static func requestMicrophoneAccess() async -> Bool {
+        await AVCaptureDevice.requestAccess(for: .audio)
+    }
+
     func start() {
         stop()
         let url = signalingURL.flatMap(URL.init(string:))
@@ -52,7 +56,7 @@ final class NearbyCallController: ObservableObject, NearbyTransport {
         status = "Allow microphone access"
         setLink(.looking)
         Task {
-            let microphone = await AVCaptureDevice.requestAccess(for: .audio)
+            let microphone = await Self.requestMicrophoneAccess()
             guard run == generation else { return }
             guard microphone else { fail("Microphone access is off. Enable it in Settings, then retry."); return }
             #if targetEnvironment(simulator)
