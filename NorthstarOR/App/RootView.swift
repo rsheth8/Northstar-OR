@@ -10,6 +10,7 @@ struct RootView: View {
     @State private var showCall = false
     @State private var pendingRole: DemoPost?
     @State private var showingRoles = false
+    @State private var chosenRole: DemoPost?
 
     var body: some View {
         @Bindable var model = model
@@ -77,6 +78,9 @@ struct RootView: View {
                 } message: {
                     Text("Nearby support will disconnect. Saved records stay on this device. Reconnect using the new role.")
                 }
+                .sheet(isPresented: $showingRoles, onDismiss: completeRoleSelection) {
+                    roleChooser
+                }
                 .sheet(isPresented: $showCall) { NearbyCallView() }
                 .sheet(isPresented: $showNearby) { NearbyLinkSheet() }
                 .sheet(isPresented: $showingSettings) {
@@ -103,16 +107,55 @@ struct RootView: View {
         .buttonStyle(.plain)
         .accessibilityIdentifier("nearby-role")
         .accessibilityHint("Choose this device's role")
-        .confirmationDialog("This device's role", isPresented: $showingRoles, titleVisibility: .visible) {
-            Button("Room device") { requestRole(.room) }
-            Button("Rep device") { requestRole(.rep) }
-            Button("Cancel", role: .cancel) { }
-        }
         if model.demoPost == .room || model.remoteSession != nil {
             Button(model.nearbyCall?.status == "In call" ? "Call controls" : "Session and call") { showCall = true }
                 .frame(minHeight: Northstar.Target.minimum).accessibilityIdentifier("open-call")
         }
         Button("Connect devices") { showNearby = true }.frame(minHeight: Northstar.Target.minimum)
+    }
+
+    private var roleChooser: some View {
+        NavigationStack {
+            List {
+                Section {
+                    roleChoice("Room device", role: .room)
+                    roleChoice("Rep device", role: .rep)
+                } footer: {
+                    Text("Changing role may disconnect nearby support. Saved records stay on this device.")
+                }
+            }
+            .navigationTitle("This device's role")
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { chosenRole = nil; showingRoles = false }
+                        .frame(minHeight: Northstar.Target.minimum)
+                }
+            }
+        }
+    }
+
+    private func roleChoice(_ title: String, role: DemoPost) -> some View {
+        Button {
+            chosenRole = role
+            showingRoles = false
+        } label: {
+            HStack {
+                Text(title)
+                Spacer()
+                if model.demoPost == role { Image(systemName: "checkmark").accessibilityHidden(true) }
+            }
+            .frame(minHeight: Northstar.Target.primary)
+            .contentShape(Rectangle())
+        }
+        .accessibilityLabel(title)
+        .accessibilityValue(model.demoPost == role ? "Current role" : "")
+    }
+
+    private func completeRoleSelection() {
+        guard let role = chosenRole else { return }
+        chosenRole = nil
+        // Present the disconnect confirmation only after the selection sheet closes.
+        requestRole(role)
     }
 
     private func requestRole(_ role: DemoPost) {
