@@ -7,13 +7,13 @@ final class NearbySupportJourneyTests: XCTestCase {
         XCUIDevice.shared.orientation = .landscapeLeft
         app.launch()
         XCTAssertTrue(app.buttons["defer-item"].waitForExistence(timeout: 15))
+        capture(app, "focus-initial-landscape")
         app.buttons["defer-item"].tap()
-        app.buttons["request-support"].tap()
-        let draft = app.textViews["support-question-draft"]
+        let draft = app.textViews["focus-support-draft"]
         XCTAssertTrue(draft.waitForExistence(timeout: 5))
         draft.tap(); draft.typeText("Where is the fictional reference?")
         app.buttons["Hide keyboard"].tap()
-        reveal(app.buttons["support-question-send"], app); app.buttons["support-question-send"].tap()
+        reveal(app.buttons["focus-support-send"], app); app.buttons["focus-support-send"].tap()
         XCTAssertTrue(app.buttons["acknowledge-deferral"].waitForExistence(timeout: 5))
         app.buttons["Remote Support"].firstMatch.tap()
         XCTAssertTrue(app.buttons["acknowledge-question"].waitForExistence(timeout: 5))

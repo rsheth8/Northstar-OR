@@ -31,25 +31,30 @@ struct CoPilotView: View {
             VStack(spacing: 0) {
                 context(session)
                 GeometryReader { proxy in
-                    let wide = proxy.size.width >= 1100 && !typeSize.isAccessibilitySize
-                    let showRail = proxy.size.width >= 800 && !typeSize.isAccessibilitySize
+                    let wide = proxy.size.width >= 900 && !typeSize.isAccessibilitySize
                     HStack(spacing: 0) {
-                        if showRail {
-                            workflow(session).frame(width: wide ? 280 : 260)
-                                .background(Northstar.Palette.bgBase)
-                            Divider()
-                        }
                         ScrollView {
-                            currentItem(session)
-                                .padding(Northstar.Space.s6)
-                                .frame(maxWidth: 800, alignment: .leading)
-                                .frame(maxWidth: .infinity, alignment: .leading)
+                            VStack(alignment: .leading, spacing: Northstar.Space.s6) {
+                                focusHeading(session)
+                                workflowStrip(session)
+                                currentItem(session)
+                                Divider()
+                                recordedActivity(session)
+                                if !wide {
+                                    Divider()
+                                    CoPilotSupportPanel(session: session)
+                                }
+                            }
+                            .padding(Northstar.Space.s6)
+                            .frame(maxWidth: 1100, alignment: .leading)
+                            .frame(maxWidth: .infinity, alignment: .leading)
                         }
                         .accessibilityIdentifier("copilot-current-scroll")
                         .background(Northstar.Palette.bgRaised)
                         if wide {
                             Divider()
-                            ScrollView { VStack(alignment: .leading, spacing: Northstar.Space.s4) { supportSummary(session); activity(session) }.padding(Northstar.Space.s4) }.frame(width: 280)
+                            ScrollView { CoPilotSupportPanel(session: session).padding(Northstar.Space.s6) }
+                                .frame(width: 340)
                                 .background(Northstar.Palette.bgBase)
                         }
                     }
@@ -87,6 +92,100 @@ struct CoPilotView: View {
             .sheet(item: $correction) { request in
                 CoPilotCorrectionSheet(request: request)
             }
+        }
+    }
+
+    private func focusHeading(_ session: CoPilotSession) -> some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(alignment: .center) {
+                VStack(alignment: .leading, spacing: Northstar.Space.s1) {
+                    Text("TEAM RECORDING WORKSPACE").font(Northstar.Fonts.label).foregroundStyle(Northstar.Palette.inkMuted)
+                    Text("Co-pilot").font(Northstar.Fonts.display)
+                }
+                Spacer()
+                Text(session.recordingSummary).font(Northstar.Fonts.supporting)
+            }
+            Text("Co-pilot").font(Northstar.Fonts.display)
+        }
+    }
+
+    private func workflowStrip(_ session: CoPilotSession) -> some View {
+        let confirmed = session.procedure.steps.filter { session.recordingState?.itemStatuses[$0.id] == .teamConfirmed }.count
+        return VStack(alignment: .leading, spacing: Northstar.Space.s3) {
+            HStack {
+                Text("Recorded workflow").font(Northstar.Fonts.label)
+                Spacer()
+                Text("\(confirmed) of \(session.procedure.steps.count) confirmed").font(Northstar.Fonts.supporting)
+            }
+            ProgressView(value: Double(confirmed), total: Double(max(1, session.procedure.steps.count)))
+                .tint(Northstar.Palette.aurora).accessibilityLabel("Recorded confirmations")
+            ScrollView(.horizontal) {
+                HStack(spacing: Northstar.Space.s2) {
+                    ForEach(Array(session.procedure.steps.enumerated()), id: \.element.id) { index, step in
+                        let status = session.recordingState?.itemStatuses[step.id] ?? .unrecorded
+                        let selected = session.currentStep?.id == step.id
+                        let activation = command(session, .selectItem, targetItemID: step.id).map(RecordingCommandActivation.init)
+                        Button { _ = apply(activation, to: session) } label: {
+                            VStack(spacing: Northstar.Space.s2) {
+                                Image(systemName: status == .unrecorded ? "\(index + 1).circle" : symbol(status))
+                                    .foregroundStyle(tone(status).foreground)
+                                Text(step.title.replacingOccurrences(of: " confirmation", with: "").replacingOccurrences(of: " report", with: ""))
+                                    .font(Northstar.Fonts.supporting).lineLimit(2)
+                            }
+                            .frame(width: 94, height: 76)
+                            .padding(Northstar.Space.s1)
+                            .foregroundStyle(selected ? Northstar.Palette.ice : Northstar.Palette.inkMuted)
+                            .background(selected ? Northstar.Palette.iceSoft : Northstar.Palette.bgBase)
+                            .overlay(alignment: .bottom) {
+                                if selected { Rectangle().fill(Northstar.Palette.ice).frame(height: 3) }
+                            }
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(model.demoPost == .rep || session.pendingAlert != nil || activation == nil)
+                        .accessibilityLabel("Item \(index + 1), \(step.title), \(label(status))")
+                        .accessibilityAddTraits(selected ? .isSelected : [])
+                    }
+                }
+            }
+            if session.pendingAlert != nil {
+                Text("Selection is pinned. Support and record review remain available.")
+                    .font(Northstar.Fonts.supporting).foregroundStyle(Northstar.Palette.inkMuted)
+            }
+        }
+    }
+
+    private func recordedActivity(_ session: CoPilotSession) -> some View {
+        VStack(alignment: .leading, spacing: Northstar.Space.s3) {
+            HStack {
+                Text("Recorded activity").font(Northstar.Fonts.bodyStrong)
+                Spacer()
+                Button("Review record") { showActivity = true }.frame(minHeight: Northstar.Target.minimum)
+            }
+            if session.events.isEmpty {
+                Text("No activity recorded.").font(Northstar.Fonts.supporting).foregroundStyle(Northstar.Palette.inkMuted)
+            }
+            ForEach(session.events.suffix(4).reversed()) { event in
+                HStack(alignment: .top, spacing: Northstar.Space.s3) {
+                    Text(event.occurredAt.formatted(date: .omitted, time: .shortened))
+                        .monospacedDigit().frame(minWidth: 58, alignment: .leading)
+                    VStack(alignment: .leading, spacing: Northstar.Space.s1) {
+                        Text(activityLabel(event))
+                        Text("\(event.actor.displayName) · \(event.source.rawValue)").foregroundStyle(Northstar.Palette.inkMuted)
+                    }
+                }.font(Northstar.Fonts.supporting)
+                Divider()
+            }
+        }
+    }
+
+    private func activityLabel(_ event: SessionEvent) -> String {
+        let title = model.activeSession?.procedure.steps.first { $0.id == event.targetItemID }?.title ?? "Item"
+        switch event.payload {
+        case .itemSelected: return "\(title) · Selected"
+        case .confirmationRecorded: return "\(title) · Team confirmation recorded"
+        case .itemDeferred: return "\(title) · Deferred"
+        case .warningAcknowledged: return "Deferral warning acknowledged; item remains deferred"
+        case .recordCorrected: return "\(title) · Corrected; original retained"
         }
     }
 
@@ -165,7 +264,7 @@ struct CoPilotView: View {
             } else if let step = session.currentStep {
                 let status = session.recordingState?.itemStatuses[step.id] ?? .unrecorded
                 VStack(alignment: .leading, spacing: Northstar.Space.s3) {
-                    Text("Current item \(session.currentIndex + 1)").font(Northstar.Fonts.label).foregroundStyle(Northstar.Palette.inkMuted)
+                    Text("CURRENT ITEM · \(session.currentIndex + 1) / \(session.procedure.steps.count)").font(Northstar.Fonts.label).foregroundStyle(Northstar.Palette.inkMuted)
                     Text(step.title).font(Northstar.Fonts.stepCurrent).accessibilityAddTraits(.isHeader)
                     Text(step.detail).font(Northstar.Fonts.body).foregroundStyle(Northstar.Palette.inkMuted)
                     NorthstarStatusLabel(label(status), tone: tone(status), systemImage: symbol(status))
@@ -198,7 +297,7 @@ struct CoPilotView: View {
                     Button("Correct record") { correction = request }
                         .buttonStyle(NorthstarSecondaryButtonStyle(size: .large))
                 }
-                supportSummary(session)
+                if model.latestQuestion(for: session.identity.sessionID)?.reply != nil { supportSummary(session) }
 
             } else {
                 Text(session.recordingSummary).font(Northstar.Fonts.title)
