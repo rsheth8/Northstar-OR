@@ -99,6 +99,34 @@ final class WorkspaceFormsTests: XCTestCase {
         XCTAssertThrowsError(try draft.applying(to: base))
     }
 
+    func testSiteCoordinatesParseRetainAndClearThroughNormalForms() throws {
+        var setupDraft = setup()
+        setupDraft.site.latitudeText = " 46.5 "
+        setupDraft.site.longitudeText = " -91.25 "
+        let workspace = try setupDraft.build()
+        XCTAssertEqual(workspace.sites[0].latitude, 46.5)
+        XCTAssertEqual(workspace.sites[0].longitude, -91.25)
+        var settings = WorkspaceSettingsDraft(workspace)
+        XCTAssertEqual(try settings.applying(to: workspace).sites, workspace.sites)
+        settings.sites[0].latitudeText = ""
+        settings.sites[0].longitudeText = " "
+        let cleared = try settings.applying(to: workspace)
+        XCTAssertNil(cleared.sites[0].latitude)
+        XCTAssertNil(cleared.sites[0].longitude)
+    }
+
+    func testSiteCoordinatesRejectPartialMalformedNonfiniteAndOutOfRangePairs() {
+        for (latitude, longitude) in [("45", ""), ("", "-90"), ("north", "-90"),
+                                       ("nan", "0"), ("0", "inf"), ("91", "0"), ("0", "-181")] {
+            var draft = setup()
+            draft.site.latitudeText = latitude
+            draft.site.longitudeText = longitude
+            XCTAssertThrowsError(try draft.build(newID: { "test-" + $0 })) { error in
+                XCTAssertEqual(error as? WorkspaceContractError, .invalidCoordinates("test-site"))
+            }
+        }
+    }
+
     func testTimeZoneChoicesListUSZonesFirstAndKeepCurrent() {
         let list = WorkspaceForms.timeZoneChoices(including: "Custom/Zone")
         XCTAssertEqual(list.first, "Custom/Zone")
